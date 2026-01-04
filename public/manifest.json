@@ -1,0 +1,17 @@
+{
+  "name": "Grovara B2B Blaster",
+  "short_name": "B2B Blaster",
+  "description": "Old B2B is broken. Grovara is built for what's next.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#0a0d14",
+  "theme_color": "#14b8a6",
+  "orientation": "portrait",
+  "icons": [
+    {
+      "src": "/favicon.ico",
+      "sizes": "64x64",
+      "type": "image/x-icon"
+    }
+  ]
+}
