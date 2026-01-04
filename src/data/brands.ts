@@ -1,4 +1,5 @@
 import { Brand } from '@/types/game';
+import realBrandsData from './realBrands.json';
 
 export const GROVARA_BRANDS: Brand[] = [
   {
@@ -67,18 +68,19 @@ export const GROVARA_BRANDS: Brand[] = [
   },
 ];
 
-export const ENEMY_LABELS = [
+// Real brands from Grovara marketplace - these are the "enemies" to shoot
+export const ENEMY_LABELS = realBrandsData.map(brand => ({
+  id: brand.id,
+  label: brand.name,
+  emoji: brand.emoji,
+  imageUrl: brand.imageUrl,
+}));
+
+export const FRIENDLY_LABELS = [
   { id: 'pdf', label: 'PDF Catalogs', emoji: '📄' },
   { id: 'spreadsheet', label: 'Spreadsheets', emoji: '📊' },
   { id: 'fax', label: 'Fax Machines', emoji: '📠' },
   { id: 'broker', label: 'Old Brokers', emoji: '👔' },
   { id: 'paperwork', label: 'Paperwork', emoji: '📋' },
   { id: 'email-chain', label: 'Email Chains', emoji: '📧' },
-];
-
-export const FRIENDLY_LABELS = [
-  { id: 'grovara', label: 'Grovara', emoji: '🌱' },
-  { id: 'organic', label: 'Organic', emoji: '🥬' },
-  { id: 'healthy', label: 'Healthy', emoji: '💚' },
-  { id: 'eco', label: 'Eco-Friendly', emoji: '♻️' },
 ];

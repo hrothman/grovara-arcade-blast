@@ -3,7 +3,7 @@ import { useGame } from '@/context/GameContext';
 import { Zap, Target, Crosshair } from 'lucide-react';
 
 export const WelcomeScreen = () => {
-  const { startGame } = useGame();
+  const { startGame, goToSwipe } = useGame();
 
   return (
     <div className="min-h-screen gradient-arcade flex flex-col items-center justify-center p-6 relative overflow-hidden">
@@ -85,19 +85,34 @@ export const WelcomeScreen = () => {
           </div>
         </motion.div>
 
-        {/* Start button */}
-        <motion.button
-          initial={{ opacity: 0, scale: 0.9 }}
-          animate={{ opacity: 1, scale: 1 }}
-          transition={{ delay: 0.8, type: 'spring' }}
-          whileHover={{ scale: 1.05 }}
-          whileTap={{ scale: 0.95 }}
-          onClick={startGame}
-          className="btn-arcade text-xl w-full max-w-xs flex items-center justify-center gap-3 animate-pulse-glow"
-        >
-          <Zap className="w-6 h-6" />
-          START MISSION
-        </motion.button>
+        {/* Start & swipe buttons */}
+        <div className="flex flex-col items-center gap-3">
+          <motion.button
+            initial={{ opacity: 0, scale: 0.9 }}
+            animate={{ opacity: 1, scale: 1 }}
+            transition={{ delay: 0.8, type: 'spring' }}
+            whileHover={{ scale: 1.05 }}
+            whileTap={{ scale: 0.95 }}
+            onClick={startGame}
+            className="btn-arcade text-xl w-full max-w-xs flex items-center justify-center gap-3 animate-pulse-glow"
+          >
+            <Zap className="w-6 h-6" />
+            START MISSION
+          </motion.button>
+
+          <motion.button
+            initial={{ opacity: 0, scale: 0.9 }}
+            animate={{ opacity: 1, scale: 1 }}
+            transition={{ delay: 0.9, type: 'spring' }}
+            whileHover={{ scale: 1.05 }}
+            whileTap={{ scale: 0.95 }}
+            onClick={goToSwipe}
+            className="btn-arcade text-lg w-full max-w-xs flex items-center justify-center gap-3 bg-card/80 hover:bg-card text-foreground"
+          >
+            <Target className="w-5 h-5" />
+            SWIPE BRANDS
+          </motion.button>
+        </div>
 
         {/* Footer */}
         <motion.p

@@ -15,12 +15,13 @@ interface GameTarget {
   speed: number;
   points: number;
   container?: Phaser.GameObjects.Container;
+  disappearTime?: number;
 }
 
 const LEVEL_CONFIG = {
-  1: { enemies: 8, friendlies: 3, speed: 1, duration: 30000 },
-  2: { enemies: 12, friendlies: 5, speed: 1.3, duration: 35000 },
-  3: { enemies: 16, friendlies: 7, speed: 1.6, duration: 40000 },
+  1: { enemies: 15, friendlies: 7, speed: 1, duration: 30000, targetLifeMin: 3000, targetLifeMax: 5000 },
+  2: { enemies: 25, friendlies: 12, speed: 1.3, duration: 35000, targetLifeMin: 2500, targetLifeMax: 4000 },
+  3: { enemies: 35, friendlies: 17, speed: 1.6, duration: 40000, targetLifeMin: 2000, targetLifeMax: 3500 },
 };
 
 export const GameCanvas = () => {
@@ -28,15 +29,15 @@ export const GameCanvas = () => {
   const phaserGameRef = useRef<Phaser.Game | null>(null);
   const { gameState, addScore, loseLife, completeLevel } = useGame();
   const [displayScore, setDisplayScore] = useState(0);
-  const [hitFeedback, setHitFeedback] = useState<{ type: 'enemy' | 'friendly' | null; points: number }>({ type: null, points: 0 });
+  const [hitFeedback, setHitFeedback] = useState<{ type: 'enemy' | 'friendly' | null; points: number; x: number; y: number }>({ type: null, points: 0, x: 0, y: 0 });
   const [timeLeft, setTimeLeft] = useState(30);
   const [targetsHit, setTargetsHit] = useState({ enemies: 0, friendlies: 0 });
   
   const levelConfig = LEVEL_CONFIG[gameState.currentLevel as keyof typeof LEVEL_CONFIG] || LEVEL_CONFIG[1];
 
-  const showHitFeedback = useCallback((type: 'enemy' | 'friendly', points: number) => {
-    setHitFeedback({ type, points });
-    setTimeout(() => setHitFeedback({ type: null, points: 0 }), 500);
+  const showHitFeedback = useCallback((type: 'enemy' | 'friendly', points: number, x: number, y: number) => {
+    setHitFeedback({ type, points, x, y });
+    setTimeout(() => setHitFeedback({ type: null, points: 0, x: 0, y: 0 }), 800);
   }, []);
 
   useEffect(() => {
@@ -70,18 +71,11 @@ export const GameCanvas = () => {
 
             const width = scene.scale.width;
             const height = scene.scale.height;
-            const side = Math.floor(Math.random() * 4);
-            let x = 0, y = 0;
-
-            switch (side) {
-              case 0: x = Math.random() * width; y = -60; break;
-              case 1: x = width + 60; y = Math.random() * height; break;
-              case 2: x = Math.random() * width; y = height + 60; break;
-              case 3: x = -60; y = Math.random() * height; break;
-            }
-
-            const targetX = width / 2 + (Math.random() - 0.5) * 200;
-            const targetY = height / 2 + (Math.random() - 0.5) * 200;
+            
+            // Spawn at random location within the screen (with margin from edges)
+            const margin = 80; // Keep targets away from edges
+            const x = margin + Math.random() * (width - 2 * margin);
+            const y = margin + Math.random() * (height - 2 * margin);
 
             const container = scene.add.container(x, y);
             
@@ -107,36 +101,47 @@ export const GameCanvas = () => {
             container.setSize(90, 90);
             container.setInteractive();
 
-            const speed = (0.5 + Math.random() * 0.5) * levelConfig.speed;
-            const angle = Math.atan2(targetY - y, targetX - x);
+            // Randomize target lifetime based on level
+            const disappearTime = levelConfig.targetLifeMin + 
+              Math.random() * (levelConfig.targetLifeMax - levelConfig.targetLifeMin);
             
             const target: GameTarget = {
               id: `target_${Date.now()}_${Math.random()}`,
               type: isEnemy ? 'enemy' : 'friendly',
               label: labelData.label,
               emoji: labelData.emoji,
-              x, y, speed,
+              x, y, 
+              speed: levelConfig.speed,
               points: isEnemy ? 100 : -150,
               container,
+              disappearTime,
             };
 
             targets.push(target);
 
-            // Movement tween
+            // Fade in animation
+            container.setAlpha(0);
             scene.tweens.add({
               targets: container,
-              x: targetX,
-              y: targetY,
-              duration: 3000 / speed,
-              ease: 'Linear',
-              onComplete: () => {
-                if (!gameActive) return;
-                // Target escaped
-                const idx = targets.findIndex(t => t.id === target.id);
-                if (idx !== -1) {
-                  targets.splice(idx, 1);
-                  container.destroy();
-                }
+              alpha: 1,
+              duration: 300,
+              ease: 'Power2',
+            });
+
+            // Auto-disappear after timeout
+            const disappearTimeout = scene.time.delayedCall(disappearTime, () => {
+              if (!gameActive) return;
+              const idx = targets.findIndex(t => t.id === target.id);
+              if (idx !== -1) {
+                targets.splice(idx, 1);
+                // Fade out animation
+                scene.tweens.add({
+                  targets: container,
+                  alpha: 0,
+                  duration: 300,
+                  ease: 'Power2',
+                  onComplete: () => container.destroy(),
+                });
               }
             });
 
@@ -159,27 +164,96 @@ export const GameCanvas = () => {
                 targets.splice(idx, 1);
               }
 
-              // Hit effect
-              scene.tweens.killTweensOf(container);
-              scene.tweens.add({
-                targets: container,
-                scaleX: 1.5,
-                scaleY: 1.5,
-                alpha: 0,
-                duration: 200,
-                ease: 'Power2',
-                onComplete: () => container.destroy(),
-              });
+              const clickX = container.x;
+              const clickY = container.y;
 
               if (isEnemy) {
+                // Explosion effect for enemy
+                scene.tweens.killTweensOf(container);
+                
+                // Create explosion particles
+                for (let i = 0; i < 12; i++) {
+                  const particle = scene.add.circle(clickX, clickY, 8, 0xff4444);
+                  const angle = (Math.PI * 2 * i) / 12;
+                  const distance = 50 + Math.random() * 30;
+                  
+                  scene.tweens.add({
+                    targets: particle,
+                    x: clickX + Math.cos(angle) * distance,
+                    y: clickY + Math.sin(angle) * distance,
+                    alpha: 0,
+                    scale: 0,
+                    duration: 400 + Math.random() * 200,
+                    ease: 'Power2',
+                    onComplete: () => particle.destroy(),
+                  });
+                }
+                
+                // Flash effect
+                const flash = scene.add.circle(clickX, clickY, 60, 0xffff00, 0.8);
+                scene.tweens.add({
+                  targets: flash,
+                  scale: 2,
+                  alpha: 0,
+                  duration: 300,
+                  ease: 'Power2',
+                  onComplete: () => flash.destroy(),
+                });
+                
+                container.destroy();
+                
                 addScore(100);
                 setDisplayScore(prev => prev + 100);
                 setTargetsHit(prev => ({ ...prev, enemies: prev.enemies + 1 }));
-                showHitFeedback('enemy', 100);
+                showHitFeedback('enemy', 100, clickX, clickY);
               } else {
+                // Big red X effect for friendly
+                scene.tweens.killTweensOf(container);
+                
+                const lineThickness = 8;
+                const size = 60;
+                
+                // Create X lines at the click position
+                const xGraphics = scene.add.graphics();
+                xGraphics.lineStyle(lineThickness, 0xff0000);
+                
+                // Draw first diagonal
+                xGraphics.beginPath();
+                xGraphics.moveTo(clickX - size/2, clickY - size/2);
+                xGraphics.lineTo(clickX + size/2, clickY + size/2);
+                xGraphics.strokePath();
+                
+                // Draw second diagonal
+                xGraphics.beginPath();
+                xGraphics.moveTo(clickX + size/2, clickY - size/2);
+                xGraphics.lineTo(clickX - size/2, clickY + size/2);
+                xGraphics.strokePath();
+                
+                xGraphics.setAlpha(0);
+                
+                // Animate X appearing and disappearing
+                scene.tweens.add({
+                  targets: xGraphics,
+                  alpha: 1,
+                  duration: 150,
+                  ease: 'Power2',
+                  onComplete: () => {
+                    scene.tweens.add({
+                      targets: xGraphics,
+                      alpha: 0,
+                      duration: 400,
+                      delay: 200,
+                      ease: 'Power2',
+                      onComplete: () => xGraphics.destroy(),
+                    });
+                  },
+                });
+                
+                container.destroy();
+                
                 loseLife();
                 setTargetsHit(prev => ({ ...prev, friendlies: prev.friendlies + 1 }));
-                showHitFeedback('friendly', -150);
+                showHitFeedback('friendly', -150, clickX, clickY);
               }
             });
           };
@@ -269,7 +343,7 @@ export const GameCanvas = () => {
         
         <div className="bg-card/80 backdrop-blur-sm rounded-lg px-4 py-2">
           <span className={`arcade-text text-xl ${timeLeft <= 10 ? 'text-destructive' : 'text-foreground'}`}>
-            {timeLeft}s
+            {timeLeft} sec
           </span>
         </div>
       </div>
@@ -279,9 +353,14 @@ export const GameCanvas = () => {
         {hitFeedback.type && (
           <motion.div
             initial={{ opacity: 0, scale: 0.5, y: 0 }}
-            animate={{ opacity: 1, scale: 1, y: -20 }}
-            exit={{ opacity: 0, y: -50 }}
-            className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 z-30 pointer-events-none"
+            animate={{ opacity: 1, scale: 1.2, y: -30 }}
+            exit={{ opacity: 0, y: -60 }}
+            className="absolute z-30 pointer-events-none"
+            style={{
+              left: `${hitFeedback.x}px`,
+              top: `${hitFeedback.y}px`,
+              transform: 'translate(-50%, -50%)'
+            }}
           >
             <span className={`arcade-text text-4xl font-bold ${
               hitFeedback.type === 'enemy' ? 'text-success score-glow' : 'text-destructive enemy-glow'

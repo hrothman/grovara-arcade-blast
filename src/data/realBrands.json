@@ -1,0 +1,107 @@
+[
+  {
+    "id": "beanvivo",
+    "name": "BeanVIVO",
+    "emoji": "🫘",
+    "category": "Food",
+    "imageUrl": "https://platform.grovara.com/api/files/public%2Faccounts%2F01K9JTRTF34EEB4BQNSSZV2MXA%2FLogo%2Flogo%20(1).png"
+  },
+  {
+    "id": "liquid-death",
+    "name": "Liquid Death",
+    "emoji": "💀",
+    "category": "Beverage",
+    "imageUrl": "https://platform.grovara.com/api/files/public%2Faccounts%2F01KAKGNH2PK1EZPWTCZB9H0AS9%2Fassets%2Flogo%2FScreenshot%202025-12-01%20at%2012.47.02%E2%80%AFPM.png"
+  },
+  {
+    "id": "positive-beverage",
+    "name": "Positive Hydration",
+    "emoji": "🥤",
+    "category": "Beverage",
+    "imageUrl": "https://platform.grovara.com/api/files/public%2Faccounts%2F01K9JTRTEX3RDGFN6K6H4NBXN4%2FLogo%2F2025%20POSITIVE%20BEVERAGE%20Curved%20Logo%20Blue.jpg"
+  },
+  {
+    "id": "rule-breaker",
+    "name": "Rule Breaker",
+    "emoji": "🍫",
+    "category": "Food",
+    "imageUrl": "https://platform.grovara.com/api/files/public%2Faccounts%2F01K9JTRTEWFDYNWFE5Z68912K5%2FLogo%2FRuleBreaker_PinkLogo(1)(1).jpg"
+  },
+  {
+    "id": "pnuff",
+    "name": "P-nuff",
+    "emoji": "🥜",
+    "category": "Food",
+    "imageUrl": "https://platform.grovara.com/api/files/public%2Faccounts%2F01K9JTRTF1M73ZQKT1PK3ASD9Y%2FLogo%2FPnuff_Logo.png"
+  },
+  {
+    "id": "hellowater",
+    "name": "Hellowater",
+    "emoji": "💧",
+    "category": "Beverage",
+    "imageUrl": "https://platform.grovara.com/api/files/public%2Faccounts%2F01K9JTRTF1SHA4JDN2H9GS187X%2FLogo%2Fhellowater-logo.png"
+  },
+  {
+    "id": "so-delicious",
+    "name": "So Delicious",
+    "emoji": "🍦",
+    "category": "Food",
+    "imageUrl": "https://platform.grovara.com/api/files/public%2Faccounts%2F01K9JTTZGTF5GAD5FY3E6F7CGM%2FLogo%2FSo_Delicious_Dairy_Free_Logo_2.jpg"
+  },
+  {
+    "id": "craveclean",
+    "name": "CravePops",
+    "emoji": "🍬",
+    "category": "Food",
+    "imageUrl": "https://platform.grovara.com/api/files/public%2Faccounts%2F01KBNG77YW3PQG6ZRFC0MX6B12%2Fassets%2Flogo%2FCraveClean%20(2).PNG"
+  },
+  {
+    "id": "nfc-fruti",
+    "name": "NFC Fruti",
+    "emoji": "🍓",
+    "category": "Food",
+    "imageUrl": "https://platform.grovara.com/api/files/public%2Faccounts%2F01K9JTRTEW953W0G3MZ1MP8W06%2FLogo%2FFruti%20Logo%20Hi%20Res%20(1)_2.png"
+  },
+  {
+    "id": "120-life",
+    "name": "120/Life",
+    "emoji": "❤️",
+    "category": "Beverage",
+    "imageUrl": "https://platform.grovara.com/api/files/public%2Faccounts%2F01KC8210CCWZHYGE4Y7SW0FC9R%2Fassets%2Flogo%2FLogo%20w_%20Ingredient%20Cluster.jpg"
+  },
+  {
+    "id": "elemind",
+    "name": "Elemind",
+    "emoji": "🧠",
+    "category": "Electronics",
+    "imageUrl": "https://platform.grovara.com/api/files/public%2Faccounts%2F01K9JTX0QCKF3NER5WH0K1W4XM%2Fassets%2Flogo%2FIMG_6579.png"
+  },
+  {
+    "id": "sylvan-meadows",
+    "name": "Sylvan Meadows",
+    "emoji": "🥛",
+    "category": "Food",
+    "imageUrl": "https://platform.grovara.com/api/files/public%2Faccounts%2F01K9JTTZGY3RE635TX9TZCTW4E%2FLogo%2FScreenshot%202025-05-07%20at%2010.35.21%E2%80%AFAM.png"
+  },
+  {
+    "id": "g-brands",
+    "name": "G-Brands",
+    "emoji": "👓",
+    "category": "Electronics",
+    "imageUrl": "https://platform.grovara.com/api/files/public%2Faccounts%2F01K9JTRTF2GGZA476G6B7G25HX%2FLogo%2Foutput-onlinepngtools.png"
+  },
+  {
+    "id": "ultratech-labs",
+    "name": "Ultratech Labs",
+    "emoji": "🧼",
+    "category": "Homegoods",
+    "imageUrl": "https://platform.grovara.com/api/files/public%2Faccounts%2F01K9JTX0QCT363S282MXX7P5G2%2Fassets%2Flogo%2Fqt%3Dq_95.webp"
+  },
+  {
+    "id": "doritos",
+    "name": "Doritos",
+    "emoji": "🌽",
+    "category": "Food",
+    "imageUrl": ""
+  }
+]
