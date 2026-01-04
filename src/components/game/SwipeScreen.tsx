@@ -1,10 +1,39 @@
 import { useState, useMemo } from 'react';
 import { motion, AnimatePresence, PanInfo } from 'framer-motion';
 import { useGame } from '@/context/GameContext';
-import { GROVARA_BRANDS } from '@/data/brands';
+import realBrandsData from '@/data/realBrands.json';
 import { Heart, X, ArrowRight, Sparkles } from 'lucide-react';
 
 const SWIPE_THRESHOLD = 100;
+
+type SwipeBrand = {
+  id: string;
+  name: string;
+  description: string;
+  category: string;
+  imageUrl: string;
+  color: string;
+  emoji?: string;
+};
+
+const BRAND_COLORS = ['#10B981', '#22D3EE', '#8B5CF6', '#F59E0B', '#EC4899', '#3B82F6'];
+
+const buildBrands = (): SwipeBrand[] => {
+  return realBrandsData.map((brand: any, idx: number) => {
+    const color = BRAND_COLORS[idx % BRAND_COLORS.length];
+    return {
+      id: brand.id,
+      name: brand.name,
+      description: brand.description || `Explore ${brand.name} on Grovara`,
+      category: brand.category || 'Brand',
+      imageUrl: brand.imageUrl,
+      color,
+      emoji: brand.emoji,
+    };
+  });
+};
+
+const REAL_BRANDS = buildBrands();
 
 export const SwipeScreen = () => {
   const { gameState, recordSwipe, nextLevel } = useGame();
@@ -13,8 +42,8 @@ export const SwipeScreen = () => {
 
   // Select brands for this level
   const levelBrands = useMemo(() => {
-    const startIdx = ((gameState.currentLevel - 1) * 3) % GROVARA_BRANDS.length;
-    return GROVARA_BRANDS.slice(startIdx, startIdx + 3);
+    const startIdx = ((gameState.currentLevel - 1) * 3) % REAL_BRANDS.length;
+    return REAL_BRANDS.slice(startIdx, startIdx + 3);
   }, [gameState.currentLevel]);
 
   const currentBrand = levelBrands[currentIndex];
@@ -128,17 +157,29 @@ export const SwipeScreen = () => {
               className="absolute w-full cursor-grab active:cursor-grabbing"
             >
               <div className="bg-card rounded-3xl overflow-hidden card-swipe">
-                {/* Brand image placeholder */}
+                {/* Brand image */}
                 <div 
-                  className="h-56 flex items-center justify-center"
+                  className="h-56 flex items-center justify-center bg-muted/40 relative"
                   style={{ backgroundColor: currentBrand.color + '20' }}
                 >
-                  <div 
-                    className="w-32 h-32 rounded-2xl flex items-center justify-center text-6xl"
-                    style={{ backgroundColor: currentBrand.color + '30' }}
-                  >
-                    🌱
+                  <div className="absolute top-3 right-3 text-2xl" aria-hidden>
+                    {currentBrand.emoji}
                   </div>
+                  {currentBrand.imageUrl ? (
+                    <img
+                      src={currentBrand.imageUrl}
+                      alt={currentBrand.name}
+                      className="max-h-44 max-w-[75%] object-contain drop-shadow-lg"
+                      loading="lazy"
+                    />
+                  ) : (
+                    <div 
+                      className="w-32 h-32 rounded-2xl flex items-center justify-center text-6xl"
+                      style={{ backgroundColor: currentBrand.color + '30' }}
+                    >
+                      {currentBrand.emoji}
+                    </div>
+                  )}
                 </div>
                 
                 {/* Brand info */}
