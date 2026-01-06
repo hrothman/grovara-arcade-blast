@@ -1,9 +1,18 @@
+import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { useGame } from '@/context/GameContext';
-import { Zap, Target, Medal } from 'lucide-react';
+import { Zap, Target, Medal, Download } from 'lucide-react';
+import { getCurrentUser } from '@/lib/leaderboardManager';
 
 export const WelcomeScreen = () => {
-  const { startGame, goToSwipe, goToLeaderboard } = useGame();
+  const { startGame, goToSwipe, goToLeaderboard, goToLoadProgress } = useGame();
+  const [currentUser, setCurrentUser] = useState<{ username: string; email?: string } | null>(null);
+
+  useEffect(() => {
+    // Check if user is already logged in
+    const user = getCurrentUser();
+    setCurrentUser(user);
+  }, []);
 
   return (
     <div className="min-h-screen gradient-arcade flex flex-col items-center justify-center p-6 relative overflow-hidden">
@@ -132,6 +141,21 @@ export const WelcomeScreen = () => {
             <Medal className="w-4 h-4" />
             View Leaderboard
           </motion.button>
+
+          {!currentUser && (
+            <motion.button
+              initial={{ opacity: 0, scale: 0.9 }}
+              animate={{ opacity: 1, scale: 1 }}
+              transition={{ delay: 1.1, type: 'spring' }}
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
+              onClick={goToLoadProgress}
+              className="text-sm w-full max-w-xs flex items-center justify-center gap-2 py-2 text-muted-foreground hover:text-foreground transition-colors"
+            >
+              <Download className="w-4 h-4" />
+              Continue Progress
+            </motion.button>
+          )}
         </div>
 
         {/* Footer */}

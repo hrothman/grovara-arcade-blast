@@ -38,7 +38,7 @@ const REAL_BRANDS = buildItems(realBrandsData);
 const BUYERS = buildItems(buyersData);
 
 export const SwipeScreen = () => {
-  const { gameState, recordSwipe, nextLevel } = useGame();
+  const { gameState, recordSwipe, goToSwipeSummary } = useGame();
   const [currentIndex, setCurrentIndex] = useState(0);
   const [swipeDirection, setSwipeDirection] = useState<'left' | 'right' | null>(null);
 
@@ -90,19 +90,16 @@ export const SwipeScreen = () => {
           </h2>
           
           <p className="text-muted-foreground mb-8">
-            {gameState.currentLevel < 3 
-              ? "Ready for the next level?"
-              : "You've completed all levels!"
-            }
+            See your matches and get follow-up information
           </p>
 
           <motion.button
             whileHover={{ scale: 1.05 }}
             whileTap={{ scale: 0.95 }}
-            onClick={nextLevel}
+            onClick={goToSwipeSummary}
             className="btn-arcade text-lg flex items-center justify-center gap-3 mx-auto"
           >
-            {gameState.currentLevel < 3 ? 'NEXT LEVEL' : 'SEE RESULTS'}
+            VIEW MATCHES
             <ArrowRight className="w-5 h-5" />
           </motion.button>
         </motion.div>

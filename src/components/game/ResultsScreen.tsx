@@ -5,8 +5,7 @@ import { GROVARA_BRANDS } from '@/data/brands';
 import { Trophy, Heart, User, RefreshCw, Share2, Check, Medal } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { toast } from 'sonner';
-import leaderboardData from '@/data/leaderboard.json';
-import { savePlayerAccount, checkUsernameAvailable } from '@/lib/leaderboardManager';
+import { savePlayerAccount, checkUsernameAvailable, getMergedLeaderboard, setCurrentUser } from '@/lib/leaderboardManager';
 
 export const ResultsScreen = () => {
   const { gameState, resetGame, getAnalytics } = useGame();
@@ -15,6 +14,7 @@ export const ResultsScreen = () => {
   const [savedUsername, setSavedUsername] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [username] = useState(`user${Math.floor(Math.random() * 10000000)}`);
+  const [leaderboard, setLeaderboard] = useState<Array<{ username: string; score: number }>>([]);
   const leaderboardRef = useRef<HTMLDivElement>(null);
   const playerRowRef = useRef<HTMLDivElement>(null);
 
@@ -28,13 +28,24 @@ export const ResultsScreen = () => {
   // Use saved username if available, otherwise use temporary one
   const displayUsername = savedUsername || username;
 
-  // Merge player score into leaderboard and sort
-  const fullLeaderboard = [
-    ...leaderboardData,
-    { username: displayUsername, score: gameState.totalScore }
-  ].sort((a, b) => b.score - a.score);
+  // Load merged leaderboard on mount and when account is created
+  useEffect(() => {
+    const loadLeaderboard = async () => {
+      const merged = await getMergedLeaderboard();
+      // Only add current player if not already in merged leaderboard (new temporary player)
+      const playerExists = merged.some(entry => entry.username === displayUsername);
+      const withPlayer = playerExists
+        ? merged
+        : [
+            ...merged,
+            { username: displayUsername, score: gameState.totalScore }
+          ];
+      setLeaderboard(withPlayer.sort((a, b) => b.score - a.score));
+    };
+    loadLeaderboard();
+  }, [displayUsername, gameState.totalScore, accountCreated]);
 
-  const playerRank = fullLeaderboard.findIndex(entry => entry.username === displayUsername) + 1;
+  const playerRank = leaderboard.findIndex(entry => entry.username === displayUsername) + 1;
 
   // Auto-scroll to player position with acceleration
   useEffect(() => {
@@ -83,6 +94,9 @@ export const ResultsScreen = () => {
       // Save account with matched brand IDs
       const matchedBrandIds = matchedBrands.map(b => b?.id).filter(Boolean) as string[];
       await savePlayerAccount(usernameInput, gameState.totalScore, matchedBrandIds);
+
+      // Set current user session
+      setCurrentUser(usernameInput);
 
       setSavedUsername(usernameInput);
       setAccountCreated(true);
@@ -180,7 +194,7 @@ export const ResultsScreen = () => {
             ref={leaderboardRef}
             className="max-h-40 overflow-y-auto space-y-1 pr-2 custom-scrollbar"
           >
-            {fullLeaderboard.map((entry, idx) => {
+            {leaderboard.map((entry, idx) => {
               const isPlayer = entry.username === displayUsername;
               const rank = idx + 1;
               

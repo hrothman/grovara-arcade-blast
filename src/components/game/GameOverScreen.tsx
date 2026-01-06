@@ -2,21 +2,35 @@ import { useState, useEffect, useRef } from 'react';
 import { motion } from 'framer-motion';
 import { useGame } from '@/context/GameContext';
 import { Frown, RefreshCw, Medal } from 'lucide-react';
-import leaderboardData from '@/data/leaderboard.json';
+import { getMergedLeaderboard, getCurrentUser } from '@/lib/leaderboardManager';
 
 export const GameOverScreen = () => {
   const { gameState, resetGame, goToSwipe } = useGame();
   const [username] = useState(`user${Math.floor(Math.random() * 10000000)}`);
+  const [leaderboard, setLeaderboard] = useState<Array<{ username: string; score: number }>>([]);
   const leaderboardRef = useRef<HTMLDivElement>(null);
   const playerRowRef = useRef<HTMLDivElement>(null);
 
-  // Merge player score into leaderboard and sort
-  const fullLeaderboard = [
-    ...leaderboardData,
-    { username, score: gameState.totalScore }
-  ].sort((a, b) => b.score - a.score);
+  // Load merged leaderboard on mount
+  useEffect(() => {
+    const loadLeaderboard = async () => {
+      const currentUser = getCurrentUser();
+      const merged = await getMergedLeaderboard();
+      const displayUsername = currentUser?.username || username;
+      // Only add temporary player if not logged in
+      const withPlayer = currentUser
+        ? merged
+        : [
+            ...merged,
+            { username: displayUsername, score: gameState.totalScore }
+          ];
+      setLeaderboard(withPlayer.sort((a, b) => b.score - a.score));
+    };
+    loadLeaderboard();
+  }, [username, gameState.totalScore]);
 
-  const playerRank = fullLeaderboard.findIndex(entry => entry.username === username) + 1;
+  const displayUsername = getCurrentUser()?.username || username;
+  const playerRank = leaderboard.findIndex(entry => entry.username === displayUsername) + 1;
 
   // Auto-scroll to player position with acceleration
   useEffect(() => {
@@ -98,8 +112,8 @@ export const GameOverScreen = () => {
             ref={leaderboardRef}
             className="max-h-64 overflow-y-auto space-y-1 pr-2 custom-scrollbar"
           >
-            {fullLeaderboard.map((entry, idx) => {
-              const isPlayer = entry.username === username;
+            {leaderboard.map((entry, idx) => {
+              const isPlayer = entry.username === displayUsername;
               const rank = idx + 1;
               
               return (

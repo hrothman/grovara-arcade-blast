@@ -2,10 +2,12 @@ import { WelcomeScreen } from './WelcomeScreen';
 import { GameCanvas } from './GameCanvas';
 import { LevelCompleteScreen } from './LevelCompleteScreen';
 import { SwipeScreen } from './SwipeScreen';
+import { SwipeSummaryScreen } from './SwipeSummaryScreen';
 import { GameOverScreen } from './GameOverScreen';
 import { ResultsScreen } from './ResultsScreen';
 import { UserTypeSelectionScreen } from './UserTypeSelectionScreen';
 import { LeaderboardScreen } from './LeaderboardScreen';
+import { LoadProgressScreen } from './LoadProgressScreen';
 import { useGame } from '@/context/GameContext';
 import { AnimatePresence, motion } from 'framer-motion';
 
@@ -24,12 +26,16 @@ export const GameContainer = () => {
         return <UserTypeSelectionScreen />;
       case 'swipe':
         return <SwipeScreen />;
+      case 'swipeSummary':
+        return <SwipeSummaryScreen />;
       case 'gameOver':
         return <GameOverScreen />;
       case 'results':
         return <ResultsScreen />;
       case 'leaderboard':
         return <LeaderboardScreen />;
+      case 'loadProgress':
+        return <LoadProgressScreen />;
       default:
         return <WelcomeScreen />;
     }

@@ -11,6 +11,8 @@ interface GameContextType {
   goToSwipe: () => void;
   goToResults: () => void;
   goToLeaderboard: () => void;
+  goToSwipeSummary: () => void;
+  goToLoadProgress: () => void;
   resetGame: () => void;
   addScore: (points: number) => void;
   loseLife: () => void;
@@ -151,6 +153,20 @@ export const GameProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     }));
   }, []);
 
+  const goToSwipeSummary = useCallback(() => {
+    setGameState(prev => ({
+      ...prev,
+      currentScreen: 'swipeSummary',
+    }));
+  }, []);
+
+  const goToLoadProgress = useCallback(() => {
+    setGameState(prev => ({
+      ...prev,
+      currentScreen: 'loadProgress',
+    }));
+  }, []);
+
   const resetGame = useCallback(() => {
     setGameState({
       currentScreen: 'welcome',
@@ -195,6 +211,8 @@ export const GameProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         goToSwipe,
         goToResults,
         goToLeaderboard,
+        goToSwipeSummary,
+        goToLoadProgress,
         resetGame,
         addScore,
         loseLife,

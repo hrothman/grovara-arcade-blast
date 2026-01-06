@@ -81,7 +81,7 @@ export const ENEMY_LABELS = [
   { id: 'pdf', label: 'PDF Catalogs', emoji: '📄', imageUrl: '/enemies/pdf.png' },
   { id: 'spreadsheet', label: 'Spreadsheets', emoji: '📊', imageUrl: '/enemies/spreadsheet.png' },
   { id: 'fax', label: 'Fax Machines', emoji: '📠', imageUrl: '/enemies/printer.png' },
-  { id: 'broker', label: 'Old Brokers', emoji: '👔', imageUrl: '/enemies/broker.png' },
+  { id: 'broker', label: 'Broker Jokers', emoji: '👔', imageUrl: '/enemies/broker.png' },
   { id: 'paperwork', label: 'Paperwork', emoji: '📋', imageUrl: '/enemies/paperwork.png' },
   { id: 'mail', label: 'Mail', emoji: '📋', imageUrl: '/enemies/letter.png' },
   { id: 'email-chain', label: 'Email Chains', emoji: '📧', imageUrl: '/enemies/email.png' },

@@ -2,22 +2,42 @@ import { useState, useEffect, useRef } from 'react';
 import { motion } from 'framer-motion';
 import { useGame } from '@/context/GameContext';
 import { Trophy, Star, ArrowRight, Sparkles, Medal } from 'lucide-react';
-import leaderboardData from '@/data/leaderboard.json';
+import { getMergedLeaderboard, getCurrentUser, updatePlayerScore } from '@/lib/leaderboardManager';
 
 export const LevelCompleteScreen = () => {
   const { gameState, goToSwipe, nextLevel } = useGame();
   const currentLevelData = gameState.levels[gameState.levels.length - 1];
   const [username] = useState(`user${Math.floor(Math.random() * 10000000)}`);
+  const [leaderboard, setLeaderboard] = useState<Array<{ username: string; score: number }>>([]);
   const leaderboardRef = useRef<HTMLDivElement>(null);
   const playerRowRef = useRef<HTMLDivElement>(null);
 
-  // Merge player score into leaderboard and sort
-  const fullLeaderboard = [
-    ...leaderboardData,
-    { username, score: gameState.totalScore }
-  ].sort((a, b) => b.score - a.score);
+  // Update score if user is logged in, then load leaderboard
+  useEffect(() => {
+    const loadAndUpdateLeaderboard = async () => {
+      // If user is logged in, update their score
+      const currentUser = getCurrentUser();
+      if (currentUser) {
+        await updatePlayerScore(currentUser.username, gameState.totalScore);
+      }
 
-  const playerRank = fullLeaderboard.findIndex(entry => entry.username === username) + 1;
+      const merged = await getMergedLeaderboard();
+      // Only add temporary player if not logged in (logged-in user is already in merged leaderboard)
+      const displayUsername = currentUser?.username || username;
+      const withPlayer = currentUser 
+        ? merged
+        : [
+            ...merged,
+            { username: displayUsername, score: gameState.totalScore }
+          ];
+      setLeaderboard(withPlayer.sort((a, b) => b.score - a.score));
+    };
+    loadAndUpdateLeaderboard();
+  }, [username, gameState.totalScore]);
+
+  // Get the correct username to display (logged in user or temporary)
+  const displayUsername = getCurrentUser()?.username || username;
+  const playerRank = leaderboard.findIndex(entry => entry.username === displayUsername) + 1;
 
   // Auto-scroll to player position with acceleration
   useEffect(() => {
@@ -47,24 +67,24 @@ export const LevelCompleteScreen = () => {
   }, []);
 
   return (
-    <div className="min-h-screen gradient-arcade flex flex-col items-center justify-center p-6 relative overflow-hidden">
+    <div className="min-h-screen gradient-arcade flex flex-col items-center justify-center p-4 sm:p-6 relative overflow-hidden">
       <div className="absolute inset-0 gradient-radial-glow" />
       
       <motion.div
         initial={{ opacity: 0, scale: 0.8 }}
         animate={{ opacity: 1, scale: 1 }}
         transition={{ type: 'spring', duration: 0.6 }}
-        className="relative z-10 text-center max-w-md mx-auto w-full"
+        className="relative z-10 text-center max-w-md mx-auto w-full max-h-[calc(100vh-40px)] overflow-y-auto flex flex-col"
       >
         {/* Success icon */}
         <motion.div
           initial={{ scale: 0 }}
           animate={{ scale: 1 }}
           transition={{ delay: 0.2, type: 'spring', stiffness: 200 }}
-          className="mb-4"
+          className="mb-2"
         >
-          <div className="inline-flex items-center justify-center w-20 h-20 bg-primary/20 rounded-full neon-border">
-            <Trophy className="w-10 h-10 text-primary" />
+          <div className="inline-flex items-center justify-center w-16 h-16 bg-primary/20 rounded-full neon-border">
+            <Trophy className="w-8 h-8 text-primary" />
           </div>
         </motion.div>
 
@@ -72,7 +92,7 @@ export const LevelCompleteScreen = () => {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.3 }}
-          className="arcade-text text-3xl font-bold text-foreground neon-glow mb-8"
+          className="arcade-text text-2xl font-bold text-foreground neon-glow mb-4"
         >
           LEVEL {gameState.currentLevel} COMPLETE!
         </motion.h2>
@@ -82,25 +102,25 @@ export const LevelCompleteScreen = () => {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.5 }}
-          className="bg-card/50 backdrop-blur-sm rounded-2xl p-6 mb-6 neon-border"
+          className="bg-card/50 backdrop-blur-sm rounded-xl p-4 mb-4 neon-border text-sm"
         >
-          <div className="flex items-center justify-center gap-2 mb-4">
-            <Star className="w-5 h-5 text-warning fill-warning" />
-            <span className="arcade-text text-sm text-muted-foreground">Level Stats</span>
-            <Star className="w-5 h-5 text-warning fill-warning" />
+          <div className="flex items-center justify-center gap-2 mb-3">
+            <Star className="w-4 h-4 text-warning fill-warning" />
+            <span className="arcade-text text-xs text-muted-foreground">Level Stats</span>
+            <Star className="w-4 h-4 text-warning fill-warning" />
           </div>
           
-          <div className="space-y-4">
+          <div className="space-y-2">
             <div className="flex justify-between items-center">
-              <span className="text-muted-foreground">Score</span>
-              <span className="arcade-text text-2xl text-warning score-glow">
+              <span className="text-muted-foreground text-xs">Score</span>
+              <span className="arcade-text text-lg text-warning score-glow">
                 {currentLevelData?.score?.toLocaleString() || 0}
               </span>
             </div>
             <div className="h-px bg-border" />
             <div className="flex justify-between items-center">
-              <span className="text-muted-foreground">Total Score</span>
-              <span className="arcade-text text-lg text-foreground">
+              <span className="text-muted-foreground text-xs">Total</span>
+              <span className="arcade-text text-base text-foreground">
                 {gameState.totalScore.toLocaleString()}
               </span>
             </div>
@@ -112,35 +132,35 @@ export const LevelCompleteScreen = () => {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.7 }}
-          className="bg-card/50 backdrop-blur-sm rounded-2xl p-6 mb-8 neon-border w-full"
+          className="bg-card/50 backdrop-blur-sm rounded-xl p-4 mb-4 neon-border w-full flex-1 min-h-0 flex flex-col"
         >
-          <div className="flex items-center gap-2 mb-4 justify-center">
-            <Medal className="w-5 h-5 text-warning" />
-            <h2 className="font-semibold text-foreground">Leaderboard</h2>
-            <span className="text-sm text-muted-foreground">
-              Rank #{playerRank}
+          <div className="flex items-center gap-2 mb-2 justify-center">
+            <Medal className="w-4 h-4 text-warning" />
+            <h2 className="font-semibold text-foreground text-sm">Leaderboard</h2>
+            <span className="text-xs text-muted-foreground">
+              #{playerRank}
             </span>
           </div>
 
           <div 
             ref={leaderboardRef}
-            className="max-h-64 overflow-y-auto space-y-1 pr-2 custom-scrollbar"
+            className="flex-1 min-h-0 overflow-y-auto space-y-1 pr-2 custom-scrollbar"
           >
-            {fullLeaderboard.map((entry, idx) => {
-              const isPlayer = entry.username === username;
+            {leaderboard.map((entry, idx) => {
+              const isPlayer = entry.username === displayUsername;
               const rank = idx + 1;
               
               return (
                 <div
                   key={entry.username}
                   ref={isPlayer ? playerRowRef : null}
-                  className={`flex items-center gap-3 p-3 rounded-lg transition-all ${
+                  className={`flex items-center gap-3 p-2 rounded-lg transition-all text-xs ${
                     isPlayer 
                       ? 'bg-primary/20 border-2 border-primary' 
                       : 'bg-background/50 hover:bg-background/70'
                   }`}
                 >
-                  <span className={`arcade-text text-sm w-8 text-center ${
+                  <span className={`arcade-text text-xs w-6 text-center ${
                     rank === 1 ? 'text-warning' :
                     rank === 2 ? 'text-muted-foreground' :
                     rank === 3 ? 'text-orange-400' :
@@ -169,15 +189,15 @@ export const LevelCompleteScreen = () => {
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ delay: 0.9 }}
-          className="mb-6"
+          className="mb-3"
         >
           <div className="flex items-center justify-center gap-2 text-primary">
-            <Sparkles className="w-5 h-5" />
-            <p className="text-lg font-medium">Discover amazing brands!</p>
-            <Sparkles className="w-5 h-5" />
+            <Sparkles className="w-4 h-4" />
+            <p className="text-sm font-medium">Discover amazing brands!</p>
+            <Sparkles className="w-4 h-4" />
           </div>
-          <p className="text-muted-foreground text-sm mt-2">
-            Swipe right on brands you'd like to learn more about
+          <p className="text-muted-foreground text-xs mt-1">
+            Swipe right on brands you're interested in
           </p>
         </motion.div>
 
@@ -190,10 +210,10 @@ export const LevelCompleteScreen = () => {
             whileHover={{ scale: 1.05 }}
             whileTap={{ scale: 0.95 }}
             onClick={goToSwipe}
-            className="btn-arcade text-lg px-8 flex items-center justify-center gap-3"
+            className="btn-arcade text-base px-6 py-2 flex items-center justify-center gap-2"
           >
             DISCOVER BRANDS
-            <ArrowRight className="w-5 h-5" />
+            <ArrowRight className="w-4 h-4" />
           </motion.button>
         </div>
       </motion.div>

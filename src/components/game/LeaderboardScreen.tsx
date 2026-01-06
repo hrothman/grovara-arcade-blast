@@ -1,10 +1,20 @@
+import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { Medal, ArrowLeft } from 'lucide-react';
-import leaderboardData from '@/data/leaderboard.json';
+import { getMergedLeaderboard } from '@/lib/leaderboardManager';
 import { useGame } from '@/context/GameContext';
 
 export const LeaderboardScreen = () => {
   const { resetGame } = useGame();
+  const [leaderboard, setLeaderboard] = useState<Array<{ username: string; score: number }>>([]);
+
+  useEffect(() => {
+    const loadLeaderboard = async () => {
+      const merged = await getMergedLeaderboard();
+      setLeaderboard(merged);
+    };
+    loadLeaderboard();
+  }, []);
 
   const goBack = () => {
     resetGame();
@@ -64,10 +74,10 @@ export const LeaderboardScreen = () => {
               <div className="text-4xl mb-2">🥈</div>
               <div className="text-xs text-muted-foreground mb-1">2nd</div>
               <div className="font-medium text-foreground text-sm text-center">
-                {leaderboardData[1].username}
+                {leaderboard[1]?.username || 'N/A'}
               </div>
               <div className="arcade-text text-warning text-sm mt-1">
-                {leaderboardData[1].score.toLocaleString()}
+                {leaderboard[1]?.score.toLocaleString() || '0'}
               </div>
             </motion.div>
 
@@ -81,10 +91,10 @@ export const LeaderboardScreen = () => {
               <div className="text-5xl mb-2">🏆</div>
               <div className="text-xs text-warning mb-1">1st</div>
               <div className="font-bold text-foreground text-center">
-                {leaderboardData[0].username}
+                {leaderboard[0]?.username || 'N/A'}
               </div>
               <div className="arcade-text text-warning text-lg mt-1">
-                {leaderboardData[0].score.toLocaleString()}
+                {leaderboard[0]?.score.toLocaleString() || '0'}
               </div>
             </motion.div>
 
@@ -98,17 +108,17 @@ export const LeaderboardScreen = () => {
               <div className="text-3xl mb-2">🥉</div>
               <div className="text-xs text-muted-foreground mb-1">3rd</div>
               <div className="font-medium text-foreground text-xs text-center">
-                {leaderboardData[2].username}
+                {leaderboard[2]?.username || 'N/A'}
               </div>
               <div className="arcade-text text-orange-400 text-sm mt-1">
-                {leaderboardData[2].score.toLocaleString()}
+                {leaderboard[2]?.score.toLocaleString() || '0'}
               </div>
             </motion.div>
           </div>
 
           {/* Full Leaderboard List */}
           <div className="max-h-96 overflow-y-auto space-y-1 pr-2 custom-scrollbar">
-            {leaderboardData.map((entry, idx) => {
+            {leaderboard.map((entry, idx) => {
               const rank = idx + 1;
               
               return (

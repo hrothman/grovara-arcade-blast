@@ -31,10 +31,13 @@ export const GameCanvas = () => {
   const { gameState, addScore, loseLife, completeLevel } = useGame();
   const [displayScore, setDisplayScore] = useState(0);
   const [hitFeedback, setHitFeedback] = useState<{ type: 'enemy' | 'friendly' | null; points: number; x: number; y: number }>({ type: null, points: 0, x: 0, y: 0 });
-  const [timeLeft, setTimeLeft] = useState(0);
-  const [targetsHit, setTargetsHit] = useState({ enemies: 0, friendlies: 0 });
+ 
   
   const levelConfig = LEVEL_CONFIG[gameState.currentLevel as keyof typeof LEVEL_CONFIG] || LEVEL_CONFIG[1];
+  const levelStartScore = useRef(gameState.totalScore);
+
+  const [timeLeft, setTimeLeft] = useState(LEVEL_CONFIG[gameState.currentLevel as keyof typeof LEVEL_CONFIG]?.duration / 1000 || 10);
+  const [targetsHit, setTargetsHit] = useState({ enemies: 0, friendlies: 0 });
 
   const showHitFeedback = useCallback((type: 'enemy' | 'friendly', points: number, x: number, y: number) => {
     if (!isMountedRef.current) return;
@@ -49,6 +52,9 @@ export const GameCanvas = () => {
 
   useEffect(() => {
     if (!gameContainerRef.current) return;
+
+    // Update the starting score for this level whenever we enter
+    levelStartScore.current = gameState.totalScore;
 
     // Store timeout IDs for cleanup
     const timeoutIds: NodeJS.Timeout[] = [];
@@ -356,9 +362,11 @@ export const GameCanvas = () => {
               // Complete level only if still on the game screen and component is mounted
               const timeoutId = setTimeout(() => {
                 if (isMountedRef.current && gameState.currentScreen === 'game') {
+                  // Calculate level score as the difference in totalScore during this level
+                  const levelScore = gameState.totalScore - levelStartScore.current;
                   completeLevel({
                     level: gameState.currentLevel,
-                    score: displayScore,
+                    score: Math.max(levelScore, 0),
                     accuracy: 0,
                     completed: true,
                     enemiesHit: 0,
