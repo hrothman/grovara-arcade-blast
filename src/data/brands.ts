@@ -68,19 +68,21 @@ export const GROVARA_BRANDS: Brand[] = [
   },
 ];
 
-// Real brands from Grovara marketplace - these are the "enemies" to shoot
-export const ENEMY_LABELS = realBrandsData.map(brand => ({
+// Real brands from Grovara marketplace - these are the "friendlies" (good guys - do not shoot)
+export const FRIENDLY_LABELS = realBrandsData.map(brand => ({
   id: brand.id,
   label: brand.name,
   emoji: brand.emoji,
   imageUrl: brand.imageUrl,
 }));
 
-export const FRIENDLY_LABELS = [
-  { id: 'pdf', label: 'PDF Catalogs', emoji: '📄' },
-  { id: 'spreadsheet', label: 'Spreadsheets', emoji: '📊' },
-  { id: 'fax', label: 'Fax Machines', emoji: '📠' },
-  { id: 'broker', label: 'Old Brokers', emoji: '👔' },
-  { id: 'paperwork', label: 'Paperwork', emoji: '📋' },
-  { id: 'email-chain', label: 'Email Chains', emoji: '📧' },
+// Old outdated tools and methods - these are the "enemies" (bad guys - do shoot)
+export const ENEMY_LABELS = [
+  { id: 'pdf', label: 'PDF Catalogs', emoji: '📄', imageUrl: '/enemies/pdf.png' },
+  { id: 'spreadsheet', label: 'Spreadsheets', emoji: '📊', imageUrl: '/enemies/spreadsheet.png' },
+  { id: 'fax', label: 'Fax Machines', emoji: '📠', imageUrl: '/enemies/printer.png' },
+  { id: 'broker', label: 'Old Brokers', emoji: '👔', imageUrl: '/enemies/broker.png' },
+  { id: 'paperwork', label: 'Paperwork', emoji: '📋', imageUrl: '/enemies/paperwork.png' },
+  { id: 'mail', label: 'Mail', emoji: '📋', imageUrl: '/enemies/letter.png' },
+  { id: 'email-chain', label: 'Email Chains', emoji: '📧', imageUrl: '/enemies/email.png' },
 ];

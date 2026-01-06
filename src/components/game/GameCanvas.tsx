@@ -19,29 +19,39 @@ interface GameTarget {
 }
 
 const LEVEL_CONFIG = {
-  1: { enemies: 15, friendlies: 7, speed: 1, duration: 30000, targetLifeMin: 3000, targetLifeMax: 5000 },
-  2: { enemies: 25, friendlies: 12, speed: 1.3, duration: 35000, targetLifeMin: 2500, targetLifeMax: 4000 },
-  3: { enemies: 35, friendlies: 17, speed: 1.6, duration: 40000, targetLifeMin: 2000, targetLifeMax: 3500 },
+  1: { enemies: 20, friendlies: 10, speed: 1, duration: 10000, targetLifeMin: 3000, targetLifeMax: 5000 },
+  2: { enemies: 30, friendlies: 15, speed: 1.3, duration: 15000, targetLifeMin: 2500, targetLifeMax: 4000 },
+  3: { enemies: 50, friendlies: 25, speed: 1.6, duration: 20000, targetLifeMin: 2000, targetLifeMax: 3500 },
 };
 
 export const GameCanvas = () => {
   const gameContainerRef = useRef<HTMLDivElement>(null);
   const phaserGameRef = useRef<Phaser.Game | null>(null);
+  const isMountedRef = useRef(true);
   const { gameState, addScore, loseLife, completeLevel } = useGame();
   const [displayScore, setDisplayScore] = useState(0);
   const [hitFeedback, setHitFeedback] = useState<{ type: 'enemy' | 'friendly' | null; points: number; x: number; y: number }>({ type: null, points: 0, x: 0, y: 0 });
-  const [timeLeft, setTimeLeft] = useState(30);
+  const [timeLeft, setTimeLeft] = useState(0);
   const [targetsHit, setTargetsHit] = useState({ enemies: 0, friendlies: 0 });
   
   const levelConfig = LEVEL_CONFIG[gameState.currentLevel as keyof typeof LEVEL_CONFIG] || LEVEL_CONFIG[1];
 
   const showHitFeedback = useCallback((type: 'enemy' | 'friendly', points: number, x: number, y: number) => {
+    if (!isMountedRef.current) return;
     setHitFeedback({ type, points, x, y });
-    setTimeout(() => setHitFeedback({ type: null, points: 0, x: 0, y: 0 }), 800);
+    const timeoutId = setTimeout(() => {
+      if (isMountedRef.current) {
+        setHitFeedback({ type: null, points: 0, x: 0, y: 0 });
+      }
+    }, 800);
+    return timeoutId;
   }, []);
 
   useEffect(() => {
     if (!gameContainerRef.current) return;
+
+    // Store timeout IDs for cleanup
+    const timeoutIds: NodeJS.Timeout[] = [];
 
     const config: Phaser.Types.Core.GameConfig = {
       type: Phaser.AUTO,
@@ -49,6 +59,12 @@ export const GameCanvas = () => {
       width: window.innerWidth,
       height: window.innerHeight - 120,
       transparent: true,
+      scale: {
+        mode: Phaser.Scale.FIT,
+        autoCenter: Phaser.Scale.CENTER_BOTH,
+        expandParent: true,
+        resizeInterval: 200,
+      },
       physics: {
         default: 'arcade',
         arcade: {
@@ -57,6 +73,23 @@ export const GameCanvas = () => {
         },
       },
       scene: {
+        preload: function(this: Phaser.Scene) {
+          const scene = this;
+          
+          // Preload enemy images
+          ENEMY_LABELS.forEach(enemy => {
+            if (enemy.imageUrl) {
+              scene.load.image(enemy.id, enemy.imageUrl);
+            }
+          });
+          
+          // Preload friendly images
+          FRIENDLY_LABELS.forEach(friendly => {
+            if (friendly.imageUrl) {
+              scene.load.image(friendly.id, friendly.imageUrl);
+            }
+          });
+        },
         create: function(this: Phaser.Scene) {
           const scene = this;
           const targets: GameTarget[] = [];
@@ -73,31 +106,71 @@ export const GameCanvas = () => {
             const height = scene.scale.height;
             
             // Spawn at random location within the screen (with margin from edges)
-            const margin = 80; // Keep targets away from edges
-            const x = margin + Math.random() * (width - 2 * margin);
-            const y = margin + Math.random() * (height - 2 * margin);
+            // Larger top margin to avoid UI elements (HUD and score/timer)
+            const marginSides = 80; // Side margins
+            const marginTop = 140; // Top margin to clear UI
+            const marginBottom = 80; // Bottom margin
+            const minDistance = 120; // Minimum distance between entities
+            
+            // Try to find a non-overlapping position
+            let x, y;
+            let attempts = 0;
+            const maxAttempts = 20;
+            let validPosition = false;
+            
+            while (!validPosition && attempts < maxAttempts) {
+              x = marginSides + Math.random() * (width - 2 * marginSides);
+              y = marginTop + Math.random() * (height - marginTop - marginBottom);
+              
+              // Check if this position overlaps with existing targets
+              validPosition = !targets.some(target => {
+                const dx = target.x - x;
+                const dy = target.y - y;
+                const distance = Math.sqrt(dx * dx + dy * dy);
+                return distance < minDistance;
+              });
+              
+              attempts++;
+            }
+            
+            // If we couldn't find a valid position after max attempts, skip spawning this entity
+            if (!validPosition) return;
 
             const container = scene.add.container(x, y);
             
-            // Background circle
-            const bgColor = isEnemy ? 0xff4444 : 0x44ff88;
-            const bg = scene.add.circle(0, 0, 45, bgColor, 0.9);
-            bg.setStrokeStyle(3, isEnemy ? 0xff0000 : 0x00ff66);
+            // Create image sprite or fallback to emoji
+            let sprite: Phaser.GameObjects.Image | Phaser.GameObjects.Text;
             
-            // Emoji text
-            const emoji = scene.add.text(0, -5, labelData.emoji, {
-              fontSize: '28px',
-            }).setOrigin(0.5);
+            if (labelData.imageUrl) {
+              sprite = scene.add.image(0, -10, labelData.id);
+              sprite.setDisplaySize(50, 50);
+              sprite.setOrigin(0.5);
+              
+              // Add glow effect only for enemies (outdated business stuff)
+              if (isEnemy) {
+                sprite.setTint(0xff4444); // Red tint for enemies
+                sprite.postFX?.addGlow(0xff4444, 4, 0, false, 0.5, 10);
+              }
+              // Friendlies (brands) have no effect - clean image visibility
+            } else {
+              // Fallback to emoji
+              sprite = scene.add.text(0, -10, labelData.emoji, {
+                fontSize: '40px',
+              }).setOrigin(0.5);
+            }
 
-            // Label
-            const label = scene.add.text(0, 25, labelData.label, {
-              fontSize: '10px',
+            // Label underneath
+            const label = scene.add.text(0, 30, labelData.label, {
+              fontSize: '11px',
               color: '#ffffff',
               fontFamily: 'Inter',
               fontStyle: 'bold',
+              align: 'center',
+              backgroundColor: 'rgba(0, 0, 0, 0.6)',
+              padding: { x: 6, y: 3 },
             }).setOrigin(0.5);
 
-            container.add([bg, emoji, label]);
+            container.add([sprite, label]);
             container.setSize(90, 90);
             container.setInteractive();
 
@@ -258,16 +331,20 @@ export const GameCanvas = () => {
             });
           };
 
-          // Spawn targets
+          // Spawn targets frequently to ensure all entities appear during level
           const spawnInterval = setInterval(() => {
             if (!gameActive) return;
             const isEnemy = Math.random() > 0.25;
             createTarget(isEnemy);
-          }, 1500 / levelConfig.speed);
+          }, 350 / levelConfig.speed);
 
           // Timer
           let timeRemaining = levelConfig.duration / 1000;
           const timerInterval = setInterval(() => {
+            if (!isMountedRef.current) {
+              clearInterval(timerInterval);
+              return;
+            }
             timeRemaining--;
             setTimeLeft(timeRemaining);
             
@@ -276,17 +353,20 @@ export const GameCanvas = () => {
               clearInterval(spawnInterval);
               clearInterval(timerInterval);
               
-              // Complete level
-              setTimeout(() => {
-                completeLevel({
-                  level: gameState.currentLevel,
-                  score: displayScore,
-                  accuracy: 0,
-                  completed: true,
-                  enemiesHit: 0,
-                  friendliesHit: 0,
-                });
+              // Complete level only if still on the game screen and component is mounted
+              const timeoutId = setTimeout(() => {
+                if (isMountedRef.current && gameState.currentScreen === 'game') {
+                  completeLevel({
+                    level: gameState.currentLevel,
+                    score: displayScore,
+                    accuracy: 0,
+                    completed: true,
+                    enemiesHit: 0,
+                    friendliesHit: 0,
+                  });
+                }
               }, 500);
+              timeoutIds.push(timeoutId);
             }
           }, 1000);
 
@@ -303,9 +383,20 @@ export const GameCanvas = () => {
     phaserGameRef.current = new Phaser.Game(config);
 
     return () => {
+      // Mark component as unmounted to prevent state updates
+      isMountedRef.current = false;
+      // Clean up all pending timeouts
+      timeoutIds.forEach(id => clearTimeout(id));
       phaserGameRef.current?.destroy(true);
     };
   }, [gameState.currentLevel, levelConfig, addScore, loseLife, completeLevel, showHitFeedback]);
+
+  // Cleanup mounted flag when component unmounts
+  useEffect(() => {
+    return () => {
+      isMountedRef.current = false;
+    };
+  }, []);
 
   return (
     <div className="min-h-screen bg-arcade-dark relative overflow-hidden">

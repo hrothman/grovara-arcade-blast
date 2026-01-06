@@ -1,9 +1,9 @@
 import { motion } from 'framer-motion';
 import { useGame } from '@/context/GameContext';
-import { Zap, Target, Crosshair } from 'lucide-react';
+import { Zap, Target, Medal } from 'lucide-react';
 
 export const WelcomeScreen = () => {
-  const { startGame, goToSwipe } = useGame();
+  const { startGame, goToSwipe, goToLeaderboard } = useGame();
 
   return (
     <div className="min-h-screen gradient-arcade flex flex-col items-center justify-center p-6 relative overflow-hidden">
@@ -26,8 +26,15 @@ export const WelcomeScreen = () => {
           transition={{ delay: 0.2, type: 'spring', stiffness: 200 }}
           className="mb-8"
         >
-          <div className="inline-flex items-center gap-3 mb-4">
-            <Crosshair className="w-10 h-10 text-primary animate-pulse-neon" />
+          <div className="inline-flex items-center gap-4 mb-4">
+            <img 
+              src="/grovara-logo.svg" 
+              alt="Grovara" 
+              className="w-14 h-14 drop-shadow-lg animate-float"
+              style={{
+                filter: 'drop-shadow(0 0 15px rgba(0, 181, 115, 0.6)) drop-shadow(0 0 25px rgba(0, 171, 158, 0.4))',
+              }}
+            />
             <h1 className="arcade-text text-4xl font-bold text-foreground neon-glow">
               GROVARA
             </h1>
@@ -110,7 +117,20 @@ export const WelcomeScreen = () => {
             className="btn-arcade text-lg w-full max-w-xs flex items-center justify-center gap-3 bg-card/80 hover:bg-card text-foreground"
           >
             <Target className="w-5 h-5" />
-            SWIPE BRANDS
+            SWIPE
+          </motion.button>
+
+          <motion.button
+            initial={{ opacity: 0, scale: 0.9 }}
+            animate={{ opacity: 1, scale: 1 }}
+            transition={{ delay: 1, type: 'spring' }}
+            whileHover={{ scale: 1.05 }}
+            whileTap={{ scale: 0.95 }}
+            onClick={goToLeaderboard}
+            className="text-sm w-full max-w-xs flex items-center justify-center gap-2 py-2 text-muted-foreground hover:text-foreground transition-colors"
+          >
+            <Medal className="w-4 h-4" />
+            View Leaderboard
           </motion.button>
         </div>
 
@@ -121,7 +141,7 @@ export const WelcomeScreen = () => {
           transition={{ delay: 1 }}
           className="mt-8 text-muted-foreground text-xs"
         >
-          Expo West 2024 • Powered by Grovara
+          Expo West 2026 • Powered by Grovara
         </motion.p>
       </motion.div>
     </div>

@@ -7,27 +7,27 @@
 @layer base {
   :root {
     /* Arcade-inspired dark theme with neon accents */
-    --background: 222 47% 8%;
+    --background: 260 40% 7%;
     --foreground: 180 100% 98%;
 
-    --card: 222 47% 12%;
+    --card: 260 40% 11%;
     --card-foreground: 180 100% 98%;
 
-    --popover: 222 47% 10%;
+    --popover: 260 40% 9%;
     --popover-foreground: 180 100% 98%;
 
-    /* Grovara teal - fresh, modern, trustworthy */
-    --primary: 168 76% 42%;
-    --primary-foreground: 222 47% 8%;
-    --primary-glow: 168 76% 52%;
+    /* Vibrant gradient accent */
+    --primary: 319 75% 45%;
+    --primary-foreground: 260 40% 7%;
+    --primary-glow: 166 100% 42%;
 
-    --secondary: 222 47% 18%;
+    --secondary: 260 40% 16%;
     --secondary-foreground: 180 100% 98%;
 
-    --muted: 222 47% 15%;
+    --muted: 260 40% 13%;
     --muted-foreground: 215 20% 65%;
 
-    --accent: 168 76% 35%;
+    --accent: 319 75% 40%;
     --accent-foreground: 180 100% 98%;
 
     /* Enemy red - danger, old B2B */
@@ -36,15 +36,15 @@
 
     /* Score gold */
     --warning: 45 93% 58%;
-    --warning-foreground: 222 47% 8%;
+    --warning-foreground: 260 40% 7%;
 
     /* Success green */
     --success: 142 76% 45%;
-    --success-foreground: 222 47% 8%;
+    --success-foreground: 260 40% 7%;
 
-    --border: 222 47% 20%;
-    --input: 222 47% 18%;
-    --ring: 168 76% 42%;
+    --border: 260 40% 18%;
+    --input: 260 40% 16%;
+    --ring: 319 75% 45%;
 
     --radius: 1rem;
 
@@ -52,52 +52,52 @@
     --neon-teal: 168 76% 50%;
     --neon-coral: 0 84% 65%;
     --neon-gold: 45 93% 58%;
-    --arcade-dark: 222 47% 6%;
-    --arcade-glow: 0 0 20px hsl(168 76% 42% / 0.5);
+    --arcade-dark: 260 40% 5%;
+    --arcade-glow: 0 0 20px rgba(0, 181, 115, 0.5), 0 0 30px rgba(0, 171, 158, 0.3);
 
     /* Typography */
     --font-display: 'Orbitron', sans-serif;
     --font-body: 'Inter', sans-serif;
 
     /* Sidebar tokens */
-    --sidebar-background: 222 47% 10%;
+    --sidebar-background: 260 40% 9%;
     --sidebar-foreground: 180 100% 98%;
-    --sidebar-primary: 168 76% 42%;
-    --sidebar-primary-foreground: 222 47% 8%;
-    --sidebar-accent: 222 47% 18%;
+    --sidebar-primary: 319 75% 45%;
+    --sidebar-primary-foreground: 260 40% 7%;
+    --sidebar-accent: 260 40% 16%;
     --sidebar-accent-foreground: 180 100% 98%;
-    --sidebar-border: 222 47% 20%;
-    --sidebar-ring: 168 76% 42%;
+    --sidebar-border: 260 40% 18%;
+    --sidebar-ring: 319 75% 45%;
   }
 
   .dark {
-    --background: 222 47% 8%;
+    --background: 260 40% 7%;
     --foreground: 180 100% 98%;
-    --card: 222 47% 12%;
+    --card: 260 40% 11%;
     --card-foreground: 180 100% 98%;
-    --popover: 222 47% 10%;
+    --popover: 260 40% 9%;
     --popover-foreground: 180 100% 98%;
-    --primary: 168 76% 42%;
-    --primary-foreground: 222 47% 8%;
-    --secondary: 222 47% 18%;
+    --primary: 319 75% 45%;
+    --primary-foreground: 260 40% 7%;
+    --secondary: 260 40% 16%;
     --secondary-foreground: 180 100% 98%;
-    --muted: 222 47% 15%;
+    --muted: 260 40% 13%;
     --muted-foreground: 215 20% 65%;
-    --accent: 168 76% 35%;
+    --accent: 319 75% 40%;
     --accent-foreground: 180 100% 98%;
     --destructive: 0 84% 60%;
     --destructive-foreground: 180 100% 98%;
-    --border: 222 47% 20%;
-    --input: 222 47% 18%;
-    --ring: 168 76% 42%;
-    --sidebar-background: 222 47% 10%;
+    --border: 260 40% 18%;
+    --input: 260 40% 16%;
+    --ring: 319 75% 45%;
+    --sidebar-background: 260 40% 9%;
     --sidebar-foreground: 180 100% 98%;
-    --sidebar-primary: 168 76% 42%;
-    --sidebar-primary-foreground: 222 47% 8%;
-    --sidebar-accent: 222 47% 18%;
+    --sidebar-primary: 319 75% 45%;
+    --sidebar-primary-foreground: 260 40% 7%;
+    --sidebar-accent: 260 40% 16%;
     --sidebar-accent-foreground: 180 100% 98%;
-    --sidebar-border: 222 47% 20%;
-    --sidebar-ring: 168 76% 42%;
+    --sidebar-border: 260 40% 18%;
+    --sidebar-ring: 319 75% 45%;
   }
 }
 
@@ -130,15 +130,15 @@
 
   .neon-glow {
     text-shadow: 
-      0 0 10px hsl(var(--primary) / 0.8),
-      0 0 20px hsl(var(--primary) / 0.6),
-      0 0 40px hsl(var(--primary) / 0.4);
+      0 0 10px rgba(0, 181, 115, 0.8),
+      0 0 20px rgba(0, 171, 158, 0.6),
+      0 0 40px rgba(30, 118, 214, 0.4);
   }
 
   .neon-border {
     box-shadow: 
-      0 0 10px hsl(var(--primary) / 0.5),
-      inset 0 0 10px hsl(var(--primary) / 0.1);
+      0 0 10px rgba(0, 181, 115, 0.5),
+      inset 0 0 10px rgba(0, 171, 158, 0.1);
   }
 
   .enemy-glow {
@@ -162,25 +162,26 @@
 
   .btn-arcade {
     @apply arcade-text font-bold py-4 px-8 rounded-xl;
-    @apply bg-primary text-primary-foreground;
+    background: linear-gradient(90deg, #1E093D 0%, #E24A7E 20%, #FF8600 40%, #D8D228 60%, #00B66F 80%, #00AB9E 100%);
+    @apply text-white;
     @apply transition-all duration-200;
     @apply active:scale-95;
     box-shadow: 
-      0 4px 0 hsl(168 76% 30%),
-      0 0 20px hsl(var(--primary) / 0.4);
+      0 4px 0 rgba(0, 171, 158, 0.5),
+      0 0 20px rgba(0, 181, 115, 0.4);
   }
 
   .btn-arcade:active {
     box-shadow: 
-      0 2px 0 hsl(168 76% 30%),
-      0 0 15px hsl(var(--primary) / 0.3);
+      0 2px 0 rgba(0, 171, 158, 0.5),
+      0 0 15px rgba(0, 181, 115, 0.3);
     transform: translateY(2px);
   }
 
   .scanline {
     background: linear-gradient(
       transparent 0%,
-      hsl(var(--primary) / 0.02) 50%,
+      rgba(0, 181, 115, 0.02) 50%,
       transparent 100%
     );
     background-size: 100% 4px;
@@ -191,16 +192,39 @@
     background: linear-gradient(
       180deg,
       hsl(var(--background)) 0%,
-      hsl(222 47% 5%) 100%
+      hsl(260 40% 4%) 100%
     );
   }
 
   .gradient-radial-glow {
     background: radial-gradient(
       circle at center,
-      hsl(var(--primary) / 0.15) 0%,
+      rgba(0, 181, 115, 0.15) 0%,
       transparent 70%
     );
+  }
+
+  .custom-scrollbar {
+    scrollbar-width: thin;
+    scrollbar-color: rgba(0, 181, 115, 0.3) rgba(0, 0, 0, 0.1);
+  }
+
+  .custom-scrollbar::-webkit-scrollbar {
+    width: 6px;
+  }
+
+  .custom-scrollbar::-webkit-scrollbar-track {
+    background: rgba(0, 0, 0, 0.1);
+    border-radius: 10px;
+  }
+
+  .custom-scrollbar::-webkit-scrollbar-thumb {
+    background: rgba(0, 181, 115, 0.3);
+    border-radius: 10px;
+  }
+
+  .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+    background: rgba(0, 181, 115, 0.5);
   }
 }
 

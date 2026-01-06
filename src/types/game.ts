@@ -33,13 +33,14 @@ export interface SwipeAction {
 }
 
 export interface GameState {
-  currentScreen: 'welcome' | 'game' | 'swipe' | 'levelComplete' | 'gameOver' | 'results';
+  currentScreen: 'welcome' | 'game' | 'swipe' | 'levelComplete' | 'gameOver' | 'results' | 'userTypeSelection' | 'leaderboard';
   currentLevel: number;
   totalScore: number;
   lives: number;
   levels: LevelData[];
   swipes: SwipeAction[];
   session: GameSession | null;
+  userType: 'buyer' | 'brand' | null;
 }
 
 export interface Target {

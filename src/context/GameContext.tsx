@@ -10,11 +10,13 @@ interface GameContextType {
   nextLevel: () => void;
   goToSwipe: () => void;
   goToResults: () => void;
+  goToLeaderboard: () => void;
   resetGame: () => void;
   addScore: (points: number) => void;
   loseLife: () => void;
   setEmail: (email: string) => void;
   getAnalytics: () => any;
+  setUserType: (type: 'buyer' | 'brand') => void;
 }
 
 const GameContext = createContext<GameContextType | undefined>(undefined);
@@ -39,6 +41,7 @@ export const GameProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     levels: [],
     swipes: [],
     session: null,
+    userType: null,
   });
 
   const startGame = useCallback(() => {
@@ -118,16 +121,33 @@ export const GameProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   }, []);
 
   const goToSwipe = useCallback(() => {
-    setGameState(prev => ({
-      ...prev,
-      currentScreen: 'swipe',
-    }));
+    setGameState(prev => {
+      // If userType hasn't been set yet, go to user type selection first
+      if (prev.userType === null) {
+        return {
+          ...prev,
+          currentScreen: 'userTypeSelection',
+        };
+      }
+      // Otherwise go directly to swipe
+      return {
+        ...prev,
+        currentScreen: 'swipe',
+      };
+    });
   }, []);
 
   const goToResults = useCallback(() => {
     setGameState(prev => ({
       ...prev,
       currentScreen: 'results',
+    }));
+  }, []);
+
+  const goToLeaderboard = useCallback(() => {
+    setGameState(prev => ({
+      ...prev,
+      currentScreen: 'leaderboard',
     }));
   }, []);
 
@@ -140,6 +160,7 @@ export const GameProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       levels: [],
       swipes: [],
       session,
+      userType: null,
     });
   }, [session]);
 
@@ -155,6 +176,14 @@ export const GameProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     return getAnalyticsData();
   }, [getAnalyticsData]);
 
+  const setUserType = useCallback((type: 'buyer' | 'brand') => {
+    setGameState(prev => ({
+      ...prev,
+      userType: type,
+      currentScreen: 'swipe',
+    }));
+  }, []);
+
   return (
     <GameContext.Provider
       value={{
@@ -165,11 +194,13 @@ export const GameProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         nextLevel,
         goToSwipe,
         goToResults,
+        goToLeaderboard,
         resetGame,
         addScore,
         loseLife,
         setEmail,
         getAnalytics,
+        setUserType,
       }}
     >
       {children}

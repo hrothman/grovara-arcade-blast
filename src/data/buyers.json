@@ -1,0 +1,42 @@
+[
+  {
+    "id": "urban-cafe",
+    "name": "Urban Cafe Collective",
+    "emoji": "☕",
+    "category": "Retail",
+    "imageUrl": "/buyers/urban-cafe.png",
+    "description": "Premium coffee shops across major cities"
+  },
+  {
+    "id": "fitness-hub",
+    "name": "Fitness Hub Network",
+    "emoji": "💪",
+    "category": "Wellness",
+    "imageUrl": "/buyers/fitness-hub.png",
+    "description": "Chain of health and fitness centers"
+  },
+  {
+    "id": "organic-markets",
+    "name": "Organic Markets Co",
+    "emoji": "🥬",
+    "category": "Retail",
+    "imageUrl": "/buyers/organic-markets.png",
+    "description": "Regional organic food store chain"
+  },
+  {
+    "id": "tech-lounges",
+    "name": "Tech Lounge Spaces",
+    "emoji": "💻",
+    "category": "Entertainment",
+    "imageUrl": "/buyers/tech-lounges.png",
+    "description": "Co-working and gaming lounge franchises"
+  },
+  {
+    "id": "wellness-retreat",
+    "name": "Wellness Retreat Centers",
+    "emoji": "🧘",
+    "category": "Wellness",
+    "imageUrl": "/buyers/wellness-retreat.png",
+    "description": "Premium wellness and spa centers"
+  }
+]

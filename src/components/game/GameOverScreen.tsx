@@ -1,56 +1,72 @@
+import { useState, useEffect, useRef } from 'react';
 import { motion } from 'framer-motion';
 import { useGame } from '@/context/GameContext';
-import { Frown, RefreshCw, Heart } from 'lucide-react';
+import { Frown, RefreshCw, Medal } from 'lucide-react';
+import leaderboardData from '@/data/leaderboard.json';
 
 export const GameOverScreen = () => {
-  const { gameState, resetGame, goToResults } = useGame();
+  const { gameState, resetGame, goToSwipe } = useGame();
+  const [username] = useState(`user${Math.floor(Math.random() * 10000000)}`);
+  const leaderboardRef = useRef<HTMLDivElement>(null);
+  const playerRowRef = useRef<HTMLDivElement>(null);
+
+  // Merge player score into leaderboard and sort
+  const fullLeaderboard = [
+    ...leaderboardData,
+    { username, score: gameState.totalScore }
+  ].sort((a, b) => b.score - a.score);
+
+  const playerRank = fullLeaderboard.findIndex(entry => entry.username === username) + 1;
+
+  // Auto-scroll to player position with acceleration
+  useEffect(() => {
+    if (leaderboardRef.current && playerRowRef.current) {
+      const container = leaderboardRef.current;
+      const playerRow = playerRowRef.current;
+      const targetScroll = playerRow.offsetTop - container.offsetTop - 100;
+
+      if (targetScroll > 0) {
+        let currentScroll = 0;
+        let velocity = 0;
+        const acceleration = 0.5;
+        const maxVelocity = 30;
+
+        const animate = () => {
+          if (currentScroll < targetScroll) {
+            velocity = Math.min(velocity + acceleration, maxVelocity);
+            currentScroll += velocity;
+            container.scrollTop = Math.min(currentScroll, targetScroll);
+            requestAnimationFrame(animate);
+          }
+        };
+
+        setTimeout(() => animate(), 1000);
+      }
+    }
+  }, []);
 
   return (
     <div className="min-h-screen gradient-arcade flex flex-col items-center justify-center p-6 relative overflow-hidden">
       <div className="absolute inset-0 gradient-radial-glow opacity-30" />
       
-      <motion.div
-        initial={{ opacity: 0, scale: 0.8 }}
-        animate={{ opacity: 1, scale: 1 }}
-        className="relative z-10 text-center max-w-md mx-auto"
-      >
+      <div className="relative z-10 text-center max-w-md mx-auto w-full">
         {/* Game over icon */}
-        <motion.div
-          initial={{ scale: 0 }}
-          animate={{ scale: 1 }}
-          transition={{ delay: 0.2, type: 'spring' }}
-          className="mb-6"
-        >
+        <div className="mb-6">
           <div className="inline-flex items-center justify-center w-20 h-20 bg-destructive/20 rounded-full">
             <Frown className="w-10 h-10 text-destructive" />
           </div>
-        </motion.div>
+        </div>
 
-        <motion.h2
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.3 }}
-          className="arcade-text text-3xl font-bold text-foreground mb-2"
-        >
+        <h2 className="arcade-text text-3xl font-bold text-foreground mb-2">
           GAME OVER
-        </motion.h2>
+        </h2>
         
-        <motion.p
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ delay: 0.4 }}
-          className="text-muted-foreground mb-8"
-        >
+        <p className="text-muted-foreground mb-8">
           Too many friendly hits! Remember: protect the good brands.
-        </motion.p>
+        </p>
 
         {/* Stats */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.5 }}
-          className="bg-card/50 backdrop-blur-sm rounded-2xl p-6 mb-8 neon-border"
-        >
+        <div className="bg-card/50 backdrop-blur-sm rounded-2xl p-6 mb-6 neon-border">
           <div className="space-y-4">
             <div className="flex justify-between items-center">
               <span className="text-muted-foreground">Final Score</span>
@@ -66,35 +82,83 @@ export const GameOverScreen = () => {
               </span>
             </div>
           </div>
-        </motion.div>
+        </div>
+
+        {/* Leaderboard */}
+        <div className="bg-card/50 backdrop-blur-sm rounded-2xl p-6 mb-6 neon-border">
+          <div className="flex items-center gap-2 mb-4">
+            <Medal className="w-5 h-5 text-warning" />
+            <h2 className="font-semibold text-foreground">Leaderboard</h2>
+            <span className="ml-auto text-sm text-muted-foreground">
+              Rank #{playerRank}
+            </span>
+          </div>
+
+          <div 
+            ref={leaderboardRef}
+            className="max-h-64 overflow-y-auto space-y-1 pr-2 custom-scrollbar"
+          >
+            {fullLeaderboard.map((entry, idx) => {
+              const isPlayer = entry.username === username;
+              const rank = idx + 1;
+              
+              return (
+                <div
+                  key={entry.username}
+                  ref={isPlayer ? playerRowRef : null}
+                  className={`flex items-center gap-3 p-3 rounded-lg transition-all ${
+                    isPlayer 
+                      ? 'bg-primary/20 border-2 border-primary' 
+                      : 'bg-background/50 hover:bg-background/70'
+                  }`}
+                >
+                  <span className={`arcade-text text-sm w-8 text-center ${
+                    rank === 1 ? 'text-warning' :
+                    rank === 2 ? 'text-muted-foreground' :
+                    rank === 3 ? 'text-orange-400' :
+                    'text-muted-foreground'
+                  }`}>
+                    {rank <= 3 ? '🏆' : rank}
+                  </span>
+                  <span className={`flex-1 font-medium ${
+                    isPlayer ? 'text-primary' : 'text-foreground'
+                  }`}>
+                    {isPlayer ? `${entry.username} (You)` : entry.username}
+                  </span>
+                  <span className={`arcade-text text-sm ${
+                    isPlayer ? 'text-primary' : 'text-warning'
+                  }`}>
+                    {entry.score.toLocaleString()}
+                  </span>
+                </div>
+              );
+            })}
+          </div>
+        </div>
 
         {/* Action buttons */}
-        <div className="space-y-4">
-          <motion.button
-            initial={{ opacity: 0, scale: 0.9 }}
-            animate={{ opacity: 1, scale: 1 }}
-            transition={{ delay: 0.7, type: 'spring' }}
-            whileHover={{ scale: 1.05 }}
-            whileTap={{ scale: 0.95 }}
-            onClick={resetGame}
+        <div className="flex flex-col items-center gap-3 w-full">
+          <button
+            onClick={() => {
+              resetGame();
+            }}
+            type="button"
             className="btn-arcade text-lg w-full max-w-xs flex items-center justify-center gap-3"
           >
             <RefreshCw className="w-5 h-5" />
-            TRY AGAIN
-          </motion.button>
-
-          <motion.button
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ delay: 0.8 }}
-            onClick={goToResults}
+            BACK TO START
+          </button>
+          <button
+            onClick={() => {
+              goToSwipe();
+            }}
+            type="button"
             className="text-muted-foreground hover:text-primary transition-colors flex items-center justify-center gap-2 w-full"
           >
-            <Heart className="w-4 h-4" />
-            <span className="text-sm">View matched brands anyway</span>
-          </motion.button>
+            <span className="text-sm">See brands / buyers anyway</span>
+          </button>
         </div>
-      </motion.div>
+      </div>
     </div>
   );
 };

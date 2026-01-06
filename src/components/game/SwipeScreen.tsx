@@ -2,11 +2,12 @@ import { useState, useMemo } from 'react';
 import { motion, AnimatePresence, PanInfo } from 'framer-motion';
 import { useGame } from '@/context/GameContext';
 import realBrandsData from '@/data/realBrands.json';
-import { Heart, X, ArrowRight, Sparkles } from 'lucide-react';
+import buyersData from '@/data/buyers.json';
+import { Heart, X, ArrowRight, Sparkles, CheckCircle } from 'lucide-react';
 
 const SWIPE_THRESHOLD = 100;
 
-type SwipeBrand = {
+type SwipeItem = {
   id: string;
   name: string;
   description: string;
@@ -18,36 +19,41 @@ type SwipeBrand = {
 
 const BRAND_COLORS = ['#10B981', '#22D3EE', '#8B5CF6', '#F59E0B', '#EC4899', '#3B82F6'];
 
-const buildBrands = (): SwipeBrand[] => {
-  return realBrandsData.map((brand: any, idx: number) => {
+const buildItems = (items: any[]): SwipeItem[] => {
+  return items.map((item: any, idx: number) => {
     const color = BRAND_COLORS[idx % BRAND_COLORS.length];
     return {
-      id: brand.id,
-      name: brand.name,
-      description: brand.description || `Explore ${brand.name} on Grovara`,
-      category: brand.category || 'Brand',
-      imageUrl: brand.imageUrl,
+      id: item.id,
+      name: item.name,
+      description: item.description || `Explore ${item.name} on Grovara`,
+      category: item.category || 'Item',
+      imageUrl: item.imageUrl,
       color,
-      emoji: brand.emoji,
+      emoji: item.emoji,
     };
   });
 };
 
-const REAL_BRANDS = buildBrands();
+const REAL_BRANDS = buildItems(realBrandsData);
+const BUYERS = buildItems(buyersData);
 
 export const SwipeScreen = () => {
   const { gameState, recordSwipe, nextLevel } = useGame();
   const [currentIndex, setCurrentIndex] = useState(0);
   const [swipeDirection, setSwipeDirection] = useState<'left' | 'right' | null>(null);
 
-  // Select brands for this level
-  const levelBrands = useMemo(() => {
-    const startIdx = ((gameState.currentLevel - 1) * 3) % REAL_BRANDS.length;
-    return REAL_BRANDS.slice(startIdx, startIdx + 3);
-  }, [gameState.currentLevel]);
+  // Select items based on user type
+  const items = gameState.userType === 'brand' ? BUYERS : REAL_BRANDS;
+  const itemType = gameState.userType === 'brand' ? 'BUYERS' : 'BRANDS';
 
-  const currentBrand = levelBrands[currentIndex];
-  const isComplete = currentIndex >= levelBrands.length;
+  // Select items for this level
+  const levelItems = useMemo(() => {
+    const startIdx = ((gameState.currentLevel - 1) * 3) % items.length;
+    return items.slice(startIdx, startIdx + 3);
+  }, [gameState.currentLevel, items]);
+
+  const currentBrand = levelItems[currentIndex];
+  const isComplete = currentIndex >= levelItems.length;
 
   const handleSwipe = (direction: 'left' | 'right') => {
     if (!currentBrand) return;
@@ -80,7 +86,7 @@ export const SwipeScreen = () => {
           </div>
           
           <h2 className="arcade-text text-2xl font-bold text-foreground neon-glow mb-4">
-            BRANDS DISCOVERED!
+            {itemType} DISCOVERED!
           </h2>
           
           <p className="text-muted-foreground mb-8">
@@ -115,13 +121,13 @@ export const SwipeScreen = () => {
         className="relative z-10 text-center mb-8"
       >
         <h2 className="arcade-text text-xl font-bold text-foreground mb-2">
-          DISCOVER BRANDS
+          DISCOVER {itemType}
         </h2>
         <p className="text-muted-foreground text-sm">
-          Swipe right on brands you're interested in
+          Swipe right on {itemType.toLowerCase()} you're interested in
         </p>
         <div className="flex items-center justify-center gap-2 mt-4">
-          {levelBrands.map((_, idx) => (
+          {levelItems.map((_, idx) => (
             <div
               key={idx}
               className={`w-2 h-2 rounded-full transition-all ${
@@ -156,7 +162,54 @@ export const SwipeScreen = () => {
               onDragEnd={handleDragEnd}
               className="absolute w-full cursor-grab active:cursor-grabbing"
             >
-              <div className="bg-card rounded-3xl overflow-hidden card-swipe">
+              <div className="bg-card rounded-3xl overflow-hidden card-swipe relative">
+                {/* Swipe feedback overlay */}
+                <AnimatePresence>
+                  {swipeDirection === 'right' && (
+                    <motion.div
+                      initial={{ opacity: 0, scale: 0.5 }}
+                      animate={{ opacity: 1, scale: 1 }}
+                      exit={{ opacity: 0, scale: 0 }}
+                      transition={{ type: 'spring', stiffness: 300 }}
+                      className="absolute inset-0 flex items-center justify-center bg-success/10 backdrop-blur-sm z-10 rounded-3xl"
+                    >
+                      <div className="text-center">
+                        <motion.div
+                          animate={{ scale: [1, 1.1, 1] }}
+                          transition={{ duration: 0.6 }}
+                          className="mb-2"
+                        >
+                          <CheckCircle className="w-12 h-12 text-success mx-auto" />
+                        </motion.div>
+                        <motion.p
+                          initial={{ opacity: 0, y: 10 }}
+                          animate={{ opacity: 1, y: 0 }}
+                          transition={{ delay: 0.1 }}
+                          className="arcade-text text-lg text-success font-bold"
+                        >
+                          MATCH SAVED!
+                        </motion.p>
+                      </div>
+                    </motion.div>
+                  )}
+                  {swipeDirection === 'left' && (
+                    <motion.div
+                      initial={{ opacity: 0, scale: 0 }}
+                      animate={{ opacity: 1, scale: 1 }}
+                      exit={{ opacity: 0, scale: 0 }}
+                      transition={{ type: 'spring', stiffness: 300 }}
+                      className="absolute inset-0 flex items-center justify-center z-10 bg-destructive/10 backdrop-blur-sm rounded-3xl"
+                    >
+                      <motion.div
+                        animate={{ scale: [1, 1.2, 1] }}
+                        transition={{ duration: 0.6 }}
+                      >
+                        <X className="w-16 h-16 text-destructive" strokeWidth={2} />
+                      </motion.div>
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+
                 {/* Brand image */}
                 <div 
                   className="h-56 flex items-center justify-center bg-muted/40 relative"

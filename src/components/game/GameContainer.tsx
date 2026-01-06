@@ -4,6 +4,8 @@ import { LevelCompleteScreen } from './LevelCompleteScreen';
 import { SwipeScreen } from './SwipeScreen';
 import { GameOverScreen } from './GameOverScreen';
 import { ResultsScreen } from './ResultsScreen';
+import { UserTypeSelectionScreen } from './UserTypeSelectionScreen';
+import { LeaderboardScreen } from './LeaderboardScreen';
 import { useGame } from '@/context/GameContext';
 import { AnimatePresence, motion } from 'framer-motion';
 
@@ -18,12 +20,16 @@ export const GameContainer = () => {
         return <GameCanvas />;
       case 'levelComplete':
         return <LevelCompleteScreen />;
+      case 'userTypeSelection':
+        return <UserTypeSelectionScreen />;
       case 'swipe':
         return <SwipeScreen />;
       case 'gameOver':
         return <GameOverScreen />;
       case 'results':
         return <ResultsScreen />;
+      case 'leaderboard':
+        return <LeaderboardScreen />;
       default:
         return <WelcomeScreen />;
     }
