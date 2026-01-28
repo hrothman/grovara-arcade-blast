@@ -3,7 +3,7 @@ import Phaser from 'phaser';
 import { useGame } from '@/context/GameContext';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Heart, Zap, Target } from 'lucide-react';
-import { getEnemyAssets, getProductAssets, getRandomAsset, Asset } from '@/lib/assetLoader';
+import { getEnemyAssets, getProductAssets, getRareProductAssets, getRandomAsset, Asset } from '@/lib/assetLoader';
 import { ShelfManager } from '@/lib/shelfManager';
 import { ShelfSlot } from '@/types/game';
 
@@ -25,6 +25,8 @@ interface GameProduct extends GameTarget {
   originalShelfSlotId?: string;
   wasStolen?: boolean;
   escapeTween?: Phaser.Tweens.Tween;
+  rarity: 'normal' | 'ultra';
+  followEnemyId?: string;
 }
 
 interface GameEnemy extends GameTarget {
@@ -39,30 +41,42 @@ interface GameEnemy extends GameTarget {
   healthText?: Phaser.GameObjects.Text;
   baseSpriteScaleX: number;
   baseSpriteScaleY: number;
+  escapeTarget?: { x: number; y: number };
 }
 
 const LEVEL_CONFIG = {
-  1: { productSpawnRate: 1500, enemySpawnRate: 2000, duration: 60000, baseEnemyHealth: 1 },
-  2: { productSpawnRate: 1200, enemySpawnRate: 1500, duration: 90000, baseEnemyHealth: 1.5 },
-  3: { productSpawnRate: 1000, enemySpawnRate: 1000, duration: 120000, baseEnemyHealth: 2 },
+  1: { productSpawnRate: 1500, enemySpawnRate: 2000, duration: 30000, baseEnemyHealth: 1 },
+  2: { productSpawnRate: 1200, enemySpawnRate: 1500, duration: 45000, baseEnemyHealth: 1.5 },
+  3: { productSpawnRate: 1000, enemySpawnRate: 1000, duration: 60000, baseEnemyHealth: 2 },
 };
 
 const ENEMY_ASSETS: Asset[] = getEnemyAssets();
 const PRODUCT_ASSETS: Asset[] = getProductAssets();
+const RARE_PRODUCT_ASSETS: Asset[] = getRareProductAssets();
 
-const BACKGROUND_IMAGE_PATH = '/background.png';
+const BACKGROUND_IMAGE_PATH = '/store.png';
+const SHELF_IMAGE_PATH = '/shelf.png';
 const BACKGROUND_HEIGHT_RATIO = 1;
-const SHELF_AREA_INSETS = {
-  top: 0.2,
-  bottom: 0.18,
-  left: 0.08,
-  right: 0.08,
+const ULTRA_RARE_DEBUG = false;
+const ULTRA_RARE_CHANCE = 0.25;
+const PLAYBOUNDS_Y_OFFSET = 36;
+const PLAYBOUNDS_PADDING = 0.1; // 10% padding on all sides
+
+// Dynamic shelf layout configuration
+const SHELF_LAYOUT = {
+  rows: 4,
+  slotsPerRow: 5,
+  topMargin: 0.105, // Top margin as % of background height
+  bottomMargin: 0.24, // Bottom margin as % of background height
+  leftMargin: 0.118, // Left margin as % of background width
+  rightMargin: 0.118, // Right margin as % of background width
+  shelfSpacing: 0.155, // Vertical spacing between shelf centers as % of background height
 };
-const SHELF_AREA_SCALE_Y = 0.88;
 
 const DEFAULT_BG_SIZE = { width: 1080, height: 1920 };
 
 const getContainRect = (
+  canvasWidth: number,
   containerWidth: number,
   containerHeight: number,
   imageWidth: number,
@@ -71,8 +85,8 @@ const getContainRect = (
   const scale = Math.min(containerWidth / imageWidth, containerHeight / imageHeight);
   const width = imageWidth * scale;
   const height = imageHeight * scale;
-  const x = (containerWidth - width) / 2;
-  const y = 0;
+  const x = (canvasWidth - width) / 2;
+  const y = PLAYBOUNDS_Y_OFFSET;
   return { x, y, width, height };
 };
 
@@ -85,6 +99,14 @@ export const GameCanvas = () => {
     shelfArea: { x: number; y: number; width: number; height: number };
     backgroundContainerHeight: number;
     spawnAreaY: number;
+    gridScale: number;
+  } | null>(null);
+  const [backgroundLayout, setBackgroundLayout] = useState<{
+    backgroundRect: { x: number; y: number; width: number; height: number };
+    shelfArea: { x: number; y: number; width: number; height: number };
+    backgroundContainerHeight: number;
+    spawnAreaY: number;
+    gridScale: number;
   } | null>(null);
   const dataRef = useRef<{
     products: GameProduct[];
@@ -97,6 +119,20 @@ export const GameCanvas = () => {
   const [displayScore, setDisplayScore] = useState(0);
   const [displayProductsCount, setDisplayProductsCount] = useState(0);
   const [displayKills, setDisplayKills] = useState(0);
+  const [rarePopup, setRarePopup] = useState<{ active: boolean; text: string }>({
+    active: false,
+    text: '',
+  });
+  const [scorePopup, setScorePopup] = useState<{ active: boolean; value: number; x: number; y: number }>({
+    active: false,
+    value: 0,
+    x: 0,
+    y: 0,
+  });
+  const [eventPopup, setEventPopup] = useState<{ active: boolean; text: string }>({
+    active: false,
+    text: '',
+  });
   const [hitFeedback, setHitFeedback] = useState<{ 
     type: 'kill' | 'damage' | null; 
     text: string; 
@@ -126,6 +162,50 @@ export const GameCanvas = () => {
     return timeoutId;
   }, []);
 
+  const showRarePopup = useCallback((text: string) => {
+    if (!isMountedRef.current) return;
+    setRarePopup({ active: true, text });
+    const timeoutId = setTimeout(() => {
+      if (isMountedRef.current) {
+        setRarePopup({ active: false, text: '' });
+      }
+    }, 1200);
+    return timeoutId;
+  }, []);
+
+  const showScorePopup = useCallback((value: number, x: number, y: number) => {
+    if (!isMountedRef.current) return;
+    setScorePopup({ active: true, value, x, y });
+    const timeoutId = setTimeout(() => {
+      if (isMountedRef.current) {
+        setScorePopup({ active: false, value: 0, x: 0, y: 0 });
+      }
+    }, 800);
+    return timeoutId;
+  }, []);
+
+  const showEventPopup = useCallback((text: string) => {
+    if (!isMountedRef.current) return;
+    setEventPopup({ active: true, text });
+    const timeoutId = setTimeout(() => {
+      if (isMountedRef.current) {
+        setEventPopup({ active: false, text: '' });
+      }
+    }, 1200);
+    return timeoutId;
+  }, []);
+
+  const applyScoreChange = useCallback(
+    (delta: number, x?: number, y?: number) => {
+      addScore(delta);
+      setDisplayScore(prev => Math.max(0, prev + delta));
+      if (x !== undefined && y !== undefined) {
+        showScorePopup(delta, x, y);
+      }
+    },
+    [addScore, showScorePopup]
+  );
+
   useEffect(() => {
     if (!gameContainerRef.current) return;
 
@@ -146,37 +226,41 @@ export const GameCanvas = () => {
 
       const canvasWidth = window.innerWidth;
       const canvasHeight = window.innerHeight - 120;
-      const backgroundContainerHeight = canvasHeight * BACKGROUND_HEIGHT_RATIO;
-      const backgroundRect = getContainRect(
-        canvasWidth,
-        backgroundContainerHeight,
-        bgSize.width,
-        bgSize.height
-      );
+      
+      // Apply 10% padding to create playbounds area
+      const paddingX = canvasWidth * PLAYBOUNDS_PADDING;
+      const paddingY = canvasHeight * PLAYBOUNDS_PADDING;
+      
+      const playboundsWidth = canvasWidth - (paddingX * 2);
+      const playboundsHeight = canvasHeight - (paddingY * 2) - PLAYBOUNDS_Y_OFFSET;
+      
+      // Center the playbounds with padding
+      const backgroundRect = {
+        x: paddingX,
+        y: PLAYBOUNDS_Y_OFFSET + paddingY,
+        width: playboundsWidth,
+        height: playboundsHeight,
+      };
 
-      const shelfArea = {
-        x: backgroundRect.x + backgroundRect.width * SHELF_AREA_INSETS.left,
-        y: backgroundRect.y + backgroundRect.height * SHELF_AREA_INSETS.top,
-        width:
-          backgroundRect.width * (1 - SHELF_AREA_INSETS.left - SHELF_AREA_INSETS.right),
-        height:
-          backgroundRect.height * (1 - SHELF_AREA_INSETS.top - SHELF_AREA_INSETS.bottom),
+      // Calculate shelf area based on layout configuration
+      const shelfAreaLeft = backgroundRect.x + backgroundRect.width * SHELF_LAYOUT.leftMargin;
+      const shelfAreaWidth = backgroundRect.width * (1 - SHELF_LAYOUT.leftMargin - SHELF_LAYOUT.rightMargin);
+      
+      const firstShelfY = backgroundRect.y + backgroundRect.height * SHELF_LAYOUT.topMargin;
+      const totalShelfAreaHeight = backgroundRect.height * SHELF_LAYOUT.shelfSpacing * (SHELF_LAYOUT.rows - 1);
+      const shelfAreaHeight = totalShelfAreaHeight + backgroundRect.height * SHELF_LAYOUT.shelfSpacing;
+
+      const gridScale = Math.min(1, backgroundRect.width / 500); // Scale based on 500px reference width
+      
+      const finalShelfArea = {
+        x: shelfAreaLeft,
+        y: firstShelfY,
+        width: shelfAreaWidth,
+        height: shelfAreaHeight,
       };
-      const shelfRows = 4;
-      const slotsPerRow = 5;
-      const shelfHeight = shelfArea.height * SHELF_AREA_SCALE_Y;
-      const shelfTop = shelfArea.y + (shelfArea.height - shelfHeight) / 2;
-      const scaledShelfArea = {
-        ...shelfArea,
-        y: shelfTop,
-        height: shelfHeight,
-      };
-      const slotWidth = scaledShelfArea.width / slotsPerRow;
-      const slotHeight = scaledShelfArea.height / shelfRows;
-      const shiftedShelfArea = {
-        ...scaledShelfArea,
-        y: Math.max(backgroundRect.y, scaledShelfArea.y - slotHeight),
-      };
+      
+      const slotWidth = finalShelfArea.width / SHELF_LAYOUT.slotsPerRow;
+      const slotHeight = finalShelfArea.height / SHELF_LAYOUT.rows;
 
           const spawnAreaY = Math.min(
             backgroundRect.y + backgroundRect.height - 40,
@@ -185,10 +269,18 @@ export const GameCanvas = () => {
 
       backgroundLayoutRef.current = {
         backgroundRect,
-        shelfArea: shiftedShelfArea,
-        backgroundContainerHeight,
+        shelfArea: finalShelfArea,
+        backgroundContainerHeight: backgroundRect.height,
         spawnAreaY,
+        gridScale,
       };
+      setBackgroundLayout({
+        backgroundRect,
+        shelfArea: finalShelfArea,
+        backgroundContainerHeight: backgroundRect.height,
+        spawnAreaY,
+        gridScale,
+      });
 
       dataRef.current = {
         products: [],
@@ -196,15 +288,15 @@ export const GameCanvas = () => {
         gameActive: true,
         shelfManager: new ShelfManager(
           canvasWidth,
-          backgroundContainerHeight,
-          shelfRows,
-          slotsPerRow,
+          backgroundRect.height,
+          SHELF_LAYOUT.rows,
+          SHELF_LAYOUT.slotsPerRow,
           {
-            topMargin: shiftedShelfArea.y,
-            leftMargin: shiftedShelfArea.x,
+            topMargin: finalShelfArea.y,
+            leftMargin: finalShelfArea.x,
             slotWidth,
             slotHeight,
-            shelfHeight: shiftedShelfArea.height,
+            shelfHeight: finalShelfArea.height,
           }
         ),
         kills: 0,
@@ -233,6 +325,9 @@ export const GameCanvas = () => {
         preload: function(this: Phaser.Scene) {
           const scene = this;
           
+          // Preload shelf image
+          scene.load.image('shelf', SHELF_IMAGE_PATH);
+          
           // Preload all enemy assets
           ENEMY_ASSETS.forEach(asset => {
             scene.load.image(asset.id, asset.path);
@@ -240,6 +335,11 @@ export const GameCanvas = () => {
 
           // Preload all product assets
           PRODUCT_ASSETS.forEach(asset => {
+            scene.load.image(asset.id, asset.path);
+          });
+
+          // Preload rare product assets
+          RARE_PRODUCT_ASSETS.forEach(asset => {
             scene.load.image(asset.id, asset.path);
           });
         },
@@ -254,15 +354,34 @@ export const GameCanvas = () => {
           const height = scene.scale.height;
           const layout = backgroundLayoutRef.current;
 
+          // Draw shelves first
+          if (layout) {
+            const shelfWidth = layout.shelfArea.width;
+            const slotHeight = layout.shelfArea.height / SHELF_LAYOUT.rows;
+            const shelfHeight = slotHeight * 0.7; // Shelf visual height is 70% of slot height
+            
+            for (let i = 0; i < SHELF_LAYOUT.rows; i++) {
+              // Position shelf so its bottom edge aligns with the grid cell bottom
+              const shelfY = layout.shelfArea.y + (i + 1) * slotHeight - shelfHeight / 2;
+              const shelfX = layout.shelfArea.x + shelfWidth / 2;
+              
+              const shelf = scene.add.image(shelfX, shelfY, 'shelf');
+              shelf.setDisplaySize(shelfWidth, shelfHeight);
+              shelf.setDepth(0);
+            }
+          }
+
           // Draw shelves background
           const drawShelves = () => {
             if (!layout) return;
             const graphics = scene.add.graphics();
+            const gridScale = layout.gridScale;
+            const lineWidth = Math.max(1, 2 * gridScale);
             const shelfTop = shelfMgr.getConfig().topMargin;
             const shelfHeight = shelfMgr.getConfig().shelfHeight;
             const shelfArea = layout.shelfArea;
 
-            graphics.lineStyle(2, 0xd3d3d3, 0.5);
+            graphics.lineStyle(lineWidth, 0xd3d3d3, 0.5);
 
             shelfMgr.getSlots().forEach(slot => {
               graphics.strokeRect(
@@ -273,7 +392,7 @@ export const GameCanvas = () => {
               );
             });
 
-            graphics.lineStyle(2, 0xd3d3d3, 0.5);
+            graphics.lineStyle(lineWidth, 0xd3d3d3, 0.5);
             for (let i = 1; i < shelfMgr.getConfig().slotsPerRow; i++) {
               const slotWidth = shelfArea.width / shelfMgr.getConfig().slotsPerRow;
               graphics.lineBetween(
@@ -294,8 +413,12 @@ export const GameCanvas = () => {
 
           const createProduct = () => {
             if (!data.gameActive || !PRODUCT_ASSETS.length) return;
+            const ultraRareChance = ULTRA_RARE_DEBUG ? 0.9 : ULTRA_RARE_CHANCE;
+            const isUltraRare = RARE_PRODUCT_ASSETS.length > 0 && Math.random() < ultraRareChance;
 
-            const asset = getRandomAsset(PRODUCT_ASSETS);
+            const asset = isUltraRare
+              ? getRandomAsset(RARE_PRODUCT_ASSETS) ?? getRandomAsset(PRODUCT_ASSETS)
+              : getRandomAsset(PRODUCT_ASSETS);
             if (!asset) return;
 
             const spawnMinX = spawnBounds ? spawnBounds.x + 40 : 40;
@@ -306,11 +429,28 @@ export const GameCanvas = () => {
             const container = scene.add.container(x, y);
 
             const sprite = scene.add.image(0, 0, asset.id);
-            sprite.setDisplaySize(60, 60);
+            const layoutScale = backgroundLayoutRef.current?.gridScale ?? 1;
+            const spriteSize = 60 * layoutScale;
+            sprite.setDisplaySize(spriteSize, spriteSize);
             sprite.setOrigin(0.5);
 
+            if (isUltraRare) {
+              const glowOuter = scene.add.circle(0, 0, 38 * layoutScale, 0x7cf7ff, 0.18);
+              const glowInner = scene.add.circle(0, 0, 28 * layoutScale, 0xffd86a, 0.22);
+              container.add([glowOuter, glowInner]);
+
+              scene.tweens.add({
+                targets: [glowOuter, glowInner],
+                alpha: { from: 0.2, to: 0.6 },
+                duration: 900,
+                yoyo: true,
+                repeat: -1,
+                ease: 'Sine.easeInOut',
+              });
+            }
+
             container.add(sprite);
-            container.setSize(70, 70);
+            container.setSize(70 * layoutScale, 70 * layoutScale);
             container.setInteractive();
             container.setDepth(1);
 
@@ -322,6 +462,7 @@ export const GameCanvas = () => {
               y,
               container,
               onShelf: false,
+              rarity: isUltraRare ? 'ultra' : 'normal',
             };
 
             data.products.push(product);
@@ -334,10 +475,39 @@ export const GameCanvas = () => {
               ease: 'Power2',
             });
 
+            if (isUltraRare) {
+              container.setScale(0.9);
+              scene.tweens.add({
+                targets: container,
+                scale: 1.05,
+                duration: 260,
+                yoyo: true,
+                ease: 'Back.easeOut',
+              });
+
+              for (let i = 0; i < 6; i++) {
+                const sparkle = scene.add.circle(x, y, 4 * layoutScale, 0xffe27a);
+                const angle = (Math.PI * 2 * i) / 6;
+                const distance = (28 + Math.random() * 10) * layoutScale;
+                scene.tweens.add({
+                  targets: sparkle,
+                  x: x + Math.cos(angle) * distance,
+                  y: y + Math.sin(angle) * distance,
+                  alpha: 0,
+                  scale: 0,
+                  duration: 300 + Math.random() * 100,
+                  ease: 'Power2',
+                  onComplete: () => sparkle.destroy(),
+                });
+              }
+
+              showRarePopup('ULTRA RARE!!');
+            }
+
             const originalY = y;
             scene.tweens.add({
               targets: container,
-              y: originalY - 10,
+              y: originalY - 10 * layoutScale,
               yoyo: true,
               repeat: -1,
               duration: 600,
@@ -393,6 +563,10 @@ export const GameCanvas = () => {
                       product.x = nearestSlot.x;
                       product.y = nearestSlot.y;
                       setDisplayProductsCount(shelfMgr.getOccupiedProducts().length);
+                      
+                      // Give immediate score feedback
+                      const scoreValue = product.rarity === 'ultra' ? 5000 : 1000;
+                      applyScoreChange(scoreValue, nearestSlot.x, nearestSlot.y);
                     },
                   });
                 }
@@ -411,37 +585,32 @@ export const GameCanvas = () => {
             const asset = getRandomAsset(ENEMY_ASSETS);
             if (!asset) return;
 
-            const spawnFromTop = Math.random() > 0.5;
             const spawnMinX = spawnBounds ? spawnBounds.x + 40 : 40;
             const spawnMaxX = spawnBounds ? spawnBounds.x + spawnBounds.width - 40 : width - 40;
             const x = spawnMinX + Math.random() * Math.max(0, spawnMaxX - spawnMinX);
-            const y = spawnBounds
-              ? spawnFromTop
-                ? spawnBounds.y - 60
-                : spawnBounds.y + spawnBounds.height + 60
-              : spawnFromTop
-                ? -60
-                : height + 60;
+            const y = spawnBounds ? spawnBounds.y - 60 : -60;
 
             const container = scene.add.container(x, y);
 
             const sprite = scene.add.image(0, 0, asset.id);
-            sprite.setDisplaySize(70, 70);
+            const layoutScale = backgroundLayoutRef.current?.gridScale ?? 1;
+            const enemySize = 70 * layoutScale;
+            sprite.setDisplaySize(enemySize, enemySize);
             sprite.setOrigin(0.5);
 
             container.add(sprite);
-            container.setSize(80, 80);
+            container.setSize(80 * layoutScale, 80 * layoutScale);
             container.setInteractive();
             container.setDepth(1);
 
             const health = Math.ceil(Math.random() * 3);
 
-            const healthText = scene.add.text(0, -52, '❤'.repeat(health), {
+            const healthText = scene.add.text(0, -52 * layoutScale, '❤'.repeat(health), {
               fontFamily: 'inherit',
-              fontSize: '14px',
+              fontSize: `${Math.max(12, 14 * layoutScale)}px`,
               color: '#ff5a5a',
               stroke: '#2b0f0f',
-              strokeThickness: 3,
+              strokeThickness: Math.max(2, 3 * layoutScale),
             });
             healthText.setOrigin(0.5, 1);
             container.add(healthText);
@@ -553,8 +722,7 @@ export const GameCanvas = () => {
               if (enemy.health <= 0) {
                 data.kills++;
                 setDisplayKills(data.kills);
-                addScore(50);
-                setDisplayScore(prev => prev + 50);
+                applyScoreChange(500, enemy.x, enemy.y);
 
                 if (enemy.targetProductId) {
                   const stolenProduct = data.products.find(p => p.id === enemy.targetProductId);
@@ -608,6 +776,9 @@ export const GameCanvas = () => {
                   data.enemies.splice(idx, 1);
                 }
               }
+              if (enemy.health > 0) {
+                applyScoreChange(250, enemy.x, enemy.y);
+              }
             });
           };
 
@@ -628,6 +799,47 @@ export const GameCanvas = () => {
             const deltaSeconds = delta / 1000;
 
             data.enemies.forEach(enemy => {
+              if (enemy.direction === 'awayFromShelf' && enemy.escapeTarget) {
+                const escapeDx = enemy.escapeTarget.x - enemy.x;
+                const escapeDy = enemy.escapeTarget.y - enemy.y;
+                const escapeDistance = Math.hypot(escapeDx, escapeDy);
+                if (escapeDistance < 20) {
+                  if (enemy.targetProductId) {
+                    const stolenProduct = data.products.find(p => p.id === enemy.targetProductId);
+                    if (stolenProduct?.wasStolen) {
+                      stolenProduct.container?.destroy();
+                      const productIdx = data.products.indexOf(stolenProduct);
+                      if (productIdx !== -1) {
+                        data.products.splice(productIdx, 1);
+                      }
+                      const stolenValue = stolenProduct.rarity === 'ultra' ? 5000 : 1000;
+                      applyScoreChange(-stolenValue, enemy.x, enemy.y);
+                      showEventPopup('ITEM STOLEN');
+                    }
+                  }
+                  enemy.container?.destroy();
+                  const idx = data.enemies.indexOf(enemy);
+                  if (idx !== -1) {
+                    data.enemies.splice(idx, 1);
+                  }
+                  return;
+                }
+
+                const moveX = (escapeDx / escapeDistance) * enemy.speed * deltaSeconds;
+                const moveY = (escapeDy / escapeDistance) * enemy.speed * deltaSeconds;
+                enemy.x += moveX;
+                enemy.y += moveY;
+                enemy.container?.setPosition(enemy.x, enemy.y);
+
+                if (enemy.targetProductId) {
+                  const stolenProduct = data.products.find(p => p.id === enemy.targetProductId);
+                  if (stolenProduct?.followEnemyId === enemy.id && stolenProduct.container) {
+                    stolenProduct.container.setPosition(enemy.x, enemy.y + 18);
+                  }
+                }
+                return;
+              }
+
               if (!enemy.targetShelfSlotId) {
                 const occupiedProducts = shelfMgr.getOccupiedProducts();
                 if (occupiedProducts.length === 0) return;
@@ -668,60 +880,19 @@ export const GameCanvas = () => {
                     product.shelfSlotId = undefined;
                     setDisplayProductsCount(shelfMgr.getOccupiedProducts().length);
 
-                    addScore(-100);
-                    setDisplayScore(prev => Math.max(0, prev - 100));
-
                     enemy.direction = 'awayFromShelf';
-                    const offscreenX = enemy.x > width / 2 ? width + 100 : -100;
-                    const offscreenY = enemy.y > height / 2 ? height + 100 : -100;
+                    enemy.escapeTarget = {
+                      x: spawnBounds ? spawnBounds.x + spawnBounds.width / 2 : width / 2,
+                      y: spawnBounds ? spawnBounds.y + 20 : 20,
+                    };
+                    product.followEnemyId = enemy.id;
 
                     if (product.container) {
-                      const escapeSpeed = enemy.speed > 0 ? enemy.speed : 60;
-                      const productDistance = Math.hypot(offscreenX - product.x, offscreenY - product.y);
-                      const productDuration = (productDistance / escapeSpeed) * 1000;
-
-                      product.escapeTween = scene.tweens.add({
-                        targets: product.container,
-                        x: offscreenX,
-                        y: offscreenY,
-                        alpha: 0,
-                        duration: productDuration,
-                        ease: 'Linear',
-                        onComplete: () => {
-                          product.escapeTween = undefined;
-                          product.container?.destroy();
-                          const idx = data.products.indexOf(product);
-                          if (idx !== -1) {
-                            data.products.splice(idx, 1);
-                          }
-                        },
-                      });
+                      product.escapeTween?.stop();
+                      scene.tweens.killTweensOf(product.container);
                     }
                   }
                 }
-
-                const offscreenX = enemy.x > width / 2 ? width + 100 : -100;
-                const offscreenY = enemy.y > height / 2 ? height + 100 : -100;
-
-                const escapeSpeed = enemy.speed > 0 ? enemy.speed : 60;
-                const enemyDistance = Math.hypot(offscreenX - enemy.x, offscreenY - enemy.y);
-                const enemyDuration = (enemyDistance / escapeSpeed) * 1000;
-
-                scene.tweens.add({
-                  targets: enemy.container,
-                  x: offscreenX,
-                  y: offscreenY,
-                  alpha: 0,
-                  duration: enemyDuration,
-                  ease: 'Linear',
-                  onComplete: () => {
-                    enemy.container?.destroy();
-                    const idx = data.enemies.indexOf(enemy);
-                    if (idx !== -1) {
-                      data.enemies.splice(idx, 1);
-                    }
-                  },
-                });
               } else {
                 const moveX = (dx / distance) * enemy.speed * deltaSeconds;
                 const moveY = (dy / distance) * enemy.speed * deltaSeconds;
@@ -751,11 +922,14 @@ export const GameCanvas = () => {
 
               const timeoutId = setTimeout(() => {
                 if (isMountedRef.current && gameState.currentScreen === 'game') {
-                  const finalScore = 
-                    shelfMgr.getOccupiedProducts().length * 100 + 
-                    data.kills * 50;
-                  
-                  addScore(finalScore);
+                  const occupiedIds = shelfMgr.getOccupiedProducts();
+                  const ultraCount = occupiedIds.reduce((count, id) => {
+                    const product = data.products.find(p => p.id === id);
+                    return product?.rarity === 'ultra' ? count + 1 : count;
+                  }, 0);
+                  const normalCount = occupiedIds.length - ultraCount;
+                  const finalScore = normalCount * 1000 + ultraCount * 5000;
+                  applyScoreChange(finalScore);
 
                   completeLevel({
                     level: gameState.currentLevel,
@@ -793,7 +967,18 @@ export const GameCanvas = () => {
       timeoutIds.forEach(id => clearTimeout(id));
       phaserGameRef.current?.destroy(true);
     };
-  }, [gameState.currentLevel, levelConfig, addScore, loseLife, completeLevel, showHitFeedback, gameState.currentScreen]);
+  }, [
+    gameState.currentLevel,
+    levelConfig,
+    addScore,
+    loseLife,
+    completeLevel,
+    showHitFeedback,
+    showRarePopup,
+    applyScoreChange,
+    showEventPopup,
+    gameState.currentScreen,
+  ]);
 
   useEffect(() => {
     return () => {
@@ -804,14 +989,28 @@ export const GameCanvas = () => {
   return (
     <div className="min-h-screen bg-arcade-dark relative overflow-hidden">
       <div
-        className="absolute inset-x-0 top-0 h-full z-0"
+        className="absolute inset-0 z-0"
         style={{
           backgroundImage: `url('${BACKGROUND_IMAGE_PATH}')`,
-          backgroundSize: 'contain',
-          backgroundPosition: 'center top',
+          backgroundSize: 'cover',
+          backgroundPosition: 'center',
           backgroundRepeat: 'no-repeat',
         }}
       />
+      {backgroundLayout && (
+        <div
+          className="absolute z-5 pointer-events-none"
+          style={{
+            left: `${backgroundLayout.backgroundRect.x}px`,
+            top: `${backgroundLayout.backgroundRect.y}px`,
+            width: `${backgroundLayout.backgroundRect.width}px`,
+            height: `${backgroundLayout.backgroundRect.height}px`,
+            border: '2px solid rgba(124, 247, 255, 0.35)',
+            boxShadow: '0 0 18px rgba(124, 247, 255, 0.25)',
+            borderRadius: '16px',
+          }}
+        />
+      )}
       {/* HUD */}
       <div className="absolute top-0 left-0 right-0 z-20 p-4 flex items-center justify-between bg-gradient-to-b from-background/90 to-transparent">
         <div className="flex items-center gap-2">
@@ -876,6 +1075,60 @@ export const GameCanvas = () => {
             }`}>
               {hitFeedback.text}
             </span>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      <AnimatePresence>
+        {scorePopup.active && (
+          <motion.div
+            initial={{ opacity: 0, scale: 0.6, y: 10 }}
+            animate={{ opacity: 1, scale: 1, y: -20 }}
+            exit={{ opacity: 0, y: -40 }}
+            className="absolute z-30 pointer-events-none"
+            style={{
+              left: `${scorePopup.x}px`,
+              top: `${scorePopup.y + 34}px`,
+              transform: 'translate(-50%, -50%)',
+            }}
+          >
+            <span
+              className={`arcade-text text-2xl font-bold ${
+                scorePopup.value >= 0 ? 'text-success score-glow' : 'text-destructive'
+              }`}
+            >
+              {scorePopup.value >= 0 ? `+${scorePopup.value}` : scorePopup.value}
+            </span>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      <AnimatePresence>
+        {eventPopup.active && (
+          <motion.div
+            initial={{ opacity: 0, scale: 0.7, y: 10 }}
+            animate={{ opacity: 1, scale: 1, y: 0 }}
+            exit={{ opacity: 0, scale: 0.8, y: -10 }}
+            className="absolute z-30 left-1/2 top-28 -translate-x-1/2 pointer-events-none"
+          >
+            <div className="bg-destructive/20 border border-destructive/60 rounded-full px-4 py-2 backdrop-blur-sm">
+              <span className="arcade-text text-base text-destructive">{eventPopup.text}</span>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      <AnimatePresence>
+        {rarePopup.active && (
+          <motion.div
+            initial={{ opacity: 0, scale: 0.7, y: 10 }}
+            animate={{ opacity: 1, scale: 1, y: 0 }}
+            exit={{ opacity: 0, scale: 0.8, y: -10 }}
+            className="absolute z-50 left-1/2 top-32 -translate-x-1/2 pointer-events-none"
+          >
+            <div className="bg-warning/20 border border-warning/60 rounded-full px-4 py-2 backdrop-blur-sm">
+              <span className="arcade-text text-base text-warning score-glow">{rarePopup.text}</span>
+            </div>
           </motion.div>
         )}
       </AnimatePresence>

@@ -35,7 +35,6 @@ const PRODUCT_ASSETS: Asset[] = [
   { id: 'product_14', filename: '4d2b4e225940483ecfce1cd08d6caf7034d9950a.png', path: '/products/4d2b4e225940483ecfce1cd08d6caf7034d9950a.png' },
   { id: 'product_15', filename: '53554bc84e8ff536735992405bc9753b80fcbc63.png', path: '/products/53554bc84e8ff536735992405bc9753b80fcbc63.png' },
   { id: 'product_16', filename: '58e076508a56fa86cb311c7da37c0b8236533315.png', path: '/products/58e076508a56fa86cb311c7da37c0b8236533315.png' },
-  { id: 'product_17', filename: '6555ec3286479e35b86541a1a32e5521056b713e.png', path: '/products/6555ec3286479e35b86541a1a32e5521056b713e.png' },
   { id: 'product_18', filename: '6aa2344ed6ccfbbb105d0d7e0137572785965e7f.png', path: '/products/6aa2344ed6ccfbbb105d0d7e0137572785965e7f.png' },
   { id: 'product_19', filename: '6e966d8ac8754e17bb5dfae63ccfb86fa84b6ec8.png', path: '/products/6e966d8ac8754e17bb5dfae63ccfb86fa84b6ec8.png' },
   { id: 'product_20', filename: '6eb2c2947798f9534f5a4e34abd8e597a47c0398.png', path: '/products/6eb2c2947798f9534f5a4e34abd8e597a47c0398.png' },
@@ -43,7 +42,6 @@ const PRODUCT_ASSETS: Asset[] = [
   { id: 'product_22', filename: '7bc8f04eda28c44ae37c6908db64c8f668fe51d5.png', path: '/products/7bc8f04eda28c44ae37c6908db64c8f668fe51d5.png' },
   { id: 'product_23', filename: '7f28cacf9213dfe5ca01470fffca6d42d0e19b85.png', path: '/products/7f28cacf9213dfe5ca01470fffca6d42d0e19b85.png' },
   { id: 'product_24', filename: '834073e4e2c6068a66727eda50ef49812a23d350.png', path: '/products/834073e4e2c6068a66727eda50ef49812a23d350.png' },
-  { id: 'product_25', filename: '84321b115344958741934ef60055e7d34c3979dd.png', path: '/products/84321b115344958741934ef60055e7d34c3979dd.png' },
   { id: 'product_26', filename: '8dc8b8ce51323e1a65512f032490cc4140567c76.png', path: '/products/8dc8b8ce51323e1a65512f032490cc4140567c76.png' },
   { id: 'product_27', filename: '8f030cf8700a57b425ce2f81d3cdca81de867154.png', path: '/products/8f030cf8700a57b425ce2f81d3cdca81de867154.png' },
   { id: 'product_28', filename: '90bf7fc4742c25beb903f81def57036b30ea0a3b.png', path: '/products/90bf7fc4742c25beb903f81def57036b30ea0a3b.png' },
@@ -60,7 +58,6 @@ const PRODUCT_ASSETS: Asset[] = [
   { id: 'product_39', filename: 'd8bfb8a0319322cded14c0947df6d5518403d695.png', path: '/products/d8bfb8a0319322cded14c0947df6d5518403d695.png' },
   { id: 'product_40', filename: 'da53d70f3070605bd69a1b799ee892c50e8f8913.png', path: '/products/da53d70f3070605bd69a1b799ee892c50e8f8913.png' },
   { id: 'product_41', filename: 'de5043c55be1675d7abceeb8e1fc9ae93fbba59b.png', path: '/products/de5043c55be1675d7abceeb8e1fc9ae93fbba59b.png' },
-  { id: 'product_42', filename: 'e7c0cd8a7e69253a31485eadcc37efb7a251a3d7.png', path: '/products/e7c0cd8a7e69253a31485eadcc37efb7a251a3d7.png' },
   { id: 'product_43', filename: 'e9b9657728963874a8d955127475e2bc4e5c2907.png', path: '/products/e9b9657728963874a8d955127475e2bc4e5c2907.png' },
   { id: 'product_44', filename: 'edee2988da6c278c871fde87711c895bb8f4a832.png', path: '/products/edee2988da6c278c871fde87711c895bb8f4a832.png' },
   { id: 'product_45', filename: 'ef70e0fbfa9c40120c3b861bff4b55166b40763b.png', path: '/products/ef70e0fbfa9c40120c3b861bff4b55166b40763b.png' },
@@ -68,10 +65,18 @@ const PRODUCT_ASSETS: Asset[] = [
   { id: 'product_47', filename: 'f9d406d561d203c74cded9f173bff2093ac508f7.png', path: '/products/f9d406d561d203c74cded9f173bff2093ac508f7.png' },
 ];
 
+const RARE_PRODUCT_ASSETS: Asset[] = [
+  { id: 'rare_product_0', filename: 'B3B chain.png', path: '/rare_products/B3B%20chain.png' },
+  { id: 'rare_product_1', filename: 'Pokemon.png', path: '/rare_products/Pokemon.png' },
+  { id: 'rare_product_2', filename: 'Scout 2.png', path: '/rare_products/Scout%202.png' },
+];
+
 export const loadEnemyAssets = async (): Promise<Asset[]> => ENEMY_ASSETS;
 export const loadProductAssets = async (): Promise<Asset[]> => PRODUCT_ASSETS;
+export const loadRareProductAssets = async (): Promise<Asset[]> => RARE_PRODUCT_ASSETS;
 export const getEnemyAssets = (): Asset[] => ENEMY_ASSETS;
 export const getProductAssets = (): Asset[] => PRODUCT_ASSETS;
+export const getRareProductAssets = (): Asset[] => RARE_PRODUCT_ASSETS;
 
 /**
  * Get random asset from array
