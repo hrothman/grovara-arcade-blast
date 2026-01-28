@@ -71,3 +71,42 @@ export type FriendlyType =
   | 'healthy-snack'
   | 'fresh-produce'
   | 'eco-friendly';
+
+// New shelf-based gameplay types
+export interface ShelfSlot {
+  id: string;
+  shelfIndex: number;
+  slotIndex: number;
+  occupied: boolean;
+  productId?: string;
+  x: number;
+  y: number;
+}
+
+export interface Product {
+  id: string;
+  assetPath: string;
+  x: number;
+  y: number;
+  shelfSlotId?: string;
+  onShelf: boolean;
+  health?: number;
+}
+
+export interface EnemySpawner {
+  id: string;
+  assetPath: string;
+  x: number;
+  y: number;
+  targetProductId?: string;
+  health: number; // 1-3 hearts
+  targetShelfSlotId?: string;
+  isMoving: boolean;
+  direction: 'toShelf' | 'awayFromShelf';
+}
+
+export interface GameScore {
+  productsOnShelf: number;
+  enemiesKilled: number;
+  totalScore: number;
+}
