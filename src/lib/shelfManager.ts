@@ -7,6 +7,7 @@ export interface ShelfConfig {
   slotHeight: number;
   shelfHeight: number;
   topMargin: number;
+  leftMargin: number;
 }
 
 /**
@@ -20,15 +21,24 @@ export class ShelfManager {
     canvasWidth: number,
     canvasHeight: number,
     rows: number = 4,
-    slotsPerRow: number = 5
+    slotsPerRow: number = 5,
+    overrides: Partial<ShelfConfig> = {}
   ) {
+    const slotHeight = overrides.slotHeight ?? 80;
+    const topMargin = overrides.topMargin ?? 80;
+    const slotWidth = overrides.slotWidth ?? canvasWidth / slotsPerRow;
+    const shelfHeight = overrides.shelfHeight ?? rows * slotHeight;
+    const leftMargin = overrides.leftMargin ?? 0;
+
     this.config = {
       rows,
       slotsPerRow,
-      slotWidth: canvasWidth / slotsPerRow,
-      slotHeight: 80,
-      shelfHeight: rows * 80,
-      topMargin: 80, // Space from top for UI
+      slotWidth,
+      slotHeight,
+      shelfHeight,
+      topMargin, // Space from top for UI
+      leftMargin,
+      ...overrides,
     };
 
     this.initializeSlots();
@@ -40,7 +50,7 @@ export class ShelfManager {
 
     for (let shelfIndex = 0; shelfIndex < this.config.rows; shelfIndex++) {
       for (let slotIndex = 0; slotIndex < this.config.slotsPerRow; slotIndex++) {
-        const x = (slotIndex + 0.5) * this.config.slotWidth;
+        const x = this.config.leftMargin + (slotIndex + 0.5) * this.config.slotWidth;
         const y = startY + (shelfIndex + 0.5) * this.config.slotHeight;
 
         this.slots.push({

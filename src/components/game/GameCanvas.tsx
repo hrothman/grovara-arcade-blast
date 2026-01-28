@@ -22,6 +22,9 @@ interface GameProduct extends GameTarget {
   shelfSlotId?: string;
   onShelf: boolean;
   isBeingDragged?: boolean;
+  originalShelfSlotId?: string;
+  wasStolen?: boolean;
+  escapeTween?: Phaser.Tweens.Tween;
 }
 
 interface GameEnemy extends GameTarget {
@@ -47,10 +50,42 @@ const LEVEL_CONFIG = {
 const ENEMY_ASSETS: Asset[] = getEnemyAssets();
 const PRODUCT_ASSETS: Asset[] = getProductAssets();
 
+const BACKGROUND_IMAGE_PATH = '/background.png';
+const BACKGROUND_HEIGHT_RATIO = 1;
+const SHELF_AREA_INSETS = {
+  top: 0.2,
+  bottom: 0.18,
+  left: 0.08,
+  right: 0.08,
+};
+const SHELF_AREA_SCALE_Y = 0.88;
+
+const DEFAULT_BG_SIZE = { width: 1080, height: 1920 };
+
+const getContainRect = (
+  containerWidth: number,
+  containerHeight: number,
+  imageWidth: number,
+  imageHeight: number,
+) => {
+  const scale = Math.min(containerWidth / imageWidth, containerHeight / imageHeight);
+  const width = imageWidth * scale;
+  const height = imageHeight * scale;
+  const x = (containerWidth - width) / 2;
+  const y = 0;
+  return { x, y, width, height };
+};
+
 export const GameCanvas = () => {
   const gameContainerRef = useRef<HTMLDivElement>(null);
   const phaserGameRef = useRef<Phaser.Game | null>(null);
   const isMountedRef = useRef(true);
+  const backgroundLayoutRef = useRef<{
+    backgroundRect: { x: number; y: number; width: number; height: number };
+    shelfArea: { x: number; y: number; width: number; height: number };
+    backgroundContainerHeight: number;
+    spawnAreaY: number;
+  } | null>(null);
   const dataRef = useRef<{
     products: GameProduct[];
     enemies: GameEnemy[];
@@ -94,25 +129,92 @@ export const GameCanvas = () => {
   useEffect(() => {
     if (!gameContainerRef.current) return;
 
+    let isCancelled = false;
     const timeoutIds: NodeJS.Timeout[] = [];
-    dataRef.current = {
-      products: [],
-      enemies: [],
-      gameActive: true,
-      shelfManager: new ShelfManager(
-        window.innerWidth,
-        window.innerHeight - 120,
-        4,
-        5
-      ),
-      kills: 0,
-    };
 
-    const config: Phaser.Types.Core.GameConfig = {
+    const loadBackgroundSize = () =>
+      new Promise<{ width: number; height: number }>(resolve => {
+        const img = new Image();
+        img.onload = () => resolve({ width: img.naturalWidth, height: img.naturalHeight });
+        img.onerror = () => resolve(DEFAULT_BG_SIZE);
+        img.src = BACKGROUND_IMAGE_PATH;
+      });
+
+    const initGame = async () => {
+      const bgSize = await loadBackgroundSize();
+      if (isCancelled) return;
+
+      const canvasWidth = window.innerWidth;
+      const canvasHeight = window.innerHeight - 120;
+      const backgroundContainerHeight = canvasHeight * BACKGROUND_HEIGHT_RATIO;
+      const backgroundRect = getContainRect(
+        canvasWidth,
+        backgroundContainerHeight,
+        bgSize.width,
+        bgSize.height
+      );
+
+      const shelfArea = {
+        x: backgroundRect.x + backgroundRect.width * SHELF_AREA_INSETS.left,
+        y: backgroundRect.y + backgroundRect.height * SHELF_AREA_INSETS.top,
+        width:
+          backgroundRect.width * (1 - SHELF_AREA_INSETS.left - SHELF_AREA_INSETS.right),
+        height:
+          backgroundRect.height * (1 - SHELF_AREA_INSETS.top - SHELF_AREA_INSETS.bottom),
+      };
+      const shelfRows = 4;
+      const slotsPerRow = 5;
+      const shelfHeight = shelfArea.height * SHELF_AREA_SCALE_Y;
+      const shelfTop = shelfArea.y + (shelfArea.height - shelfHeight) / 2;
+      const scaledShelfArea = {
+        ...shelfArea,
+        y: shelfTop,
+        height: shelfHeight,
+      };
+      const slotWidth = scaledShelfArea.width / slotsPerRow;
+      const slotHeight = scaledShelfArea.height / shelfRows;
+      const shiftedShelfArea = {
+        ...scaledShelfArea,
+        y: Math.max(backgroundRect.y, scaledShelfArea.y - slotHeight),
+      };
+
+          const spawnAreaY = Math.min(
+            backgroundRect.y + backgroundRect.height - 40,
+            backgroundRect.y + backgroundRect.height * 0.92
+          );
+
+      backgroundLayoutRef.current = {
+        backgroundRect,
+        shelfArea: shiftedShelfArea,
+        backgroundContainerHeight,
+        spawnAreaY,
+      };
+
+      dataRef.current = {
+        products: [],
+        enemies: [],
+        gameActive: true,
+        shelfManager: new ShelfManager(
+          canvasWidth,
+          backgroundContainerHeight,
+          shelfRows,
+          slotsPerRow,
+          {
+            topMargin: shiftedShelfArea.y,
+            leftMargin: shiftedShelfArea.x,
+            slotWidth,
+            slotHeight,
+            shelfHeight: shiftedShelfArea.height,
+          }
+        ),
+        kills: 0,
+      };
+
+      const config: Phaser.Types.Core.GameConfig = {
       type: Phaser.AUTO,
       parent: gameContainerRef.current,
-      width: window.innerWidth,
-      height: window.innerHeight - 120,
+        width: canvasWidth,
+        height: canvasHeight,
       transparent: true,
       scale: {
         mode: Phaser.Scale.FIT,
@@ -150,26 +252,19 @@ export const GameCanvas = () => {
           const shelfMgr = data.shelfManager;
           const width = scene.scale.width;
           const height = scene.scale.height;
+          const layout = backgroundLayoutRef.current;
 
           // Draw shelves background
           const drawShelves = () => {
+            if (!layout) return;
             const graphics = scene.add.graphics();
             const shelfTop = shelfMgr.getConfig().topMargin;
             const shelfHeight = shelfMgr.getConfig().shelfHeight;
+            const shelfArea = layout.shelfArea;
 
-            graphics.fillStyle(0x2f1b12, 0.92);
-            graphics.fillRect(0, shelfTop, width, shelfHeight);
-
-            graphics.fillStyle(0x3b2418, 0.95);
-            graphics.lineStyle(3, 0xc9a67a, 0.9);
+            graphics.lineStyle(2, 0xd3d3d3, 0.5);
 
             shelfMgr.getSlots().forEach(slot => {
-              graphics.fillRect(
-                slot.x - shelfMgr.getConfig().slotWidth / 2,
-                slot.y - shelfMgr.getConfig().slotHeight / 2,
-                shelfMgr.getConfig().slotWidth,
-                shelfMgr.getConfig().slotHeight
-              );
               graphics.strokeRect(
                 slot.x - shelfMgr.getConfig().slotWidth / 2,
                 slot.y - shelfMgr.getConfig().slotHeight / 2,
@@ -178,13 +273,13 @@ export const GameCanvas = () => {
               );
             });
 
-            graphics.lineStyle(3, 0x6b4a36, 0.8);
+            graphics.lineStyle(2, 0xd3d3d3, 0.5);
             for (let i = 1; i < shelfMgr.getConfig().slotsPerRow; i++) {
-              const slotWidth = width / shelfMgr.getConfig().slotsPerRow;
+              const slotWidth = shelfArea.width / shelfMgr.getConfig().slotsPerRow;
               graphics.lineBetween(
-                i * slotWidth,
+                shelfArea.x + i * slotWidth,
                 shelfMgr.getConfig().topMargin,
-                i * slotWidth,
+                shelfArea.x + i * slotWidth,
                 shelfMgr.getConfig().topMargin + shelfMgr.getConfig().shelfHeight
               );
             }
@@ -194,7 +289,8 @@ export const GameCanvas = () => {
 
           drawShelves();
 
-          const spawnAreaY = height - 120;
+          const spawnAreaY = layout?.spawnAreaY ?? height - 120;
+          const spawnBounds = layout?.backgroundRect;
 
           const createProduct = () => {
             if (!data.gameActive || !PRODUCT_ASSETS.length) return;
@@ -202,7 +298,9 @@ export const GameCanvas = () => {
             const asset = getRandomAsset(PRODUCT_ASSETS);
             if (!asset) return;
 
-            const x = 40 + Math.random() * (width - 80);
+            const spawnMinX = spawnBounds ? spawnBounds.x + 40 : 40;
+            const spawnMaxX = spawnBounds ? spawnBounds.x + spawnBounds.width - 40 : width - 40;
+            const x = spawnMinX + Math.random() * Math.max(0, spawnMaxX - spawnMinX);
             const y = spawnAreaY;
 
             const container = scene.add.container(x, y);
@@ -314,8 +412,16 @@ export const GameCanvas = () => {
             if (!asset) return;
 
             const spawnFromTop = Math.random() > 0.5;
-            const x = 40 + Math.random() * (width - 80);
-            const y = spawnFromTop ? -60 : height + 60;
+            const spawnMinX = spawnBounds ? spawnBounds.x + 40 : 40;
+            const spawnMaxX = spawnBounds ? spawnBounds.x + spawnBounds.width - 40 : width - 40;
+            const x = spawnMinX + Math.random() * Math.max(0, spawnMaxX - spawnMinX);
+            const y = spawnBounds
+              ? spawnFromTop
+                ? spawnBounds.y - 60
+                : spawnBounds.y + spawnBounds.height + 60
+              : spawnFromTop
+                ? -60
+                : height + 60;
 
             const container = scene.add.container(x, y);
 
@@ -452,11 +558,29 @@ export const GameCanvas = () => {
 
                 if (enemy.targetProductId) {
                   const stolenProduct = data.products.find(p => p.id === enemy.targetProductId);
-                  if (stolenProduct && stolenProduct.shelfSlotId) {
-                    shelfMgr.releaseSlot(stolenProduct.shelfSlotId);
-                    stolenProduct.onShelf = false;
-                    stolenProduct.shelfSlotId = undefined;
-                    setDisplayProductsCount(shelfMgr.getOccupiedProducts().length);
+                  if (stolenProduct) {
+                    if (enemy.direction === 'awayFromShelf' && stolenProduct.originalShelfSlotId) {
+                      stolenProduct.escapeTween?.stop();
+                      scene.tweens.killTweensOf(stolenProduct.container);
+                      const slotId = stolenProduct.originalShelfSlotId;
+                      const slot = shelfMgr.getSlot(slotId);
+                      if (slot && stolenProduct.container) {
+                        stolenProduct.container.setAlpha(1);
+                        scene.tweens.add({
+                          targets: stolenProduct.container,
+                          x: slot.x,
+                          y: slot.y,
+                          duration: 300,
+                          ease: 'Back.easeOut',
+                        });
+                      }
+                      shelfMgr.occupySlot(slotId, stolenProduct.id);
+                      stolenProduct.onShelf = true;
+                      stolenProduct.shelfSlotId = slotId;
+                      stolenProduct.wasStolen = false;
+                      stolenProduct.originalShelfSlotId = undefined;
+                      setDisplayProductsCount(shelfMgr.getOccupiedProducts().length);
+                    }
                   }
                 }
 
@@ -537,6 +661,8 @@ export const GameCanvas = () => {
                 if (enemy.targetProductId) {
                   const product = data.products.find(p => p.id === enemy.targetProductId);
                   if (product) {
+                    product.originalShelfSlotId = enemy.targetShelfSlotId;
+                    product.wasStolen = true;
                     shelfMgr.releaseSlot(enemy.targetShelfSlotId);
                     product.onShelf = false;
                     product.shelfSlotId = undefined;
@@ -554,7 +680,7 @@ export const GameCanvas = () => {
                       const productDistance = Math.hypot(offscreenX - product.x, offscreenY - product.y);
                       const productDuration = (productDistance / escapeSpeed) * 1000;
 
-                      scene.tweens.add({
+                      product.escapeTween = scene.tweens.add({
                         targets: product.container,
                         x: offscreenX,
                         y: offscreenY,
@@ -562,6 +688,7 @@ export const GameCanvas = () => {
                         duration: productDuration,
                         ease: 'Linear',
                         onComplete: () => {
+                          product.escapeTween = undefined;
                           product.container?.destroy();
                           const idx = data.products.indexOf(product);
                           if (idx !== -1) {
@@ -655,9 +782,13 @@ export const GameCanvas = () => {
       },
     };
 
-    phaserGameRef.current = new Phaser.Game(config);
+      phaserGameRef.current = new Phaser.Game(config);
+    };
+
+    initGame();
 
     return () => {
+      isCancelled = true;
       isMountedRef.current = false;
       timeoutIds.forEach(id => clearTimeout(id));
       phaserGameRef.current?.destroy(true);
@@ -672,6 +803,15 @@ export const GameCanvas = () => {
 
   return (
     <div className="min-h-screen bg-arcade-dark relative overflow-hidden">
+      <div
+        className="absolute inset-x-0 top-0 h-full z-0"
+        style={{
+          backgroundImage: `url('${BACKGROUND_IMAGE_PATH}')`,
+          backgroundSize: 'contain',
+          backgroundPosition: 'center top',
+          backgroundRepeat: 'no-repeat',
+        }}
+      />
       {/* HUD */}
       <div className="absolute top-0 left-0 right-0 z-20 p-4 flex items-center justify-between bg-gradient-to-b from-background/90 to-transparent">
         <div className="flex items-center gap-2">
@@ -743,7 +883,7 @@ export const GameCanvas = () => {
       {/* Game canvas container */}
       <div 
         ref={gameContainerRef} 
-        className="w-full h-full absolute inset-0"
+        className="w-full h-full absolute inset-0 z-10"
         style={{ touchAction: 'none' }}
       />
     </div>
