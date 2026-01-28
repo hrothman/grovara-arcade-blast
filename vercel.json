@@ -1,4 +1,0 @@
-{
-  "installCommand": "npm install --no-save git-lfs && npx git-lfs install && npx git-lfs pull && npm install",
-  "buildCommand": "npm run build"
-}
