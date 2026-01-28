@@ -1,4 +1,4 @@
 {
-  "installCommand": "apt-get update && apt-get install -y git-lfs && git lfs install && git lfs pull && npm install",
+  "installCommand": "npm install --no-save git-lfs && npx git-lfs install && npx git-lfs pull && npm install",
   "buildCommand": "npm run build"
 }
