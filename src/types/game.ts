@@ -10,10 +10,14 @@ export interface GameSession {
 export interface LevelData {
   level: number;
   score: number;
-  accuracy: number;
+  accuracy: number; // TODO: Currently unused - set to 0
   completed: boolean;
-  enemiesHit: number;
-  friendliesHit: number;
+  enemiesHit: number; // Maps to enemies_killed in DB
+  friendliesHit: number; // TODO: Currently unused - always 0
+  // TODO: Add for DB integration:
+  // productsOnShelf?: number;
+  // ultraRareCount?: number;
+  // durationSeconds?: number;
 }
 
 export interface Brand {
@@ -27,9 +31,12 @@ export interface Brand {
 
 export interface SwipeAction {
   sessionId: string;
-  brandId: string;
+  brandId: string; // Can be brand or buyer ID depending on userType
   direction: 'left' | 'right';
   timestamp: Date;
+  // TODO: For DB integration, map to:
+  // item_id: brandId
+  // item_type: gameState.userType === 'brand' ? 'buyer' : 'brand'
 }
 
 export interface GameState {

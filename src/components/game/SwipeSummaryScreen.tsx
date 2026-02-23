@@ -1,21 +1,20 @@
 import { useState } from 'react';
 import { motion } from 'framer-motion';
 import { useGame } from '@/context/GameContext';
-import { Heart, Mail, User, Check, ArrowRight } from 'lucide-react';
-import { Input } from '@/components/ui/input';
+import { Heart, Check, ArrowRight, Plus } from 'lucide-react';
 import { toast } from 'sonner';
 import realBrandsData from '@/data/realBrands.json';
 import buyersData from '@/data/buyers.json';
-import { savePlayerAccount, checkUsernameAvailable, setCurrentUser } from '@/lib/leaderboardManager';
+import { savePlayerAccount, setCurrentUser } from '@/lib/leaderboardManager';
+import { registerUser, checkUsernameAvailable } from '@/services/userService';
+import { UserInfoModal } from './UserInfoModal';
 
 export const SwipeSummaryScreen = () => {
   const { gameState, resetGame } = useGame();
-  const [email, setEmail] = useState('');
-  const [emailSubmitted, setEmailSubmitted] = useState(false);
-  const [username, setUsername] = useState('');
+  const [showModal, setShowModal] = useState(false);
   const [accountCreated, setAccountCreated] = useState(false);
   const [savedUsername, setSavedUsername] = useState('');
-  const [isLoading, setIsLoading] = useState(false);
+  const [savedEmail, setSavedEmail] = useState('');
 
   // Get matched items based on user type
   const allItems = gameState.userType === 'brand' ? buyersData : realBrandsData;
@@ -26,57 +25,31 @@ export const SwipeSummaryScreen = () => {
     .map(s => allItems.find((item: any) => item.id === s.brandId))
     .filter(Boolean);
 
-  const handleEmailSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!email.trim()) {
-      toast.error('Please enter your email');
-      return;
-    }
-
-    setIsLoading(true);
+  const handleUserInfoSubmit = async (username: string, email: string) => {
     try {
-      // TODO: Replace with actual API call to save email and send follow-up
-      // const response = await fetch('/api/leads', {
-      //   method: 'POST',
-      //   headers: { 'Content-Type': 'application/json' },
-      //   body: JSON.stringify({ email, matches: matchedItems.map(i => i.id) }),
-      // });
+      // Check if username is available
+      const available = await checkUsernameAvailable(username);
+      if (!available) {
+        toast.error('Username already taken. Try another!');
+        throw new Error('Username taken');
+      }
 
-      // For now, save to localStorage
+      // Register user in database (updates the anonymous user record)
+      const registeredUser = await registerUser(username, email);
+      if (!registeredUser) {
+        throw new Error('Failed to register user');
+      }
+
+      console.log('✅ User registered in database:', registeredUser);
+
+      // Save email and matches to localStorage for backward compatibility
       localStorage.setItem(`user_email_${email}`, JSON.stringify({
         email,
         matches: matchedItems.map((i: any) => i.id),
         timestamp: new Date().toISOString(),
       }));
 
-      setEmailSubmitted(true);
-      toast.success('Email saved! Now create your username.');
-    } catch (error) {
-      console.error('Error saving email:', error);
-      toast.error('Failed to save email. Please try again.');
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  const handleAccountSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!username.trim()) {
-      toast.error('Please enter a username');
-      return;
-    }
-
-    setIsLoading(true);
-    try {
-      // Check if username is available
-      const available = await checkUsernameAvailable(username);
-      if (!available) {
-        toast.error('Username already taken. Try another!');
-        setIsLoading(false);
-        return;
-      }
-
-      // Save account with matched item IDs
+      // Save account with matched item IDs to leaderboard
       const matchedItemIds = matchedItems.map((i: any) => i?.id).filter(Boolean) as string[];
       await savePlayerAccount(username, 0, matchedItemIds); // 0 score for swipe-only users
 
@@ -84,7 +57,9 @@ export const SwipeSummaryScreen = () => {
       setCurrentUser(username, email);
 
       setSavedUsername(username);
+      setSavedEmail(email);
       setAccountCreated(true);
+      setShowModal(false);
       toast.success(`Welcome, ${username}! Your matches have been saved.`);
 
       // Log analytics
@@ -92,12 +67,14 @@ export const SwipeSummaryScreen = () => {
         username,
         email,
         matchedItems: matchedItemIds,
+        dbUser: registeredUser,
       });
     } catch (error) {
       console.error('Error creating account:', error);
-      toast.error('Failed to create account. Please try again.');
-    } finally {
-      setIsLoading(false);
+      if (error instanceof Error && error.message !== 'Username taken') {
+        toast.error('Failed to create account. Please try again.');
+      }
+      throw error;
     }
   };
 
@@ -176,70 +153,23 @@ export const SwipeSummaryScreen = () => {
           </motion.div>
         )}
 
-        {/* Email + Account Creation Flow */}
-        {!emailSubmitted ? (
+        {/* Save Account Button or Success Message */}
+        {!accountCreated ? (
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.6 }}
-            className="bg-card/50 backdrop-blur-sm rounded-2xl p-4 mb-6 neon-border"
           >
-            <div className="flex items-center gap-2 mb-2 justify-center">
-              <Mail className="w-4 h-4 text-primary" />
-              <h2 className="font-semibold text-foreground text-sm">Get Follow-Up</h2>
-            </div>
-            <p className="text-muted-foreground text-xs mb-3 text-center">
-              Enter your email to receive information about your {matchedItems.length} matched {itemType}
+            <button
+              onClick={() => setShowModal(true)}
+              className="btn-arcade w-full text-lg mb-6 flex items-center justify-center gap-3"
+            >
+              <Plus className="w-5 h-5" />
+              SAVE YOUR MATCHES
+            </button>
+            <p className="text-xs text-muted-foreground text-center mb-6">
+              Create an account to connect with your matched {itemType}
             </p>
-            <form onSubmit={handleEmailSubmit} className="flex gap-2">
-              <Input
-                type="email"
-                placeholder="your@email.com"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                disabled={isLoading}
-                className="flex-1 bg-background border-border text-sm h-8"
-              />
-              <button
-                type="submit"
-                disabled={isLoading}
-                className="btn-arcade px-3 py-1 text-xs disabled:opacity-50"
-              >
-                {isLoading ? 'Saving...' : 'Next'}
-              </button>
-            </form>
-          </motion.div>
-        ) : !accountCreated ? (
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            className="bg-card/50 backdrop-blur-sm rounded-2xl p-4 mb-6 neon-border"
-          >
-            <div className="flex items-center gap-2 mb-2 justify-center">
-              <User className="w-4 h-4 text-primary" />
-              <h2 className="font-semibold text-foreground text-sm">Create Username</h2>
-            </div>
-            <p className="text-muted-foreground text-xs mb-3 text-center">
-              Choose a username to save your matches
-            </p>
-            <form onSubmit={handleAccountSubmit} className="flex gap-2">
-              <Input
-                type="text"
-                placeholder="Choose a username"
-                value={username}
-                onChange={(e) => setUsername(e.target.value.replace(/\s+/g, ''))}
-                disabled={isLoading}
-                className="flex-1 bg-background border-border text-sm h-8"
-                maxLength={20}
-              />
-              <button
-                type="submit"
-                disabled={isLoading}
-                className="btn-arcade px-3 py-1 text-xs disabled:opacity-50"
-              >
-                {isLoading ? 'Saving...' : 'Create'}
-              </button>
-            </form>
           </motion.div>
         ) : (
           <motion.div
@@ -251,11 +181,24 @@ export const SwipeSummaryScreen = () => {
               <Check className="w-5 h-5 flex-shrink-0" />
               <div className="text-left">
                 <p className="font-semibold text-sm">All set, <span className="text-success">{savedUsername}</span>!</p>
-                <p className="text-xs opacity-80">We'll follow up about your matches at {email}</p>
+                <p className="text-xs opacity-80">We'll follow up about your matches at {savedEmail}</p>
               </div>
             </div>
           </motion.div>
         )}
+
+        {/* User Info Modal */}
+        <UserInfoModal
+          isOpen={showModal}
+          onClose={() => setShowModal(false)}
+          onSubmit={handleUserInfoSubmit}
+          title="Save Your Matches"
+          description="Connect with the businesses you're interested in"
+          showMatchesInfo={true}
+          matchCount={matchedItems.length}
+          matchType={itemType}
+          submitButtonText="Save & Connect"
+        />
 
         {/* Action buttons */}
         <motion.div

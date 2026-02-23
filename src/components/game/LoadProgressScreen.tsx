@@ -1,16 +1,17 @@
 import { useState } from 'react';
 import { motion } from 'framer-motion';
 import { useGame } from '@/context/GameContext';
-import { Download, ArrowLeft, Mail, User } from 'lucide-react';
+import { Download, ArrowLeft, Mail } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { toast } from 'sonner';
-import { savePlayerAccount, checkUsernameAvailable, setCurrentUser } from '@/lib/leaderboardManager';
+import { savePlayerAccount, setCurrentUser } from '@/lib/leaderboardManager';
+import { registerUser, checkUsernameAvailable } from '@/services/userService';
+import { UserInfoModal } from './UserInfoModal';
 
 export const LoadProgressScreen = () => {
   const { resetGame, startGame } = useGame();
   const [email, setEmail] = useState('');
-  const [username, setUsername] = useState('');
-  const [showUsernameForm, setShowUsernameForm] = useState(false);
+  const [showModal, setShowModal] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
 
   const handleLoadProgress = async (e: React.FormEvent) => {
@@ -35,8 +36,8 @@ export const LoadProgressScreen = () => {
         // For now, just start the game
         startGame();
       } else {
-        // No progress found - show username form to create account
-        setShowUsernameForm(true);
+        // No progress found - show modal to create account
+        setShowModal(true);
         toast.info('No progress found. Let\'s create your account!');
       }
     } catch (error) {
@@ -47,37 +48,38 @@ export const LoadProgressScreen = () => {
     }
   };
 
-  const handleCreateAccount = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!username.trim()) {
-      toast.error('Please enter a username');
-      return;
-    }
-
-    setIsLoading(true);
+  const handleUserInfoSubmit = async (username: string, submittedEmail: string) => {
     try {
       // Check if username is available
       const available = await checkUsernameAvailable(username);
       if (!available) {
         toast.error('Username already taken. Try another!');
-        setIsLoading(false);
-        return;
+        throw new Error('Username taken');
       }
 
-      // Save account
+      // Register user in database (updates the anonymous user record)
+      const registeredUser = await registerUser(username, submittedEmail);
+      if (!registeredUser) {
+        throw new Error('Failed to register user');
+      }
+
+      console.log('✅ User registered in database:', registeredUser);
+
+      // Save account to leaderboard
       await savePlayerAccount(username, 0, []);
 
       // Set current user session
-      setCurrentUser(username, email);
+      setCurrentUser(username, submittedEmail);
 
       // Save email association
-      localStorage.setItem(`user_progress_${email}`, JSON.stringify({
+      localStorage.setItem(`user_progress_${submittedEmail}`, JSON.stringify({
         username,
-        email,
+        email: submittedEmail,
         createdAt: new Date().toISOString(),
       }));
 
       toast.success(`Account created! Welcome, ${username}!`);
+      setShowModal(false);
       
       // Start the game
       setTimeout(() => {
@@ -85,9 +87,10 @@ export const LoadProgressScreen = () => {
       }, 500);
     } catch (error) {
       console.error('Error creating account:', error);
-      toast.error('Failed to create account. Please try again.');
-    } finally {
-      setIsLoading(false);
+      if (error instanceof Error && error.message !== 'Username taken') {
+        toast.error('Failed to create account. Please try again.');
+      }
+      throw error;
     }
   };
 
@@ -116,78 +119,50 @@ export const LoadProgressScreen = () => {
         </motion.h1>
 
         <p className="text-muted-foreground mb-8">
-          {showUsernameForm 
-            ? 'Choose a username to create your account'
-            : 'Enter your email to load your saved game'
-          }
+          Enter your email to load your saved game
         </p>
 
         {/* Email Form */}
-        {!showUsernameForm ? (
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.4 }}
-            className="bg-card/50 backdrop-blur-sm rounded-2xl p-6 mb-6 neon-border"
-          >
-            <div className="flex items-center gap-2 mb-4 justify-center">
-              <Mail className="w-5 h-5 text-primary" />
-              <h2 className="font-semibold text-foreground">Your Email</h2>
-            </div>
-            
-            <form onSubmit={handleLoadProgress} className="space-y-4">
-              <Input
-                type="email"
-                placeholder="your@email.com"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                disabled={isLoading}
-                className="bg-background border-border"
-              />
-              <button
-                type="submit"
-                disabled={isLoading}
-                className="btn-arcade w-full text-lg disabled:opacity-50"
-              >
-                {isLoading ? 'Loading...' : 'Load Progress'}
-              </button>
-            </form>
-          </motion.div>
-        ) : (
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            className="bg-card/50 backdrop-blur-sm rounded-2xl p-6 mb-6 neon-border"
-          >
-            <div className="flex items-center gap-2 mb-4 justify-center">
-              <User className="w-5 h-5 text-primary" />
-              <h2 className="font-semibold text-foreground">Create Username</h2>
-            </div>
-            
-            <p className="text-sm text-muted-foreground mb-4 text-center">
-              Email: <span className="text-foreground">{email}</span>
-            </p>
-            
-            <form onSubmit={handleCreateAccount} className="space-y-4">
-              <Input
-                type="text"
-                placeholder="Choose a username"
-                value={username}
-                onChange={(e) => setUsername(e.target.value.replace(/\s+/g, ''))}
-                disabled={isLoading}
-                className="bg-background border-border"
-                maxLength={20}
-              />
-              <button
-                type="submit"
-                disabled={isLoading}
-                className="btn-arcade w-full text-lg disabled:opacity-50"
-              >
-                {isLoading ? 'Creating...' : 'Create Account'}
-              </button>
-            </form>
-          </motion.div>
-        )}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.4 }}
+          className="bg-card/50 backdrop-blur-sm rounded-2xl p-6 mb-6 neon-border"
+        >
+          <div className="flex items-center gap-2 mb-4 justify-center">
+            <Mail className="w-5 h-5 text-primary" />
+            <h2 className="font-semibold text-foreground">Your Email</h2>
+          </div>
+          
+          <form onSubmit={handleLoadProgress} className="space-y-4">
+            <Input
+              type="email"
+              placeholder="your@email.com"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              disabled={isLoading}
+              className="bg-background border-border"
+            />
+            <button
+              type="submit"
+              disabled={isLoading}
+              className="btn-arcade w-full text-lg disabled:opacity-50"
+            >
+              {isLoading ? 'Loading...' : 'Load Progress'}
+            </button>
+          </form>
+        </motion.div>
+
+        {/* User Info Modal */}
+        <UserInfoModal
+          isOpen={showModal}
+          onClose={() => setShowModal(false)}
+          onSubmit={handleUserInfoSubmit}
+          title="Create Your Account"
+          description="No progress found. Let's create your account to get started!"
+          initialEmail={email}
+          submitButtonText="Create & Start Playing"
+        />
 
         {/* Info */}
         <motion.div

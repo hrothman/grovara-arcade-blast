@@ -2,17 +2,18 @@ import { useState, useEffect, useRef } from 'react';
 import { motion } from 'framer-motion';
 import { useGame } from '@/context/GameContext';
 import { GROVARA_BRANDS } from '@/data/brands';
-import { Trophy, Heart, User, RefreshCw, Share2, Check, Medal } from 'lucide-react';
-import { Input } from '@/components/ui/input';
+import { Trophy, Heart, User, RefreshCw, Share2, Check, Medal, Plus } from 'lucide-react';
 import { toast } from 'sonner';
-import { savePlayerAccount, checkUsernameAvailable, getMergedLeaderboard, setCurrentUser } from '@/lib/leaderboardManager';
+import { savePlayerAccount, getMergedLeaderboard, setCurrentUser } from '@/lib/leaderboardManager';
+import { registerUser, checkUsernameAvailable } from '@/services/userService';
+import { UserInfoModal } from './UserInfoModal';
 
 export const ResultsScreen = () => {
   const { gameState, resetGame, getAnalytics } = useGame();
-  const [usernameInput, setUsernameInput] = useState('');
+  const [showModal, setShowModal] = useState(false);
   const [accountCreated, setAccountCreated] = useState(false);
   const [savedUsername, setSavedUsername] = useState('');
-  const [isLoading, setIsLoading] = useState(false);
+  const [savedEmail, setSavedEmail] = useState('');
   const [username] = useState(`user${Math.floor(Math.random() * 10000000)}`);
   const [leaderboard, setLeaderboard] = useState<Array<{ username: string; score: number }>>([]);
   const leaderboardRef = useRef<HTMLDivElement>(null);
@@ -74,46 +75,51 @@ export const ResultsScreen = () => {
     }
   }, []);
 
-  const handleAccountSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!usernameInput.trim()) {
-      toast.error('Please enter a username');
-      return;
-    }
-
-    setIsLoading(true);
+  const handleUserInfoSubmit = async (username: string, email: string) => {
     try {
       // Check if username is available
-      const available = await checkUsernameAvailable(usernameInput);
+      const available = await checkUsernameAvailable(username);
       if (!available) {
         toast.error('Username already taken. Try another!');
-        setIsLoading(false);
-        return;
+        throw new Error('Username taken');
       }
 
-      // Save account with matched brand IDs
+      // Register user in database (updates the anonymous user record)
+      const registeredUser = await registerUser(username, email);
+      if (!registeredUser) {
+        throw new Error('Failed to register user');
+      }
+
+      console.log('✅ User registered in database:', registeredUser);
+
+      // Save account with matched brand IDs to leaderboard
       const matchedBrandIds = matchedBrands.map(b => b?.id).filter(Boolean) as string[];
-      await savePlayerAccount(usernameInput, gameState.totalScore, matchedBrandIds);
+      await savePlayerAccount(username, gameState.totalScore, matchedBrandIds);
 
       // Set current user session
-      setCurrentUser(usernameInput);
+      setCurrentUser(username, email);
 
-      setSavedUsername(usernameInput);
+      setSavedUsername(username);
+      setSavedEmail(email);
       setAccountCreated(true);
-      toast.success(`Welcome, ${usernameInput}! Your score has been saved.`);
+      setShowModal(false);
+      toast.success(`Welcome, ${username}! Your score has been saved.`);
 
       // Log analytics
       console.log('Account created:', {
-        username: usernameInput,
+        username,
+        email,
         score: gameState.totalScore,
         matchedBrands: matchedBrandIds,
+        dbUser: registeredUser,
         ...analytics,
       });
     } catch (error) {
       console.error('Error creating account:', error);
-      toast.error('Failed to create account. Please try again.');
-    } finally {
-      setIsLoading(false);
+      if (error instanceof Error && error.message !== 'Username taken') {
+        toast.error('Failed to create account. Please try again.');
+      }
+      throw error;
     }
   };
 
@@ -276,33 +282,17 @@ export const ResultsScreen = () => {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.6 }}
-            className="bg-card/50 backdrop-blur-sm rounded-2xl p-4 mb-6 neon-border"
           >
-            <div className="flex items-center gap-2 mb-2 justify-center">
-              <User className="w-4 h-4 text-primary" />
-              <h2 className="font-semibold text-foreground text-sm">Save Your Score</h2>
-            </div>
-            <p className="text-muted-foreground text-xs mb-3 text-center">
-              Create a username to keep your score on the leaderboard with your {matchedBrands.length} matched brand{matchedBrands.length !== 1 ? 's' : ''}
+            <button
+              onClick={() => setShowModal(true)}
+              className="btn-arcade w-full text-lg mb-2 flex items-center justify-center gap-3"
+            >
+              <Plus className="w-5 h-5" />
+              SAVE YOUR SCORE
+            </button>
+            <p className="text-xs text-muted-foreground text-center mb-6">
+              Save your score and connect with your {matchedBrands.length} matched brands
             </p>
-            <form onSubmit={handleAccountSubmit} className="flex gap-2">
-              <Input
-                type="text"
-                placeholder="Choose a username"
-                value={usernameInput}
-                onChange={(e) => setUsernameInput(e.target.value.replace(/\s+/g, ''))}
-                disabled={isLoading}
-                className="flex-1 bg-background border-border text-sm h-8"
-                maxLength={20}
-              />
-              <button
-                type="submit"
-                disabled={isLoading}
-                className="btn-arcade px-3 py-1 text-xs disabled:opacity-50"
-              >
-                {isLoading ? 'Saving...' : 'Save'}
-              </button>
-            </form>
           </motion.div>
         ) : (
           <motion.div
@@ -314,11 +304,24 @@ export const ResultsScreen = () => {
               <Check className="w-5 h-5 flex-shrink-0" />
               <div>
                 <p className="font-semibold text-sm">Score saved as <span className="text-success">{savedUsername}</span>!</p>
-                <p className="text-xs opacity-80">You're now on the leaderboard</p>
+                <p className="text-xs opacity-80">We'll follow up at {savedEmail}</p>
               </div>
             </div>
           </motion.div>
         )}
+
+        {/* User Info Modal */}
+        <UserInfoModal
+          isOpen={showModal}
+          onClose={() => setShowModal(false)}
+          onSubmit={handleUserInfoSubmit}
+          title="Save Your Score"
+          description="Create an account to save your score and connect with matched brands"
+          showMatchesInfo={matchedBrands.length > 0}
+          matchCount={matchedBrands.length}
+          matchType="brands"
+          submitButtonText="Save to Leaderboard"
+        />
 
         {/* Action buttons */}
         <motion.div

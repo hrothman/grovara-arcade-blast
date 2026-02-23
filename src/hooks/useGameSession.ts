@@ -1,5 +1,12 @@
 import { useState, useEffect, useCallback } from 'react';
 import { GameSession, SwipeAction, LevelData } from '@/types/game';
+import { 
+  getOrCreateUser,
+  createGameSession,
+  recordLevelResult,
+  updateGameSession,
+  recordSwipeAction 
+} from '@/services';
 
 const generateSessionId = () => {
   return `grovara_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
@@ -15,34 +22,88 @@ const getDeviceType = (): string => {
 
 export const useGameSession = () => {
   const [session, setSession] = useState<GameSession | null>(null);
+  const [userId, setUserId] = useState<string | null>(null);
+  const [dbSessionId, setDbSessionId] = useState<string | null>(null);
   const [levels, setLevels] = useState<LevelData[]>([]);
   const [swipes, setSwipes] = useState<SwipeAction[]>([]);
 
   useEffect(() => {
-    // Parse URL params from QR code
-    const params = new URLSearchParams(window.location.search);
-    
-    const newSession: GameSession = {
-      sessionId: params.get('sid') || generateSessionId(),
-      boothSource: params.get('booth') || 'expo-west-2024',
-      campaign: params.get('utm_campaign') || 'grovara-expo',
-      deviceType: getDeviceType(),
-      startTime: new Date(),
+    // Initialize user and session
+    const initializeSession = async () => {
+      console.log('🎮 Initializing game session...');
+      
+      // Get or create anonymous user
+      const user = await getOrCreateUser();
+      if (user) {
+        setUserId(user.id);
+        console.log('👤 User ID:', user.id);
+      }
+
+      // Parse URL params from QR code
+      const params = new URLSearchParams(window.location.search);
+      
+      const sessionId = params.get('sid') || generateSessionId();
+      const boothSource = params.get('booth') || 'expo-west-2024';
+      const campaign = params.get('utm_campaign') || 'grovara-expo';
+      const deviceType = getDeviceType();
+
+      const newSession: GameSession = {
+        sessionId,
+        boothSource,
+        campaign,
+        deviceType,
+        startTime: new Date(),
+      };
+
+      setSession(newSession);
+
+      // Create session in database
+      if (user) {
+        const dbSession = await createGameSession(
+          user.id,
+          sessionId,
+          boothSource,
+          campaign,
+          deviceType,
+          user.user_type || undefined
+        );
+        
+        if (dbSession) {
+          setDbSessionId(dbSession.id);
+          console.log('✅ Game session created in database:', dbSession.id);
+        }
+      }
     };
 
-    setSession(newSession);
-
-    // Log session start
-    console.log('Game session started:', newSession);
+    initializeSession();
   }, []);
 
-  const recordLevel = useCallback((levelData: LevelData) => {
+  const recordLevel = useCallback(async (levelData: LevelData) => {
+    console.log('📊 Recording level completion:', levelData);
     setLevels(prev => [...prev, levelData]);
-    console.log('Level completed:', levelData);
-  }, []);
+    
+    // Save to database
+    if (userId && dbSessionId) {
+      await recordLevelResult(
+        dbSessionId,
+        userId,
+        levelData.level,
+        {
+          score: levelData.score,
+          enemiesKilled: levelData.enemiesKilled,
+          productsOnShelf: levelData.score, // Approximate - score comes from products placed
+          ultraRareCount: levelData.ultraRareCount || 0,
+          completed: levelData.completed,
+          durationSeconds: levelData.duration || 0,
+        }
+      );
+    }
+  }, [userId, dbSessionId]);
 
-  const recordSwipe = useCallback((brandId: string, direction: 'left' | 'right') => {
+  const recordSwipe = useCallback(async (brandId: string, direction: 'left' | 'right') => {
     if (!session) return;
+    
+    console.log('👆 Recording swipe:', { brandId, direction });
     
     const swipeAction: SwipeAction = {
       sessionId: session.sessionId,
@@ -52,8 +113,21 @@ export const useGameSession = () => {
     };
 
     setSwipes(prev => [...prev, swipeAction]);
-    console.log('Brand swipe:', swipeAction);
-  }, [session]);
+    
+    // Save to database
+    if (userId && session) {
+      await recordSwipeAction(
+        session.sessionId,
+        userId,
+        brandId,
+        brandId, // Use brandId as name for now
+        'brand', // Type
+        direction,
+        swipes.length + 1, // Position
+        levels.length // Current level
+      );
+    }
+  }, [session, userId, swipes.length, levels.length]);
 
   const setEmail = useCallback((email: string) => {
     setSession(prev => prev ? { ...prev, email } : null);
@@ -97,6 +171,8 @@ export const useGameSession = () => {
 
   return {
     session,
+    userId,
+    dbSessionId,
     levels,
     swipes,
     recordLevel,
