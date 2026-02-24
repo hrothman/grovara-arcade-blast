@@ -75,21 +75,53 @@ export const SwipeScreen = () => {
 
   if (isComplete) {
     return (
-      <div className="min-h-screen gradient-arcade flex flex-col items-center justify-center p-6">
+      <div className="min-h-screen relative flex flex-col items-center justify-center p-4 sm:p-6 overflow-hidden">
+        {/* Gradient Background Layer */}
+        <div 
+          className="absolute inset-0 z-0"
+          style={{
+            backgroundImage: 'url(/swipe/gradient.png)',
+            backgroundSize: '100% 100%',
+            backgroundPosition: 'center',
+            backgroundRepeat: 'no-repeat',
+          }}
+        />
+        
+        {/* Stars Overlay Layer */}
+        <div 
+          className="absolute inset-0 z-10"
+          style={{
+            backgroundImage: 'url(/swipe/stars.png)',
+            backgroundSize: '100% 100%',
+            backgroundPosition: 'center',
+            backgroundRepeat: 'no-repeat',
+            opacity: 0.8,
+          }}
+        />
+
         <motion.div
           initial={{ opacity: 0, scale: 0.9 }}
           animate={{ opacity: 1, scale: 1 }}
-          className="text-center"
+          className="relative z-30 text-center px-4"
         >
-          <div className="inline-flex items-center justify-center w-20 h-20 bg-primary/20 rounded-full neon-border mb-6">
-            <Sparkles className="w-10 h-10 text-primary" />
+          <div className="inline-flex items-center justify-center w-16 h-16 sm:w-20 sm:h-20 bg-white/10 rounded-full border-2 border-white/30 mb-4 sm:mb-6">
+            <Sparkles className="w-8 h-8 sm:w-10 sm:h-10 text-white" />
           </div>
           
-          <h2 className="arcade-text text-2xl font-bold text-foreground neon-glow mb-4">
+          <h2 
+            className="text-2xl sm:text-3xl font-bold text-white mb-3 sm:mb-4"
+            style={{ 
+              fontFamily: 'var(--font-pixel)',
+              textShadow: '2px 2px 0px rgba(0,0,0,0.8)',
+            }}
+          >
             {itemType} DISCOVERED!
           </h2>
           
-          <p className="text-muted-foreground mb-8">
+          <p 
+            className="text-gray-300 mb-6 sm:mb-8 text-sm sm:text-base"
+            style={{ fontFamily: 'var(--font-pixel)' }}
+          >
             See your matches and get follow-up information
           </p>
 
@@ -97,10 +129,16 @@ export const SwipeScreen = () => {
             whileHover={{ scale: 1.05 }}
             whileTap={{ scale: 0.95 }}
             onClick={goToSwipeSummary}
-            className="btn-arcade text-lg flex items-center justify-center gap-3 mx-auto"
+            className="px-6 sm:px-8 py-3 sm:py-4 text-sm sm:text-base md:text-lg font-bold text-white rounded-lg sm:rounded-xl flex items-center justify-center gap-2 sm:gap-3 mx-auto"
+            style={{
+              fontFamily: 'var(--font-pixel)',
+              background: 'linear-gradient(135deg, #EC4899 0%, #8B5CF6 100%)',
+              boxShadow: '0 0 30px rgba(236, 72, 153, 0.6), 0 8px 16px rgba(0,0,0,0.4)',
+              border: '3px solid rgba(255,255,255,0.3)',
+            }}
           >
             VIEW MATCHES
-            <ArrowRight className="w-5 h-5" />
+            <ArrowRight className="w-4 h-4 sm:w-5 sm:h-5" />
           </motion.button>
         </motion.div>
       </div>
@@ -108,31 +146,63 @@ export const SwipeScreen = () => {
   }
 
   return (
-    <div className="min-h-screen gradient-arcade flex flex-col items-center justify-center p-6 relative overflow-hidden">
-      <div className="absolute inset-0 gradient-radial-glow opacity-50" />
+    <div className="min-h-screen relative flex flex-col items-center justify-center p-4 sm:p-6 overflow-hidden">
+      {/* Gradient Background Layer */}
+      <div 
+        className="absolute inset-0 z-0"
+        style={{
+          backgroundImage: 'url(/swipe/gradient.png)',
+          backgroundSize: '100% 100%',
+          backgroundPosition: 'center',
+          backgroundRepeat: 'no-repeat',
+        }}
+      />
+      
+      {/* Stars Overlay Layer */}
+      <div 
+        className="absolute inset-0 z-10"
+        style={{
+          backgroundImage: 'url(/swipe/stars.png)',
+          backgroundSize: '100% 100%',
+          backgroundPosition: 'center',
+          backgroundRepeat: 'no-repeat',
+          opacity: 0.8,
+        }}
+      />
       
       {/* Header */}
       <motion.div
         initial={{ opacity: 0, y: -20 }}
         animate={{ opacity: 1, y: 0 }}
-        className="relative z-10 text-center mb-8"
+        transition={{ duration: 0.4 }}
+        className="relative z-30 text-center mb-3 sm:mb-4 md:mb-6 lg:mb-8"
       >
-        <h2 className="arcade-text text-xl font-bold text-foreground mb-2">
-          DISCOVER {itemType}
+        <h2 
+          className="text-3xl sm:text-4xl md:text-5xl font-bold text-white mb-1 sm:mb-2 md:mb-3"
+          style={{ 
+            fontFamily: 'var(--font-pixel)',
+            textShadow: '3px 3px 0px rgba(0,0,0,0.8)',
+            fontSize: 'clamp(1.25rem, 5vw, 2.5rem)',
+          }}
+        >
+          Discover {itemType === 'BRANDS' ? 'Brands' : 'Buyers'}
         </h2>
-        <p className="text-muted-foreground text-sm">
-          Swipe right on {itemType.toLowerCase()} you're interested in
+        <p 
+          className="text-gray-300 text-xs sm:text-sm"
+          style={{ fontFamily: 'var(--font-pixel)' }}
+        >
+          Swipe right on {itemType.toLowerCase()} you're interesting in
         </p>
-        <div className="flex items-center justify-center gap-2 mt-4">
+        <div className="flex items-center justify-center gap-2 mt-2 sm:mt-3 md:mt-4">
           {levelItems.map((_, idx) => (
             <div
               key={idx}
-              className={`w-2 h-2 rounded-full transition-all ${
+              className={`w-2 h-2 sm:w-3 sm:h-3 rounded-full transition-all ${
                 idx < currentIndex 
-                  ? 'bg-primary' 
+                  ? 'bg-white' 
                   : idx === currentIndex 
-                    ? 'bg-primary animate-pulse' 
-                    : 'bg-muted'
+                    ? 'bg-white animate-pulse' 
+                    : 'bg-white/30'
               }`}
             />
           ))}
@@ -140,7 +210,7 @@ export const SwipeScreen = () => {
       </motion.div>
 
       {/* Swipe cards */}
-      <div className="relative w-full max-w-sm h-[450px] flex items-center justify-center">
+      <div className="relative z-30 w-full max-w-md h-[400px] sm:h-[450px] md:h-[500px] lg:h-[550px] flex items-center justify-center mb-3 sm:mb-4 md:mb-6">
         <AnimatePresence mode="wait">
           {currentBrand && (
             <motion.div
@@ -153,13 +223,13 @@ export const SwipeScreen = () => {
                 rotate: swipeDirection === 'left' ? -20 : swipeDirection === 'right' ? 20 : 0,
               }}
               exit={{ opacity: 0 }}
-              transition={{ type: 'spring', stiffness: 300, damping: 25 }}
+              transition={{ type: 'spring', stiffness: 260, damping: 20 }}
               drag="x"
               dragConstraints={{ left: 0, right: 0 }}
               onDragEnd={handleDragEnd}
               className="absolute w-full cursor-grab active:cursor-grabbing"
             >
-              <div className="bg-card rounded-3xl overflow-hidden card-swipe relative">
+              <div className="bg-gray-900 rounded-xl sm:rounded-2xl md:rounded-3xl overflow-hidden border-3 sm:border-4 border-white relative shadow-2xl">
                 {/* Swipe feedback overlay */}
                 <AnimatePresence>
                   {swipeDirection === 'right' && (
@@ -168,7 +238,7 @@ export const SwipeScreen = () => {
                       animate={{ opacity: 1, scale: 1 }}
                       exit={{ opacity: 0, scale: 0 }}
                       transition={{ type: 'spring', stiffness: 300 }}
-                      className="absolute inset-0 flex items-center justify-center bg-success/10 backdrop-blur-sm z-10 rounded-3xl"
+                      className="absolute inset-0 flex items-center justify-center bg-green-500/20 backdrop-blur-sm z-10 rounded-2xl sm:rounded-3xl"
                     >
                       <div className="text-center">
                         <motion.div
@@ -176,13 +246,14 @@ export const SwipeScreen = () => {
                           transition={{ duration: 0.6 }}
                           className="mb-2"
                         >
-                          <CheckCircle className="w-12 h-12 text-success mx-auto" />
+                          <CheckCircle className="w-16 h-16 sm:w-20 sm:h-20 text-green-400 mx-auto" strokeWidth={3} />
                         </motion.div>
                         <motion.p
                           initial={{ opacity: 0, y: 10 }}
                           animate={{ opacity: 1, y: 0 }}
                           transition={{ delay: 0.1 }}
-                          className="arcade-text text-lg text-success font-bold"
+                          className="text-xl sm:text-2xl text-green-400 font-bold"
+                          style={{ fontFamily: 'var(--font-pixel)' }}
                         >
                           MATCH SAVED!
                         </motion.p>
@@ -195,68 +266,50 @@ export const SwipeScreen = () => {
                       animate={{ opacity: 1, scale: 1 }}
                       exit={{ opacity: 0, scale: 0 }}
                       transition={{ type: 'spring', stiffness: 300 }}
-                      className="absolute inset-0 flex items-center justify-center z-10 bg-destructive/10 backdrop-blur-sm rounded-3xl"
+                      className="absolute inset-0 flex items-center justify-center z-10 bg-red-500/20 backdrop-blur-sm rounded-2xl sm:rounded-3xl"
                     >
                       <motion.div
                         animate={{ scale: [1, 1.2, 1] }}
                         transition={{ duration: 0.6 }}
                       >
-                        <X className="w-16 h-16 text-destructive" strokeWidth={2} />
+                        <X className="w-16 h-16 sm:w-20 sm:h-20 text-red-400" strokeWidth={3} />
                       </motion.div>
                     </motion.div>
                   )}
                 </AnimatePresence>
 
-                {/* Brand image */}
+                {/* Brand/Buyer image */}
                 <div 
-                  className="h-56 flex items-center justify-center bg-muted/40 relative"
-                  style={{ backgroundColor: currentBrand.color + '20' }}
+                  className="h-60 sm:h-64 md:h-72 lg:h-80 flex items-center justify-center bg-black/40 p-6 sm:p-8"
                 >
-                  {currentBrand.imageUrl && currentBrand.emoji && (
-                    <div className="absolute top-3 right-3 text-2xl" aria-hidden>
-                      {currentBrand.emoji}
-                    </div>
-                  )}
                   {currentBrand.imageUrl ? (
                     <img
                       src={currentBrand.imageUrl}
                       alt={currentBrand.name}
-                      className="max-h-44 max-w-[75%] object-contain drop-shadow-lg"
+                      className="max-h-full max-w-full object-contain drop-shadow-2xl"
                       loading="lazy"
                       onError={(e) => {
-                        // Hide image if it fails to load
                         e.currentTarget.style.display = 'none';
                       }}
                     />
                   ) : (
-                    <div 
-                      className="w-40 h-40 rounded-2xl flex items-center justify-center text-7xl shadow-lg"
-                      style={{ backgroundColor: currentBrand.color + '30' }}
-                    >
-                      {currentBrand.emoji}
+                    <div className="text-8xl">
+                      {currentBrand.emoji || '📦'}
                     </div>
                   )}
                 </div>
                 
-                {/* Brand info */}
-                <div className="p-6">
-                  <div 
-                    className="inline-block px-3 py-1 rounded-full text-xs font-medium mb-3"
+                {/* Brand/Buyer name */}
+                <div className="p-4 sm:p-6 md:p-8 text-center bg-gray-900">
+                  <h3 
+                    className="text-lg sm:text-xl md:text-2xl lg:text-3xl font-bold text-white"
                     style={{ 
-                      backgroundColor: currentBrand.color + '20',
-                      color: currentBrand.color,
+                      fontFamily: 'var(--font-pixel)',
+                      textShadow: '2px 2px 0px rgba(0,0,0,0.5)',
                     }}
                   >
-                    {currentBrand.category}
-                  </div>
-                  
-                  <h3 className="text-2xl font-bold text-foreground mb-2">
                     {currentBrand.name}
                   </h3>
-                  
-                  <p className="text-muted-foreground text-sm leading-relaxed">
-                    {currentBrand.description}
-                  </p>
                 </div>
               </div>
             </motion.div>
@@ -265,34 +318,51 @@ export const SwipeScreen = () => {
       </div>
 
       {/* Action buttons */}
-      <div className="relative z-10 flex items-center justify-center gap-8 mt-8">
-        <motion.button
-          whileHover={{ scale: 1.1 }}
-          whileTap={{ scale: 0.9 }}
-          onClick={() => handleSwipe('left')}
-          className="w-16 h-16 rounded-full bg-card border-2 border-destructive/50 flex items-center justify-center transition-all hover:bg-destructive/20"
-        >
-          <X className="w-8 h-8 text-destructive" />
-        </motion.button>
+      <div className="relative z-30 flex items-center justify-center gap-8 sm:gap-12 md:gap-16 mb-3 sm:mb-4 md:mb-6">
+        <div className="flex flex-col items-center gap-1 sm:gap-2">
+          <motion.button
+            whileHover={{ scale: 1.1 }}
+            whileTap={{ scale: 0.9 }}
+            onClick={() => handleSwipe('left')}
+            className="w-14 h-14 sm:w-16 sm:h-16 md:w-20 md:h-20 rounded-full bg-gray-900 border-2 sm:border-3 md:border-4 border-red-500 flex items-center justify-center transition-all hover:bg-red-500/20 shadow-lg"
+          >
+            <X className="w-7 h-7 sm:w-8 sm:h-8 md:w-10 md:h-10 text-red-500" strokeWidth={3} />
+          </motion.button>
+          <span 
+            className="text-white text-xs sm:text-sm font-bold"
+            style={{ fontFamily: 'var(--font-pixel)' }}
+          >
+            Skip
+          </span>
+        </div>
         
-        <motion.button
-          whileHover={{ scale: 1.1 }}
-          whileTap={{ scale: 0.9 }}
-          onClick={() => handleSwipe('right')}
-          className="w-16 h-16 rounded-full bg-card border-2 border-success/50 flex items-center justify-center transition-all hover:bg-success/20"
-        >
-          <Heart className="w-8 h-8 text-success" />
-        </motion.button>
+        <div className="flex flex-col items-center gap-1 sm:gap-2">
+          <motion.button
+            whileHover={{ scale: 1.1 }}
+            whileTap={{ scale: 0.9 }}
+            onClick={() => handleSwipe('right')}
+            className="w-14 h-14 sm:w-16 sm:h-16 md:w-20 md:h-20 rounded-full bg-gray-900 border-2 sm:border-3 md:border-4 border-green-500 flex items-center justify-center transition-all hover:bg-green-500/20 shadow-lg"
+          >
+            <Heart className="w-7 h-7 sm:w-8 sm:h-8 md:w-10 md:h-10 text-green-500" strokeWidth={2.5} fill="currentColor" />
+          </motion.button>
+          <span 
+            className="text-white text-xs sm:text-sm font-bold"
+            style={{ fontFamily: 'var(--font-pixel)' }}
+          >
+            Interested
+          </span>
+        </div>
       </div>
 
-      {/* Instructions */}
+      {/* Footer */}
       <motion.p
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         transition={{ delay: 0.5 }}
-        className="text-muted-foreground text-xs mt-6 text-center"
+        className="relative z-30 text-gray-400 text-xs"
+        style={{ fontFamily: 'var(--font-pixel)' }}
       >
-        ← Skip | Interested →
+        Expo West 2026 • Powered by Grovara
       </motion.p>
     </div>
   );

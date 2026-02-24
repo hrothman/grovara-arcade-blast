@@ -34,7 +34,7 @@ export const UserTypeSelectionScreen = () => {
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.3 }}
-        className="relative z-30 text-center w-full max-w-2xl mx-auto px-2 sm:px-4"
+        className="relative z-30 text-center w-full max-w-2xl mx-auto px-2 sm:px-4 py-2 sm:py-4"
       >
         {/* Title */}
         <motion.div
@@ -46,14 +46,14 @@ export const UserTypeSelectionScreen = () => {
             stiffness: 300,
             damping: 20
           }}
-          className="mb-4 sm:mb-6"
+          className="mb-3 sm:mb-4 md:mb-6"
         >
           <h1 
-            className="text-4xl sm:text-5xl md:text-6xl font-bold text-white mb-3 sm:mb-4 tracking-wider leading-tight"
+            className="text-4xl sm:text-5xl md:text-6xl font-bold text-white mb-2 sm:mb-3 md:mb-4 tracking-wider leading-tight"
             style={{ 
               fontFamily: 'var(--font-pixel)',
               textShadow: '3px 3px 0px rgba(0,0,0,0.8), 0 0 15px rgba(255,255,255,0.4)',
-              fontSize: 'clamp(1.75rem, 6vw, 3.5rem)',
+              fontSize: 'clamp(1.5rem, 6vw, 3.5rem)',
             }}
           >
             WHO ARE YOU?
@@ -64,7 +64,7 @@ export const UserTypeSelectionScreen = () => {
         </motion.div>
 
         {/* Options */}
-        <div className="flex flex-col gap-4 sm:gap-6 max-w-xl mx-auto mb-6">
+        <div className="flex flex-col gap-3 sm:gap-4 md:gap-6 max-w-xl mx-auto mb-4 sm:mb-6">
           {/* Buyer Card */}
           <motion.button
             initial={{ opacity: 0, x: -100, scale: 0.8 }}
@@ -78,17 +78,17 @@ export const UserTypeSelectionScreen = () => {
             whileHover={{ scale: 1.03, y: -4, boxShadow: '0 10px 30px rgba(250, 204, 21, 0.3)' }}
             whileTap={{ scale: 0.97 }}
             onClick={() => setUserType('buyer')}
-            className="w-full bg-gray-900 rounded-xl sm:rounded-2xl border-2 sm:border-4 border-white p-6 sm:p-8 text-left hover:border-yellow-400 transition-all"
+            className="w-full bg-gray-900 rounded-lg sm:rounded-xl md:rounded-2xl border-2 sm:border-3 md:border-4 border-white p-4 sm:p-6 md:p-8 text-left hover:border-yellow-400 transition-all"
           >
-            <div className="flex items-center gap-4 sm:gap-6">
+            <div className="flex items-center gap-3 sm:gap-4 md:gap-6">
               <img 
                 src="/who-are-you/coin.png" 
                 alt="Buyer" 
-                className="w-16 h-16 sm:w-20 sm:h-20 flex-shrink-0"
+                className="w-12 h-12 sm:w-16 sm:h-16 md:w-20 md:h-20 flex-shrink-0"
               />
               <div className="flex-1">
                 <h2 
-                  className="text-xl sm:text-2xl font-bold text-white mb-2 tracking-wide"
+                  className="text-lg sm:text-xl md:text-2xl font-bold text-white mb-1 sm:mb-2 tracking-wide"
                   style={{ fontFamily: 'var(--font-pixel)' }}
                 >
                   I'M A BUYER
@@ -113,17 +113,17 @@ export const UserTypeSelectionScreen = () => {
             whileHover={{ scale: 1.03, y: -4, boxShadow: '0 10px 30px rgba(96, 165, 250, 0.3)' }}
             whileTap={{ scale: 0.97 }}
             onClick={() => setUserType('brand')}
-            className="w-full bg-gray-900 rounded-xl sm:rounded-2xl border-2 sm:border-4 border-white p-6 sm:p-8 text-left hover:border-blue-400 transition-all"
+            className="w-full bg-gray-900 rounded-lg sm:rounded-xl md:rounded-2xl border-2 sm:border-3 md:border-4 border-white p-4 sm:p-6 md:p-8 text-left hover:border-blue-400 transition-all"
           >
-            <div className="flex items-center gap-4 sm:gap-6">
+            <div className="flex items-center gap-3 sm:gap-4 md:gap-6">
               <img 
                 src="/who-are-you/diamond.png" 
                 alt="Brand" 
-                className="w-16 h-16 sm:w-20 sm:h-20 flex-shrink-0"
+                className="w-12 h-12 sm:w-16 sm:h-16 md:w-20 md:h-20 flex-shrink-0"
               />
               <div className="flex-1">
                 <h2 
-                  className="text-xl sm:text-2xl font-bold text-white mb-2 tracking-wide"
+                  className="text-lg sm:text-xl md:text-2xl font-bold text-white mb-1 sm:mb-2 tracking-wide"
                   style={{ fontFamily: 'var(--font-pixel)' }}
                 >
                   I'M A BRAND

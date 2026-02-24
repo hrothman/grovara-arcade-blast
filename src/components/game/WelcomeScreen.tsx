@@ -143,7 +143,7 @@ export const WelcomeScreen = () => {
       <motion.img
         src="/home/villain.png"
         alt="Villain"
-        className="absolute bottom-0 left-0 w-40 sm:w-52 md:w-64 lg:w-80 z-20 pointer-events-none"
+        className="absolute bottom-0 left-0 w-32 sm:w-40 md:w-52 lg:w-64 max-h-[30vh] sm:max-h-[35vh] object-contain object-bottom z-20 pointer-events-none"
         initial={{ x: -100, opacity: 0 }}
         animate={{ x: 0, opacity: 1 }}
         transition={{ duration: 0.8, delay: 0.2 }}
@@ -153,7 +153,7 @@ export const WelcomeScreen = () => {
       <motion.img
         src="/home/bird.png"
         alt="Bird"
-        className="absolute bottom-0 right-0 w-40 sm:w-52 md:w-64 lg:w-80 z-20 pointer-events-none"
+        className="absolute bottom-0 right-0 w-32 sm:w-40 md:w-52 lg:w-64 max-h-[30vh] sm:max-h-[35vh] object-contain object-bottom z-20 pointer-events-none"
         initial={{ x: 100, opacity: 0 }}
         animate={{ x: 0, opacity: 1 }}
         transition={{ duration: 0.8, delay: 0.2 }}
@@ -164,21 +164,21 @@ export const WelcomeScreen = () => {
         initial={{ opacity: 0, y: 30 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.6 }}
-        className="relative z-30 text-center w-full max-w-3xl mx-auto px-2 sm:px-4"
+        className="relative z-30 text-center w-full max-w-3xl mx-auto px-2 sm:px-4 py-2 sm:py-4"
       >
         {/* Logo and Title */}
         <motion.div
           initial={{ scale: 0.8, opacity: 0 }}
           animate={{ scale: 1, opacity: 1 }}
           transition={{ delay: 0.3, type: 'spring', stiffness: 200 }}
-          className="mb-4 sm:mb-6"
+          className="mb-2 sm:mb-4 md:mb-6"
         >
           {/* Grovara.com Logo */}
-          <div className="flex items-center justify-center gap-2 sm:gap-3 mb-3 sm:mb-4">
+          <div className="flex items-center justify-center gap-2 sm:gap-3 mb-2 sm:mb-3 md:mb-4">
             <img 
               src="/grovara-logo.svg" 
               alt="Grovara" 
-              className="w-8 h-8 sm:w-10 sm:h-10 md:w-12 md:h-12 drop-shadow-lg"
+              className="w-6 h-6 sm:w-8 sm:h-8 md:w-10 md:h-10 lg:w-12 lg:h-12 drop-shadow-lg"
             />
             <h2 
               className="text-lg sm:text-xl md:text-2xl font-bold text-white tracking-wide" 
@@ -190,11 +190,11 @@ export const WelcomeScreen = () => {
 
           {/* Main Title */}
           <h1 
-            className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-bold text-white mb-3 sm:mb-4 tracking-wider leading-tight px-2"
+            className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-bold text-white mb-2 sm:mb-3 md:mb-4 tracking-wider leading-tight px-2"
             style={{ 
               fontFamily: 'var(--font-pixel)',
               textShadow: '3px 3px 0px rgba(0,0,0,0.8), 0 0 15px rgba(255,255,255,0.4)',
-              fontSize: 'clamp(2rem, 8vw, 4.5rem)',
+              fontSize: 'clamp(1.5rem, 8vw, 4.5rem)',
             }}
           >
             B2B BLASTER
@@ -206,17 +206,17 @@ export const WelcomeScreen = () => {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.5 }}
-          className="mb-4 sm:mb-6"
+          className="mb-3 sm:mb-4 md:mb-6"
         >
           <h3 
-            className="text-sm sm:text-base md:text-lg font-bold text-white mb-3 sm:mb-4 tracking-widest"
+            className="text-xs sm:text-sm md:text-base font-bold text-white mb-2 sm:mb-3 md:mb-4 tracking-widest"
             style={{ fontFamily: 'var(--font-pixel)' }}
           >
             HOW TO PLAY
           </h3>
 
           {/* Tagline */}
-          <div className="mb-3 sm:mb-4 space-y-1">
+          <div className="mb-2 sm:mb-3 md:mb-4 space-y-0.5 sm:space-y-1">
             <p className="text-sm sm:text-base md:text-lg text-gray-300" style={{ fontFamily: 'var(--font-pixel)' }}>
               Old B2B is <span className="text-red-400 font-semibold">broken</span>...
             </p>
@@ -226,27 +226,27 @@ export const WelcomeScreen = () => {
           </div>
 
           {/* Instructions Box */}
-          <div className="bg-gray-900 rounded-xl sm:rounded-2xl border-2 sm:border-4 border-white p-4 sm:p-6 md:p-8 max-w-xl mx-auto">
-            <div className="space-y-3 sm:space-y-4 md:space-y-5">
+          <div className="bg-gray-900 rounded-lg sm:rounded-xl md:rounded-2xl border-2 sm:border-3 md:border-4 border-white p-3 sm:p-4 md:p-6 lg:p-8 max-w-xl mx-auto">
+            <div className="space-y-2 sm:space-y-3 md:space-y-4">
               {/* Instruction 1 */}
-              <div className="flex items-center gap-3 text-left">
-                <img src="/home/sword.png" alt="Sword" className="w-8 h-8 sm:w-10 sm:h-10 flex-shrink-0" />
+              <div className="flex items-center gap-2 sm:gap-3 text-left">
+                <img src="/home/sword.png" alt="Sword" className="w-6 h-6 sm:w-8 sm:h-8 md:w-10 md:h-10 flex-shrink-0" />
                 <p className="text-white text-xs sm:text-sm md:text-base" style={{ fontFamily: 'var(--font-pixel)' }}>
                   <span className="text-red-500 font-semibold">Tap to shoot</span> outdated B2B process
                 </p>
               </div>
 
               {/* Instruction 2 */}
-              <div className="flex items-center gap-3 text-left">
-                <img src="/home/diamond.png" alt="Diamond" className="w-8 h-8 sm:w-10 sm:h-10 flex-shrink-0" />
+              <div className="flex items-center gap-2 sm:gap-3 text-left">
+                <img src="/home/diamond.png" alt="Diamond" className="w-6 h-6 sm:w-8 sm:h-8 md:w-10 md:h-10 flex-shrink-0" />
                 <p className="text-white text-xs sm:text-sm md:text-base" style={{ fontFamily: 'var(--font-pixel)' }}>
                   <span className="text-blue-500 font-semibold">Drag in</span> Grovara-approved brands
                 </p>
               </div>
 
               {/* Instruction 3 */}
-              <div className="flex items-center gap-3 text-left">
-                <img src="/home/coin.png" alt="Coin" className="w-8 h-8 sm:w-10 sm:h-10 flex-shrink-0" />
+              <div className="flex items-center gap-2 sm:gap-3 text-left">
+                <img src="/home/coin.png" alt="Coin" className="w-6 h-6 sm:w-8 sm:h-8 md:w-10 md:h-10 flex-shrink-0" />
                 <p className="text-white text-xs sm:text-sm md:text-base" style={{ fontFamily: 'var(--font-pixel)' }}>
                   <span className="text-yellow-500 font-semibold">Discover</span> new brands after each level
                 </p>
@@ -256,7 +256,7 @@ export const WelcomeScreen = () => {
         </motion.div>
 
         {/* Buttons */}
-        <div className="flex flex-col items-center gap-3 mb-4 sm:mb-6">
+        <div className="flex flex-col items-center gap-2 sm:gap-3 mb-3 sm:mb-4 md:mb-6">
           {/* Start Mission Button */}
           <motion.button
             initial={{ opacity: 0, scale: 0.9 }}
@@ -265,7 +265,7 @@ export const WelcomeScreen = () => {
             whileHover={{ scale: 1.05 }}
             whileTap={{ scale: 0.95 }}
             onClick={startGame}
-            className="w-full max-w-sm px-6 sm:px-8 py-3 sm:py-4 text-base sm:text-lg md:text-xl font-bold text-white rounded-xl relative overflow-hidden"
+            className="w-full max-w-sm px-4 sm:px-6 md:px-8 py-2.5 sm:py-3 md:py-4 text-sm sm:text-base md:text-lg lg:text-xl font-bold text-white rounded-lg sm:rounded-xl relative overflow-hidden"
             style={{
               fontFamily: 'var(--font-pixel)',
               background: 'linear-gradient(135deg, #EC4899 0%, #8B5CF6 100%)',
@@ -284,7 +284,7 @@ export const WelcomeScreen = () => {
             whileHover={{ scale: 1.05 }}
             whileTap={{ scale: 0.95 }}
             onClick={goToSwipe}
-            className="w-full max-w-sm px-6 sm:px-8 py-3 sm:py-4 text-sm sm:text-base md:text-lg font-bold bg-transparent text-white rounded-xl"
+            className="w-full max-w-sm px-4 sm:px-6 md:px-8 py-2.5 sm:py-3 md:py-4 text-xs sm:text-sm md:text-base lg:text-lg font-bold bg-transparent text-white rounded-lg sm:rounded-xl"
             style={{
               fontFamily: 'var(--font-pixel)',
               border: '3px solid white',
