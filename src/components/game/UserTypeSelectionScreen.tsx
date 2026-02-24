@@ -11,7 +11,7 @@ export const UserTypeSelectionScreen = () => {
         className="absolute inset-0 z-0"
         style={{
           backgroundImage: 'url(/who-are-you/gradient.png)',
-          backgroundSize: '100% 100%',
+          backgroundSize: 'cover',
           backgroundPosition: 'center',
           backgroundRepeat: 'no-repeat',
         }}
@@ -22,8 +22,8 @@ export const UserTypeSelectionScreen = () => {
         className="absolute inset-0 z-10"
         style={{
           backgroundImage: 'url(/who-are-you/stars.png)',
-          backgroundSize: '100% 100%',
-          backgroundPosition: 'center',
+          backgroundSize: 'cover',
+          backgroundPosition: 'center top',
           backgroundRepeat: 'no-repeat',
           opacity: 0.8,
         }}

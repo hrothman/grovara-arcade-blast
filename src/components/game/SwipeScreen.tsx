@@ -81,7 +81,7 @@ export const SwipeScreen = () => {
           className="absolute inset-0 z-0"
           style={{
             backgroundImage: 'url(/swipe/gradient.png)',
-            backgroundSize: '100% 100%',
+            backgroundSize: 'cover',
             backgroundPosition: 'center',
             backgroundRepeat: 'no-repeat',
           }}
@@ -92,8 +92,8 @@ export const SwipeScreen = () => {
           className="absolute inset-0 z-10"
           style={{
             backgroundImage: 'url(/swipe/stars.png)',
-            backgroundSize: '100% 100%',
-            backgroundPosition: 'center',
+            backgroundSize: 'cover',
+            backgroundPosition: 'center top',
             backgroundRepeat: 'no-repeat',
             opacity: 0.8,
           }}
@@ -152,7 +152,7 @@ export const SwipeScreen = () => {
         className="absolute inset-0 z-0"
         style={{
           backgroundImage: 'url(/swipe/gradient.png)',
-          backgroundSize: '100% 100%',
+          backgroundSize: 'cover',
           backgroundPosition: 'center',
           backgroundRepeat: 'no-repeat',
         }}
@@ -163,8 +163,8 @@ export const SwipeScreen = () => {
         className="absolute inset-0 z-10"
         style={{
           backgroundImage: 'url(/swipe/stars.png)',
-          backgroundSize: '100% 100%',
-          backgroundPosition: 'center',
+          backgroundSize: 'cover',
+          backgroundPosition: 'center top',
           backgroundRepeat: 'no-repeat',
           opacity: 0.8,
         }}
