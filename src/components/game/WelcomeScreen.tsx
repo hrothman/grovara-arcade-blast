@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { useGame } from '@/context/GameContext';
-import { Zap, Target, Medal, Download, UserPlus } from 'lucide-react';
+import { Medal, UserPlus } from 'lucide-react';
 import { getCurrentUser, setCurrentUser as setCurrentUserSession } from '@/lib/leaderboardManager';
 import { AccountLoadModal } from './AccountLoadModal';
 import { UserInfoModal } from './UserInfoModal';
@@ -110,178 +110,245 @@ export const WelcomeScreen = () => {
     setShowRegisterModal(true);
   };
 
-  return (
-    <div className="min-h-screen gradient-arcade flex flex-col items-center justify-center p-6 relative overflow-hidden">
-      {/* Background glow effect */}
-      <div className="absolute inset-0 gradient-radial-glow" />
-      
-      {/* Scanline overlay */}
-      <div className="absolute inset-0 scanline opacity-30" />
+  const openAccountLoadModal = () => {
+    setShowLoadModal(true);
+  };
 
+  return (
+    <div className="min-h-screen relative flex flex-col items-center justify-center p-4 sm:p-6 overflow-hidden">
+      {/* Gradient Background Layer */}
+      <div 
+        className="absolute inset-0 z-0"
+        style={{
+          backgroundImage: 'url(/home/gradient.png)',
+          backgroundSize: '100% 100%',
+          backgroundPosition: 'center',
+          backgroundRepeat: 'no-repeat',
+        }}
+      />
+      
+      {/* Stars Overlay Layer */}
+      <div 
+        className="absolute inset-0 z-10"
+        style={{
+          backgroundImage: 'url(/home/stars.png)',
+          backgroundSize: '100% 100%',
+          backgroundPosition: 'center',
+          backgroundRepeat: 'no-repeat',
+          opacity: 0.8,
+        }}
+      />
+
+      {/* Villain Character - Left */}
+      <motion.img
+        src="/home/villain.png"
+        alt="Villain"
+        className="absolute bottom-0 left-0 w-40 sm:w-52 md:w-64 lg:w-80 z-20 pointer-events-none"
+        initial={{ x: -100, opacity: 0 }}
+        animate={{ x: 0, opacity: 1 }}
+        transition={{ duration: 0.8, delay: 0.2 }}
+      />
+
+      {/* Bird Character - Right */}
+      <motion.img
+        src="/home/bird.png"
+        alt="Bird"
+        className="absolute bottom-0 right-0 w-40 sm:w-52 md:w-64 lg:w-80 z-20 pointer-events-none"
+        initial={{ x: 100, opacity: 0 }}
+        animate={{ x: 0, opacity: 1 }}
+        transition={{ duration: 0.8, delay: 0.2 }}
+      />
+
+      {/* Main Content */}
       <motion.div
         initial={{ opacity: 0, y: 30 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.6 }}
-        className="relative z-10 text-center max-w-md mx-auto"
+        className="relative z-30 text-center w-full max-w-3xl mx-auto px-2 sm:px-4"
       >
-        {/* Logo area */}
+        {/* Logo and Title */}
         <motion.div
-          initial={{ scale: 0.8 }}
-          animate={{ scale: 1 }}
-          transition={{ delay: 0.2, type: 'spring', stiffness: 200 }}
-          className="mb-8"
+          initial={{ scale: 0.8, opacity: 0 }}
+          animate={{ scale: 1, opacity: 1 }}
+          transition={{ delay: 0.3, type: 'spring', stiffness: 200 }}
+          className="mb-4 sm:mb-6"
         >
-          <div className="inline-flex items-center gap-4 mb-4">
+          {/* Grovara.com Logo */}
+          <div className="flex items-center justify-center gap-2 sm:gap-3 mb-3 sm:mb-4">
             <img 
               src="/grovara-logo.svg" 
               alt="Grovara" 
-              className="w-14 h-14 drop-shadow-lg animate-float"
-              style={{
-                filter: 'drop-shadow(0 0 15px rgba(0, 181, 115, 0.6)) drop-shadow(0 0 25px rgba(0, 171, 158, 0.4))',
-              }}
+              className="w-8 h-8 sm:w-10 sm:h-10 md:w-12 md:h-12 drop-shadow-lg"
             />
-            <h1 className="arcade-text text-4xl font-bold text-foreground neon-glow">
-              GROVARA
-            </h1>
+            <h2 
+              className="text-lg sm:text-xl md:text-2xl font-bold text-white tracking-wide" 
+              style={{ fontFamily: 'var(--font-display)' }}
+            >
+              GROVARA.COM
+            </h2>
           </div>
-          <p className="text-primary font-display text-lg tracking-wider">
+
+          {/* Main Title */}
+          <h1 
+            className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-bold text-white mb-3 sm:mb-4 tracking-wider leading-tight px-2"
+            style={{ 
+              fontFamily: 'var(--font-pixel)',
+              textShadow: '3px 3px 0px rgba(0,0,0,0.8), 0 0 15px rgba(255,255,255,0.4)',
+              fontSize: 'clamp(2rem, 8vw, 4.5rem)',
+            }}
+          >
             B2B BLASTER
-          </p>
+          </h1>
         </motion.div>
 
-        {/* Tagline */}
-        <motion.div
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ delay: 0.4 }}
-          className="mb-10 space-y-3"
-        >
-          <p className="text-muted-foreground text-lg">
-            Old B2B is <span className="text-destructive font-semibold">broken</span>.
-          </p>
-          <p className="text-foreground text-xl font-medium">
-            Grovara is built for <span className="text-primary neon-glow">what's next</span>.
-          </p>
-        </motion.div>
-
-        {/* Instructions */}
+        {/* How to Play Section */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.6 }}
-          className="bg-card/50 backdrop-blur-sm rounded-2xl p-6 mb-8 neon-border"
+          transition={{ delay: 0.5 }}
+          className="mb-4 sm:mb-6"
         >
-          <h3 className="arcade-text text-sm text-primary mb-4 flex items-center justify-center gap-2">
-            <Target className="w-4 h-4" />
-            How to Play
+          <h3 
+            className="text-sm sm:text-base md:text-lg font-bold text-white mb-3 sm:mb-4 tracking-widest"
+            style={{ fontFamily: 'var(--font-pixel)' }}
+          >
+            HOW TO PLAY
           </h3>
-          <div className="space-y-3 text-left">
-            <div className="flex items-start gap-3">
-              <span className="text-destructive text-xl">💥</span>
-              <p className="text-foreground text-sm">
-                <strong className="text-destructive">Tap to shoot</strong> outdated B2B processes
-              </p>
-            </div>
-            <div className="flex items-start gap-3">
-              <span className="text-success text-xl">🛡️</span>
-              <p className="text-foreground text-sm">
-                <strong className="text-success">Avoid</strong> Grovara-approved brands
-              </p>
-            </div>
-            <div className="flex items-start gap-3">
-              <span className="text-warning text-xl">⭐</span>
-              <p className="text-foreground text-sm">
-                <strong className="text-warning">Discover</strong> new brands after each level
-              </p>
+
+          {/* Tagline */}
+          <div className="mb-3 sm:mb-4 space-y-1">
+            <p className="text-sm sm:text-base md:text-lg text-gray-300">
+              Old B2B is <span className="text-red-400 font-semibold">broken</span>...
+            </p>
+            <p className="text-sm sm:text-base md:text-lg text-white font-medium">
+              Grovara is built for what's next.
+            </p>
+          </div>
+
+          {/* Instructions Box */}
+          <div className="bg-gray-900 rounded-xl sm:rounded-2xl border-2 sm:border-4 border-white p-4 sm:p-6 md:p-8 max-w-xl mx-auto">
+            <div className="space-y-3 sm:space-y-4 md:space-y-5">
+              {/* Instruction 1 */}
+              <div className="flex items-center gap-3 text-left">
+                <img src="/home/sword.png" alt="Sword" className="w-8 h-8 sm:w-10 sm:h-10 flex-shrink-0" />
+                <p className="text-white text-xs sm:text-sm md:text-base">
+                  <span className="text-red-500 font-semibold">Tap to shoot</span> outdated B2B process
+                </p>
+              </div>
+
+              {/* Instruction 2 */}
+              <div className="flex items-center gap-3 text-left">
+                <img src="/home/diamond.png" alt="Diamond" className="w-8 h-8 sm:w-10 sm:h-10 flex-shrink-0" />
+                <p className="text-white text-xs sm:text-sm md:text-base">
+                  <span className="text-blue-500 font-semibold">Drag in</span> Grovara-approved brands
+                </p>
+              </div>
+
+              {/* Instruction 3 */}
+              <div className="flex items-center gap-3 text-left">
+                <img src="/home/coin.png" alt="Coin" className="w-8 h-8 sm:w-10 sm:h-10 flex-shrink-0" />
+                <p className="text-white text-xs sm:text-sm md:text-base">
+                  <span className="text-yellow-500 font-semibold">Discover</span> new brands after each level
+                </p>
+              </div>
             </div>
           </div>
         </motion.div>
 
-        {/* Start & swipe buttons */}
-        <div className="flex flex-col items-center gap-3">
+        {/* Buttons */}
+        <div className="flex flex-col items-center gap-3 mb-4 sm:mb-6">
+          {/* Start Mission Button */}
+          <motion.button
+            initial={{ opacity: 0, scale: 0.9 }}
+            animate={{ opacity: 1, scale: 1 }}
+            transition={{ delay: 0.7, type: 'spring' }}
+            whileHover={{ scale: 1.05 }}
+            whileTap={{ scale: 0.95 }}
+            onClick={startGame}
+            className="w-full max-w-sm px-6 sm:px-8 py-3 sm:py-4 text-base sm:text-lg md:text-xl font-bold text-white rounded-xl relative overflow-hidden"
+            style={{
+              fontFamily: 'var(--font-pixel)',
+              background: 'linear-gradient(135deg, #EC4899 0%, #8B5CF6 100%)',
+              boxShadow: '0 0 30px rgba(236, 72, 153, 0.6), 0 8px 16px rgba(0,0,0,0.4)',
+              border: '3px solid rgba(255,255,255,0.3)',
+            }}
+          >
+            START MISSION
+          </motion.button>
+
+          {/* Swipe for Brands Button */}
           <motion.button
             initial={{ opacity: 0, scale: 0.9 }}
             animate={{ opacity: 1, scale: 1 }}
             transition={{ delay: 0.8, type: 'spring' }}
             whileHover={{ scale: 1.05 }}
             whileTap={{ scale: 0.95 }}
-            onClick={startGame}
-            className="btn-arcade text-xl w-full max-w-xs flex items-center justify-center gap-3 animate-pulse-glow"
-          >
-            <Zap className="w-6 h-6" />
-            START MISSION
-          </motion.button>
-
-          <motion.button
-            initial={{ opacity: 0, scale: 0.9 }}
-            animate={{ opacity: 1, scale: 1 }}
-            transition={{ delay: 0.9, type: 'spring' }}
-            whileHover={{ scale: 1.05 }}
-            whileTap={{ scale: 0.95 }}
             onClick={goToSwipe}
-            className="btn-arcade text-lg w-full max-w-xs flex items-center justify-center gap-3 bg-card/80 hover:bg-card text-foreground"
+            className="w-full max-w-sm px-6 sm:px-8 py-3 sm:py-4 text-sm sm:text-base md:text-lg font-bold bg-transparent text-white rounded-xl"
+            style={{
+              fontFamily: 'var(--font-pixel)',
+              border: '3px solid white',
+              boxShadow: '0 4px 12px rgba(0,0,0,0.3)',
+            }}
           >
-            <Target className="w-5 h-5" />
-            SWIPE
+            SWIPE FOR BRANDS
           </motion.button>
+        </div>
 
+        {/* Footer Links */}
+        <div className="flex flex-wrap items-center justify-center gap-4 sm:gap-6 text-xs sm:text-sm text-gray-300">
           <motion.button
-            initial={{ opacity: 0, scale: 0.9 }}
-            animate={{ opacity: 1, scale: 1 }}
-            transition={{ delay: 1, type: 'spring' }}
-            whileHover={{ scale: 1.05 }}
-            whileTap={{ scale: 0.95 }}
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ delay: 0.9 }}
             onClick={goToLeaderboard}
-            className="text-sm w-full max-w-xs flex items-center justify-center gap-2 py-2 text-muted-foreground hover:text-foreground transition-colors"
+            className="flex items-center gap-2 hover:text-white transition-colors"
           >
-            <Medal className="w-4 h-4" />
+            <Medal className="w-3 h-3 sm:w-4 sm:h-4" />
             View Leaderboard
           </motion.button>
 
           {!sessionUser && currentUser?.is_anonymous && (
             <motion.button
-              initial={{ opacity: 0, scale: 0.9 }}
-              animate={{ opacity: 1, scale: 1 }}
-              transition={{ delay: 1.1, type: 'spring' }}
-              whileHover={{ scale: 1.05 }}
-              whileTap={{ scale: 0.95 }}
-              onClick={openRegisterModal}
-              className="text-sm w-full max-w-xs flex items-center justify-center gap-2 py-2 text-primary hover:text-primary/80 transition-colors"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ delay: 1 }}
+              onClick={openAccountLoadModal}
+              className="flex items-center gap-2 hover:text-white transition-colors"
             >
-              <UserPlus className="w-4 h-4" />
-              Create Account
+              <UserPlus className="w-3 h-3 sm:w-4 sm:h-4" />
+              Continue Progress
             </motion.button>
           )}
         </div>
 
-        {/* Account Load Modal */}
-        <AccountLoadModal
-          isOpen={showLoadModal}
-          onClose={() => setShowLoadModal(false)}
-          onLoadAccount={handleLoadAccount}
-          onCreateAccount={handleCreateNewAccount}
-        />
-
-        {/* Registration Prompt Modal */}
-        <UserInfoModal
-          isOpen={showRegisterModal}
-          onClose={() => setShowRegisterModal(false)}
-          onSubmit={handleRegisterUser}
-          title="Create Your Account"
-          description="Save your progress and connect with amazing brands!"
-          submitButtonText="Create Account"
-        />
-
-        {/* Footer */}
+        {/* Footer Text */}
         <motion.p
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
-          transition={{ delay: 1 }}
-          className="mt-8 text-muted-foreground text-xs"
+          transition={{ delay: 1.1 }}
+          className="mt-3 sm:mt-4 text-gray-400 text-xs"
         >
           Expo West 2026 • Powered by Grovara
         </motion.p>
       </motion.div>
+
+      {/* Modals */}
+      <AccountLoadModal
+        isOpen={showLoadModal}
+        onClose={() => setShowLoadModal(false)}
+        onLoadAccount={handleLoadAccount}
+        onCreateAccount={handleCreateNewAccount}
+      />
+
+      <UserInfoModal
+        isOpen={showRegisterModal}
+        onClose={() => setShowRegisterModal(false)}
+        onSubmit={handleRegisterUser}
+        title="Create Your Account"
+        description="Save your progress and connect with amazing brands!"
+        submitButtonText="Create Account"
+      />
     </div>
   );
 };

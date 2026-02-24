@@ -1,4 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;500;600;700;800;900&family=Inter:wght@400;500;600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;500;600;700;800;900&family=Inter:wght@400;500;600;700&family=Press+Start+2P&display=swap');
 
 @tailwind base;
 @tailwind components;
@@ -58,6 +58,7 @@
     /* Typography */
     --font-display: 'Orbitron', sans-serif;
     --font-body: 'Inter', sans-serif;
+    --font-pixel: 'Press Start 2P', cursive;
 
     /* Sidebar tokens */
     --sidebar-background: 260 40% 9%;
