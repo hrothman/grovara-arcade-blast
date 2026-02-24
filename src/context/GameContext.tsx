@@ -1,9 +1,13 @@
 import React, { createContext, useContext, useState, useCallback, ReactNode } from 'react';
 import { GameState, LevelData, SwipeAction } from '@/types/game';
 import { useGameSession } from '@/hooks/useGameSession';
+import { Database } from '@/types/database';
+
+type User = Database['public']['Tables']['users']['Row'];
 
 interface GameContextType {
   gameState: GameState;
+  currentUser: User | null;
   startGame: () => void;
   completeLevel: (levelData: LevelData) => void;
   recordSwipe: (brandId: string, direction: 'left' | 'right') => void;
@@ -19,6 +23,7 @@ interface GameContextType {
   setEmail: (email: string) => void;
   getAnalytics: () => any;
   setUserType: (type: 'buyer' | 'brand') => void;
+  loadUserByEmail: (email: string) => Promise<boolean>;
 }
 
 const GameContext = createContext<GameContextType | undefined>(undefined);
@@ -29,10 +34,12 @@ const INITIAL_LIVES = 3;
 export const GameProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
   const {
     session,
+    currentUser,
     recordLevel,
     recordSwipe: sessionRecordSwipe,
     setEmail: sessionSetEmail,
     getAnalyticsData,
+    loadUserByEmail,
   } = useGameSession();
 
   const [gameState, setGameState] = useState<GameState>({
@@ -204,6 +211,7 @@ export const GameProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     <GameContext.Provider
       value={{
         gameState,
+        currentUser,
         startGame,
         completeLevel,
         recordSwipe,
@@ -219,6 +227,7 @@ export const GameProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         setEmail,
         getAnalytics,
         setUserType,
+        loadUserByEmail,
       }}
     >
       {children}

@@ -5,8 +5,9 @@ import { Heart, Check, ArrowRight, Plus } from 'lucide-react';
 import { toast } from 'sonner';
 import realBrandsData from '@/data/realBrands.json';
 import buyersData from '@/data/buyers.json';
-import { savePlayerAccount, setCurrentUser } from '@/lib/leaderboardManager';
+import { setCurrentUser } from '@/lib/leaderboardManager';
 import { registerUser, checkUsernameAvailable } from '@/services/userService';
+import { updateLeaderboardScore } from '@/services/leaderboardService';
 import { UserInfoModal } from './UserInfoModal';
 
 export const SwipeSummaryScreen = () => {
@@ -42,16 +43,15 @@ export const SwipeSummaryScreen = () => {
 
       console.log('✅ User registered in database:', registeredUser);
 
-      // Save email and matches to localStorage for backward compatibility
-      localStorage.setItem(`user_email_${email}`, JSON.stringify({
-        email,
-        matches: matchedItems.map((i: any) => i.id),
-        timestamp: new Date().toISOString(),
-      }));
-
-      // Save account with matched item IDs to leaderboard
-      const matchedItemIds = matchedItems.map((i: any) => i?.id).filter(Boolean) as string[];
-      await savePlayerAccount(username, 0, matchedItemIds); // 0 score for swipe-only users
+      // Add/update leaderboard entry with score 0 (swipe-only user)
+      await updateLeaderboardScore(
+        registeredUser.id,
+        username,
+        0, // 0 score for swipe-only users
+        undefined // session ID
+      );
+      
+      console.log('✅ Leaderboard entry added');
 
       // Set current user session
       setCurrentUser(username, email);
@@ -63,6 +63,7 @@ export const SwipeSummaryScreen = () => {
       toast.success(`Welcome, ${username}! Your matches have been saved.`);
 
       // Log analytics
+      const matchedItemIds = matchedItems.map((i: any) => i?.id).filter(Boolean) as string[];
       console.log('Account created from swipe:', {
         username,
         email,
@@ -159,31 +160,47 @@ export const SwipeSummaryScreen = () => {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.6 }}
+            className="space-y-3"
           >
             <button
               onClick={() => setShowModal(true)}
-              className="btn-arcade w-full text-lg mb-6 flex items-center justify-center gap-3"
+              className="btn-arcade w-full text-lg flex items-center justify-center gap-3"
             >
               <Plus className="w-5 h-5" />
               SAVE YOUR MATCHES
             </button>
-            <p className="text-xs text-muted-foreground text-center mb-6">
-              Create an account to connect with your matched {itemType}
-            </p>
+            
+            <button
+              onClick={resetGame}
+              className="w-full bg-muted/30 hover:bg-muted/50 transition-colors rounded-xl py-3 px-4 text-lg flex items-center justify-center gap-3 text-muted-foreground hover:text-foreground border border-border/50"
+            >
+              <ArrowRight className="w-5 h-5" />
+              BACK TO START
+            </button>
           </motion.div>
         ) : (
           <motion.div
             initial={{ opacity: 0, scale: 0.95 }}
             animate={{ opacity: 1, scale: 1 }}
-            className="bg-primary/10 rounded-2xl p-4 mb-6 border border-primary/30"
+            className="space-y-3"
           >
-            <div className="flex items-center gap-3 text-primary">
-              <Check className="w-5 h-5 flex-shrink-0" />
-              <div className="text-left">
-                <p className="font-semibold text-sm">All set, <span className="text-success">{savedUsername}</span>!</p>
-                <p className="text-xs opacity-80">We'll follow up about your matches at {savedEmail}</p>
+            <div className="bg-primary/10 rounded-2xl p-4 border border-primary/30">
+              <div className="flex items-center gap-3 text-primary">
+                <Check className="w-5 h-5 flex-shrink-0" />
+                <div className="text-left">
+                  <p className="font-semibold text-sm">All set, <span className="text-success">{savedUsername}</span>!</p>
+                  <p className="text-xs opacity-80">We'll follow up about your matches at {savedEmail}</p>
+                </div>
               </div>
             </div>
+            
+            <button
+              onClick={resetGame}
+              className="w-full bg-muted/30 hover:bg-muted/50 transition-colors rounded-xl py-3 px-4 text-lg flex items-center justify-center gap-3 text-muted-foreground hover:text-foreground border border-border/50"
+            >
+              <ArrowRight className="w-5 h-5" />
+              BACK TO START
+            </button>
           </motion.div>
         )}
 
@@ -199,22 +216,6 @@ export const SwipeSummaryScreen = () => {
           matchType={itemType}
           submitButtonText="Save & Connect"
         />
-
-        {/* Action buttons */}
-        <motion.div
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ delay: 0.7 }}
-          className="flex flex-col gap-3"
-        >
-          <button
-            onClick={resetGame}
-            className="btn-arcade text-lg w-full flex items-center justify-center gap-3"
-          >
-            <ArrowRight className="w-5 h-5" />
-            BACK TO START
-          </button>
-        </motion.div>
 
         {/* Footer */}
         <motion.p

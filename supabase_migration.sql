@@ -208,7 +208,9 @@ END;
 $$ language 'plpgsql';
 
 -- Trigger to update ranks on insert/update
-CREATE TRIGGER update_ranks_on_change AFTER INSERT OR UPDATE ON leaderboard_entries
+-- NOTE: Only fires on INSERT and DELETE to prevent infinite recursion
+-- When ranks are updated by this function, it won't trigger itself again
+CREATE TRIGGER update_ranks_on_change AFTER INSERT OR DELETE ON leaderboard_entries
     FOR EACH STATEMENT EXECUTE FUNCTION update_leaderboard_ranks();
 
 -- =============================================================================

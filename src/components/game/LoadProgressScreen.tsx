@@ -4,8 +4,9 @@ import { useGame } from '@/context/GameContext';
 import { Download, ArrowLeft, Mail } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { toast } from 'sonner';
-import { savePlayerAccount, setCurrentUser } from '@/lib/leaderboardManager';
+import { setCurrentUser } from '@/lib/leaderboardManager';
 import { registerUser, checkUsernameAvailable } from '@/services/userService';
+import { updateLeaderboardScore } from '@/services/leaderboardService';
 import { UserInfoModal } from './UserInfoModal';
 
 export const LoadProgressScreen = () => {
@@ -65,8 +66,15 @@ export const LoadProgressScreen = () => {
 
       console.log('✅ User registered in database:', registeredUser);
 
-      // Save account to leaderboard
-      await savePlayerAccount(username, 0, []);
+      // Add/update leaderboard entry with score 0
+      await updateLeaderboardScore(
+        registeredUser.id,
+        username,
+        0,
+        undefined
+      );
+      
+      console.log('✅ Leaderboard entry added');
 
       // Set current user session
       setCurrentUser(username, submittedEmail);

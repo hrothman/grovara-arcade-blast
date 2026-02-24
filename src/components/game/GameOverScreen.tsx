@@ -2,7 +2,8 @@ import { useState, useEffect, useRef } from 'react';
 import { motion } from 'framer-motion';
 import { useGame } from '@/context/GameContext';
 import { Frown, RefreshCw, Medal } from 'lucide-react';
-import { getMergedLeaderboard, getCurrentUser } from '@/lib/leaderboardManager';
+import { getLeaderboard } from '@/services/leaderboardService';
+import { getCurrentUser } from '@/lib/leaderboardManager';
 
 export const GameOverScreen = () => {
   const { gameState, resetGame, goToSwipe } = useGame();
@@ -15,13 +16,18 @@ export const GameOverScreen = () => {
   useEffect(() => {
     const loadLeaderboard = async () => {
       const currentUser = getCurrentUser();
-      const merged = await getMergedLeaderboard();
+      const entries = await getLeaderboard(50);
+      // Map to simple format
+      const mapped = entries.map(entry => ({
+        username: entry.username,
+        score: entry.score
+      }));
       const displayUsername = currentUser?.username || username;
       // Only add temporary player if not logged in
       const withPlayer = currentUser
-        ? merged
+        ? mapped
         : [
-            ...merged,
+            ...mapped,
             { username: displayUsername, score: gameState.totalScore }
           ];
       setLeaderboard(withPlayer.sort((a, b) => b.score - a.score));

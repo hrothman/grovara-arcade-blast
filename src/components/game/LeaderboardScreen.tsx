@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { Medal, ArrowLeft } from 'lucide-react';
-import { getMergedLeaderboard } from '@/lib/leaderboardManager';
+import { getLeaderboard } from '@/services/leaderboardService';
 import { useGame } from '@/context/GameContext';
 
 export const LeaderboardScreen = () => {
@@ -10,8 +10,13 @@ export const LeaderboardScreen = () => {
 
   useEffect(() => {
     const loadLeaderboard = async () => {
-      const merged = await getMergedLeaderboard();
-      setLeaderboard(merged);
+      const entries = await getLeaderboard(50);
+      // Map to simple format for display
+      const mapped = entries.map(entry => ({
+        username: entry.username,
+        score: entry.score
+      }));
+      setLeaderboard(mapped);
     };
     loadLeaderboard();
   }, []);

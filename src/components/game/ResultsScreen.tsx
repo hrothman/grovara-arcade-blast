@@ -4,12 +4,13 @@ import { useGame } from '@/context/GameContext';
 import { GROVARA_BRANDS } from '@/data/brands';
 import { Trophy, Heart, User, RefreshCw, Share2, Check, Medal, Plus } from 'lucide-react';
 import { toast } from 'sonner';
-import { savePlayerAccount, getMergedLeaderboard, setCurrentUser } from '@/lib/leaderboardManager';
+import { getLeaderboard, updateLeaderboardScore } from '@/services/leaderboardService';
 import { registerUser, checkUsernameAvailable } from '@/services/userService';
 import { UserInfoModal } from './UserInfoModal';
+import { getCurrentUser, setCurrentUser } from '@/lib/leaderboardManager';
 
 export const ResultsScreen = () => {
-  const { gameState, resetGame, getAnalytics } = useGame();
+  const { gameState, resetGame, getAnalytics, currentUser } = useGame();
   const [showModal, setShowModal] = useState(false);
   const [accountCreated, setAccountCreated] = useState(false);
   const [savedUsername, setSavedUsername] = useState('');
@@ -32,13 +33,21 @@ export const ResultsScreen = () => {
   // Load merged leaderboard on mount and when account is created
   useEffect(() => {
     const loadLeaderboard = async () => {
-      const merged = await getMergedLeaderboard();
-      // Only add current player if not already in merged leaderboard (new temporary player)
-      const playerExists = merged.some(entry => entry.username === displayUsername);
+      const entries = await getLeaderboard(50);
+      // Map to simple format
+      const mapped = entries.map(entry => ({
+        username: entry.username,
+        score: entry.score
+      }));
+      
+      // Check if current user exists
+      const currentUser = getCurrentUser();
+      // Only add current player if not already in leaderboard (new temporary player)
+      const playerExists = mapped.some(entry => entry.username === displayUsername) || currentUser;
       const withPlayer = playerExists
-        ? merged
+        ? mapped
         : [
-            ...merged,
+            ...mapped,
             { username: displayUsername, score: gameState.totalScore }
           ];
       setLeaderboard(withPlayer.sort((a, b) => b.score - a.score));
@@ -92,9 +101,13 @@ export const ResultsScreen = () => {
 
       console.log('✅ User registered in database:', registeredUser);
 
-      // Save account with matched brand IDs to leaderboard
-      const matchedBrandIds = matchedBrands.map(b => b?.id).filter(Boolean) as string[];
-      await savePlayerAccount(username, gameState.totalScore, matchedBrandIds);
+      // Update/create leaderboard entry with cumulative score
+      await updateLeaderboardScore(
+        registeredUser.id,
+        username,
+        gameState.totalScore,
+        undefined // session ID
+      );
 
       // Set current user session
       setCurrentUser(username, email);
@@ -110,7 +123,7 @@ export const ResultsScreen = () => {
         username,
         email,
         score: gameState.totalScore,
-        matchedBrands: matchedBrandIds,
+        matchedBrands: matchedBrands.map(b => b?.id),
         dbUser: registeredUser,
         ...analytics,
       });

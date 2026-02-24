@@ -1,18 +1,114 @@
 import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { useGame } from '@/context/GameContext';
-import { Zap, Target, Medal, Download } from 'lucide-react';
-import { getCurrentUser } from '@/lib/leaderboardManager';
+import { Zap, Target, Medal, Download, UserPlus } from 'lucide-react';
+import { getCurrentUser, setCurrentUser as setCurrentUserSession } from '@/lib/leaderboardManager';
+import { AccountLoadModal } from './AccountLoadModal';
+import { UserInfoModal } from './UserInfoModal';
+import { registerUser, checkUsernameAvailable } from '@/services/userService';
+import { updateLeaderboardScore } from '@/services/leaderboardService';
+import { toast } from 'sonner';
 
 export const WelcomeScreen = () => {
-  const { startGame, goToSwipe, goToLeaderboard, goToLoadProgress } = useGame();
-  const [currentUser, setCurrentUser] = useState<{ username: string; email?: string } | null>(null);
+  const { startGame, goToSwipe, goToLeaderboard, currentUser, loadUserByEmail } = useGame();
+  const [sessionUser, setSessionUser] = useState<{ username: string; email?: string } | null>(null);
+  const [showLoadModal, setShowLoadModal] = useState(false);
+  const [showRegisterModal, setShowRegisterModal] = useState(false);
+  const [hasShownInitialPrompt, setHasShownInitialPrompt] = useState(false);
 
+  // Check session user on mount
   useEffect(() => {
-    // Check if user is already logged in
     const user = getCurrentUser();
-    setCurrentUser(user);
+    setSessionUser(user);
+    console.log('💾 Session user:', user);
   }, []);
+
+  // Show account load/create modal immediately on first visit
+  useEffect(() => {
+    // Don't show if we already showed a prompt
+    if (hasShownInitialPrompt) return;
+
+    // Don't show if user already has a session (registered and logged in)
+    if (sessionUser) {
+      console.log('✅ User has session, no modal needed');
+      setHasShownInitialPrompt(true);
+      return;
+    }
+
+    // Show the load/create modal after a short delay
+    console.log('🎮 First visit - showing account modal');
+    const timer = setTimeout(() => {
+      setShowLoadModal(true);
+      setHasShownInitialPrompt(true);
+    }, 1000);
+    
+    return () => clearTimeout(timer);
+  }, [sessionUser, hasShownInitialPrompt]);
+
+  const handleLoadAccount = async (emailOrUsername: string): Promise<boolean> => {
+    const loaded = await loadUserByEmail(emailOrUsername);
+    if (loaded) {
+      toast.success(`Welcome back! Your account has been loaded.`);
+      setShowLoadModal(false);
+      // Refresh session user
+      const user = getCurrentUser();
+      setSessionUser(user);
+    }
+    return loaded;
+  };
+
+  const handleCreateNewAccount = () => {
+    console.log('📝 User chose to create new account - showing registration modal');
+    setShowLoadModal(false);
+    setShowRegisterModal(true);
+  };
+
+  const handleRegisterUser = async (username: string, email: string) => {
+    try {
+      // Check if username is available
+      const available = await checkUsernameAvailable(username);
+      if (!available) {
+        toast.error('Username already taken. Try another!');
+        throw new Error('Username taken');
+      }
+
+      // Register user in database
+      const registeredUser = await registerUser(username, email);
+      if (!registeredUser) {
+        throw new Error('Failed to register user');
+      }
+
+      console.log('✅ User registered:', registeredUser);
+
+      // Update leaderboard entry with new username (if they had anonymous entry)
+      // This will update any existing anonymous entry or create a new one
+      await updateLeaderboardScore(
+        registeredUser.id,
+        username,
+        0,
+        undefined
+      );
+      
+      console.log('✅ Leaderboard entry added');
+
+      // Set current user session
+      setCurrentUserSession(username, email);
+      setSessionUser({ username, email });
+
+      setShowRegisterModal(false);
+      toast.success(`Welcome, ${username}! Your account has been created.`);
+    } catch (error) {
+      console.error('Error registering user:', error);
+      if (error instanceof Error && error.message !== 'Username taken') {
+        toast.error('Failed to create account. Please try again.');
+      }
+      throw error;
+    }
+  };
+
+  const openRegisterModal = () => {
+    setShowRegisterModal(true);
+  };
 
   return (
     <div className="min-h-screen gradient-arcade flex flex-col items-center justify-center p-6 relative overflow-hidden">
@@ -142,21 +238,39 @@ export const WelcomeScreen = () => {
             View Leaderboard
           </motion.button>
 
-          {!currentUser && (
+          {!sessionUser && currentUser?.is_anonymous && (
             <motion.button
               initial={{ opacity: 0, scale: 0.9 }}
               animate={{ opacity: 1, scale: 1 }}
               transition={{ delay: 1.1, type: 'spring' }}
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
-              onClick={goToLoadProgress}
-              className="text-sm w-full max-w-xs flex items-center justify-center gap-2 py-2 text-muted-foreground hover:text-foreground transition-colors"
+              onClick={openRegisterModal}
+              className="text-sm w-full max-w-xs flex items-center justify-center gap-2 py-2 text-primary hover:text-primary/80 transition-colors"
             >
-              <Download className="w-4 h-4" />
-              Continue Progress
+              <UserPlus className="w-4 h-4" />
+              Create Account
             </motion.button>
           )}
         </div>
+
+        {/* Account Load Modal */}
+        <AccountLoadModal
+          isOpen={showLoadModal}
+          onClose={() => setShowLoadModal(false)}
+          onLoadAccount={handleLoadAccount}
+          onCreateAccount={handleCreateNewAccount}
+        />
+
+        {/* Registration Prompt Modal */}
+        <UserInfoModal
+          isOpen={showRegisterModal}
+          onClose={() => setShowRegisterModal(false)}
+          onSubmit={handleRegisterUser}
+          title="Create Your Account"
+          description="Save your progress and connect with amazing brands!"
+          submitButtonText="Create Account"
+        />
 
         {/* Footer */}
         <motion.p

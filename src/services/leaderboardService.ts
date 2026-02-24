@@ -230,6 +230,107 @@ export const qualifiesForLeaderboard = async (score: number): Promise<boolean> =
 };
 
 /**
+ * Update or create leaderboard entry with cumulative score
+ * This updates existing entries or creates new ones as users progress
+ */
+export const updateLeaderboardScore = async (
+  userId: string,
+  username: string,
+  cumulativeScore: number,
+  sessionId?: string
+): Promise<void> => {
+  console.log('🏆 [LeaderboardService] updateLeaderboardScore called', { userId, username, cumulativeScore, sessionId });
+  try {
+    if (isSupabaseConfigured()) {
+      // Check if user already has an entry (by user_id, regardless of session)
+      // This allows updating anonymous entries when they register with a real username
+      const { data: existingEntry } = await supabase
+        .from('leaderboard_entries')
+        .select('*')
+        .eq('user_id', userId)
+        .maybeSingle();
+
+      if (existingEntry) {
+        // Update existing entry with new cumulative score and username
+        console.log('📝 Updating existing leaderboard entry', existingEntry.id);
+        const { error } = await supabase
+          .from('leaderboard_entries')
+          .update({ 
+            username: username, // Update username in case user registered
+            score: cumulativeScore,
+            session_id: sessionId || existingEntry.session_id, // Update session if provided
+            achieved_at: new Date().toISOString()
+          })
+          .eq('id', existingEntry.id);
+
+        if (error) {
+          console.error('❌ Error updating leaderboard entry:', error);
+          throw error;
+        }
+        console.log('✅ Leaderboard entry updated');
+      } else {
+        // Create new entry
+        console.log('➕ Creating new leaderboard entry');
+        await addLeaderboardEntry(userId, username, cumulativeScore, sessionId);
+      }
+    } else {
+      // LocalStorage fallback
+      updateLeaderboardScoreLocal(userId, username, cumulativeScore, sessionId);
+    }
+  } catch (error) {
+    console.error('❌ Error updating leaderboard score:', error);
+    updateLeaderboardScoreLocal(userId, username, cumulativeScore, sessionId);
+  }
+};
+
+/**
+ * LocalStorage fallback for updating leaderboard score
+ */
+const updateLeaderboardScoreLocal = (
+  userId: string,
+  username: string,
+  cumulativeScore: number,
+  sessionId?: string
+): void => {
+  const entriesJson = localStorage.getItem(LEADERBOARD_STORAGE_KEY);
+  let entries: LeaderboardEntry[] = entriesJson ? JSON.parse(entriesJson) : [];
+
+  // Find existing entry for this user (by user_id only)
+  // This allows updating when anonymous users register with a real username
+  const existingIndex = entries.findIndex(e => e.user_id === userId);
+
+  if (existingIndex >= 0) {
+    // Update existing entry with new score, username, and session
+    entries[existingIndex].username = username; // Update username in case user registered
+    entries[existingIndex].score = cumulativeScore;
+    entries[existingIndex].session_id = sessionId || entries[existingIndex].session_id;
+    entries[existingIndex].achieved_at = new Date().toISOString();
+  } else {
+    // Create new entry
+    const entry: LeaderboardEntry = {
+      id: `local_${Date.now()}_${Math.random().toString(36).substring(2, 9)}`,
+      user_id: userId,
+      username: username,
+      score: cumulativeScore,
+      rank: null,
+      session_id: sessionId || null,
+      achieved_at: new Date().toISOString(),
+      is_fake: false,
+    };
+    entries.push(entry);
+  }
+
+  // Recalculate ranks
+  const sorted = entries.sort((a, b) => b.score - a.score);
+  sorted.forEach((e, index) => {
+    e.rank = index + 1;
+  });
+
+  localStorage.setItem(LEADERBOARD_STORAGE_KEY, JSON.stringify(sorted));
+  console.log('✅ Leaderboard score updated in localStorage');
+};
+
+/**
  * Get leaderboard statistics
  */
 export const getLeaderboardStats = async (): Promise<{

@@ -151,6 +151,114 @@ export const getUserByDeviceId = async (deviceId: string): Promise<User | null> 
 };
 
 /**
+ * Get user by email
+ */
+export const getUserByEmail = async (email: string): Promise<User | null> => {
+  try {
+    if (isSupabaseConfigured()) {
+      const { data, error } = await supabase
+        .from('users')
+        .select('*')
+        .eq('email', email)
+        .maybeSingle();
+
+      if (error && error.code !== 'PGRST116') throw error;
+      
+      if (data) {
+        // Update last_active_at
+        await supabase
+          .from('users')
+          .update({ last_active_at: new Date().toISOString() })
+          .eq('id', data.id);
+      }
+      
+      return data;
+    } else {
+      const usersJson = localStorage.getItem(USERS_STORAGE_KEY);
+      if (!usersJson) return null;
+      const users: User[] = JSON.parse(usersJson);
+      const user = users.find(u => u.email?.toLowerCase() === email.toLowerCase()) || null;
+      
+      if (user) {
+        // Update last_active_at
+        user.last_active_at = new Date().toISOString();
+        localStorage.setItem(USERS_STORAGE_KEY, JSON.stringify(users));
+      }
+      
+      return user;
+    }
+  } catch (error) {
+    console.error('Error getting user by email:', error);
+    return null;
+  }
+};
+
+/**
+ * Get user by username
+ */
+export const getUserByUsername = async (username: string): Promise<User | null> => {
+  try {
+    if (isSupabaseConfigured()) {
+      const { data, error } = await supabase
+        .from('users')
+        .select('*')
+        .eq('username', username)
+        .maybeSingle();
+
+      if (error && error.code !== 'PGRST116') throw error;
+      
+      if (data) {
+        // Update last_active_at
+        await supabase
+          .from('users')
+          .update({ last_active_at: new Date().toISOString() })
+          .eq('id', data.id);
+      }
+      
+      return data;
+    } else {
+      const usersJson = localStorage.getItem(USERS_STORAGE_KEY);
+      if (!usersJson) return null;
+      const users: User[] = JSON.parse(usersJson);
+      const user = users.find(u => u.username?.toLowerCase() === username.toLowerCase()) || null;
+      
+      if (user) {
+        // Update last_active_at
+        user.last_active_at = new Date().toISOString();
+        localStorage.setItem(USERS_STORAGE_KEY, JSON.stringify(users));
+      }
+      
+      return user;
+    }
+  } catch (error) {
+    console.error('Error getting user by username:', error);
+    return null;
+  }
+};
+
+/**
+ * Get user by email or username
+ */
+export const getUserByEmailOrUsername = async (emailOrUsername: string): Promise<User | null> => {
+  try {
+    // Try email first (if it contains @)
+    if (emailOrUsername.includes('@')) {
+      return await getUserByEmail(emailOrUsername);
+    }
+    
+    // Try username
+    const userByUsername = await getUserByUsername(emailOrUsername);
+    if (userByUsername) return userByUsername;
+    
+    // Fallback: try as email anyway (in case user entered email without validation)
+    return await getUserByEmail(emailOrUsername);
+  } catch (error) {
+    console.error('Error getting user by email or username:', error);
+    return null;
+  }
+};
+
+/**
  * Register user (convert anonymous to registered)
  */
 export const registerUser = async (

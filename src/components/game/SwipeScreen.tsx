@@ -212,19 +212,25 @@ export const SwipeScreen = () => {
                   className="h-56 flex items-center justify-center bg-muted/40 relative"
                   style={{ backgroundColor: currentBrand.color + '20' }}
                 >
-                  <div className="absolute top-3 right-3 text-2xl" aria-hidden>
-                    {currentBrand.emoji}
-                  </div>
+                  {currentBrand.imageUrl && currentBrand.emoji && (
+                    <div className="absolute top-3 right-3 text-2xl" aria-hidden>
+                      {currentBrand.emoji}
+                    </div>
+                  )}
                   {currentBrand.imageUrl ? (
                     <img
                       src={currentBrand.imageUrl}
                       alt={currentBrand.name}
                       className="max-h-44 max-w-[75%] object-contain drop-shadow-lg"
                       loading="lazy"
+                      onError={(e) => {
+                        // Hide image if it fails to load
+                        e.currentTarget.style.display = 'none';
+                      }}
                     />
                   ) : (
                     <div 
-                      className="w-32 h-32 rounded-2xl flex items-center justify-center text-6xl"
+                      className="w-40 h-40 rounded-2xl flex items-center justify-center text-7xl shadow-lg"
                       style={{ backgroundColor: currentBrand.color + '30' }}
                     >
                       {currentBrand.emoji}

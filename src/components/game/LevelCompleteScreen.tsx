@@ -2,7 +2,8 @@ import { useState, useEffect, useRef } from 'react';
 import { motion } from 'framer-motion';
 import { useGame } from '@/context/GameContext';
 import { Trophy, Star, ArrowRight, Sparkles, Medal } from 'lucide-react';
-import { getMergedLeaderboard, getCurrentUser, updatePlayerScore } from '@/lib/leaderboardManager';
+import { getLeaderboard } from '@/services/leaderboardService';
+import { getCurrentUser } from '@/lib/leaderboardManager';
 
 export const LevelCompleteScreen = () => {
   const { gameState, goToSwipe, nextLevel } = useGame();
@@ -15,19 +16,21 @@ export const LevelCompleteScreen = () => {
   // Update score if user is logged in, then load leaderboard
   useEffect(() => {
     const loadAndUpdateLeaderboard = async () => {
-      // If user is logged in, update their score
       const currentUser = getCurrentUser();
-      if (currentUser) {
-        await updatePlayerScore(currentUser.username, gameState.totalScore);
-      }
-
-      const merged = await getMergedLeaderboard();
-      // Only add temporary player if not logged in (logged-in user is already in merged leaderboard)
+      
+      const entries = await getLeaderboard(50);
+      // Map to simple format
+      const mapped = entries.map(entry => ({
+        username: entry.username,
+        score: entry.score
+      }));
+      
+      // Only add temporary player if not logged in (logged-in user should already be in leaderboard)
       const displayUsername = currentUser?.username || username;
       const withPlayer = currentUser 
-        ? merged
+        ? mapped
         : [
-            ...merged,
+            ...mapped,
             { username: displayUsername, score: gameState.totalScore }
           ];
       setLeaderboard(withPlayer.sort((a, b) => b.score - a.score));

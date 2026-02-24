@@ -2,11 +2,17 @@ import { useState, useEffect, useCallback } from 'react';
 import { GameSession, SwipeAction, LevelData } from '@/types/game';
 import { 
   getOrCreateUser,
+  getUserByEmail,
+  getUserByEmailOrUsername,
   createGameSession,
   recordLevelResult,
   updateGameSession,
   recordSwipeAction 
 } from '@/services';
+import { updateLeaderboardScore } from '@/services/leaderboardService';
+import { Database } from '@/types/database';
+
+type User = Database['public']['Tables']['users']['Row'];
 
 const generateSessionId = () => {
   return `grovara_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
@@ -23,6 +29,7 @@ const getDeviceType = (): string => {
 export const useGameSession = () => {
   const [session, setSession] = useState<GameSession | null>(null);
   const [userId, setUserId] = useState<string | null>(null);
+  const [currentUser, setCurrentUser] = useState<User | null>(null);
   const [dbSessionId, setDbSessionId] = useState<string | null>(null);
   const [levels, setLevels] = useState<LevelData[]>([]);
   const [swipes, setSwipes] = useState<SwipeAction[]>([]);
@@ -36,7 +43,9 @@ export const useGameSession = () => {
       const user = await getOrCreateUser();
       if (user) {
         setUserId(user.id);
+        setCurrentUser(user);
         console.log('👤 User ID:', user.id);
+        console.log('👤 User details:', user);
       }
 
       // Parse URL params from QR code
@@ -80,9 +89,35 @@ export const useGameSession = () => {
 
   const recordLevel = useCallback(async (levelData: LevelData) => {
     console.log('📊 Recording level completion:', levelData);
-    setLevels(prev => [...prev, levelData]);
+    setLevels(prev => {
+      const newLevels = [...prev, levelData];
+      
+      // Calculate cumulative score
+      const cumulativeScore = newLevels.reduce((sum, level) => sum + level.score, 0);
+      console.log('📈 Cumulative score:', cumulativeScore);
+      
+      // Update leaderboard for all users (both anonymous and registered)
+      if (userId && currentUser) {
+        // Generate display name for anonymous users or use real username
+        const displayName = currentUser.username || `Player_${userId.slice(0, 8)}`;
+        
+        console.log('🏆 Updating leaderboard with cumulative score for:', displayName);
+        updateLeaderboardScore(
+          userId,
+          displayName,
+          cumulativeScore,
+          dbSessionId || undefined
+        ).catch(err => {
+          console.error('Failed to update leaderboard:', err);
+        });
+      } else {
+        console.log('⚠️ Skipping leaderboard update - no user found');
+      }
+      
+      return newLevels;
+    });
     
-    // Save to database
+    // Save level result to database
     if (userId && dbSessionId) {
       await recordLevelResult(
         dbSessionId,
@@ -90,20 +125,20 @@ export const useGameSession = () => {
         levelData.level,
         {
           score: levelData.score,
-          enemiesKilled: levelData.enemiesKilled,
+          enemiesKilled: levelData.enemiesHit, // Map enemiesHit to enemiesKilled
           productsOnShelf: levelData.score, // Approximate - score comes from products placed
-          ultraRareCount: levelData.ultraRareCount || 0,
+          ultraRareCount: 0, // TODO: Add this field to LevelData
           completed: levelData.completed,
-          durationSeconds: levelData.duration || 0,
+          durationSeconds: 0, // TODO: Add this field to LevelData
         }
       );
     }
-  }, [userId, dbSessionId]);
+  }, [userId, dbSessionId, currentUser]);
 
   const recordSwipe = useCallback(async (brandId: string, direction: 'left' | 'right') => {
     if (!session) return;
     
-    console.log('👆 Recording swipe:', { brandId, direction });
+    console.log('👆 Recording swipe:', { brandId, direction, userId, dbSessionId });
     
     const swipeAction: SwipeAction = {
       sessionId: session.sessionId,
@@ -114,10 +149,11 @@ export const useGameSession = () => {
 
     setSwipes(prev => [...prev, swipeAction]);
     
-    // Save to database
-    if (userId && session) {
+    // Save to database - IMPORTANT: Use dbSessionId (UUID) not session.sessionId (string)
+    if (userId && dbSessionId) {
+      console.log('💾 Saving swipe to database:', { dbSessionId, userId, brandId, direction });
       await recordSwipeAction(
-        session.sessionId,
+        dbSessionId, // Use database UUID, not frontend session string!
         userId,
         brandId,
         brandId, // Use brandId as name for now
@@ -126,8 +162,10 @@ export const useGameSession = () => {
         swipes.length + 1, // Position
         levels.length // Current level
       );
+    } else {
+      console.warn('⚠️ Cannot save swipe - missing userId or dbSessionId:', { userId, dbSessionId });
     }
-  }, [session, userId, swipes.length, levels.length]);
+  }, [session, userId, dbSessionId, swipes.length, levels.length]);
 
   const setEmail = useCallback((email: string) => {
     setSession(prev => prev ? { ...prev, email } : null);
@@ -143,6 +181,22 @@ export const useGameSession = () => {
       completedLevels: levels.filter(l => l.completed).length,
     };
   }, [session, levels, swipes]);
+
+  const loadUserByEmail = useCallback(async (emailOrUsername: string): Promise<boolean> => {
+    try {
+      const user = await getUserByEmailOrUsername(emailOrUsername);
+      if (user) {
+        setUserId(user.id);
+        setCurrentUser(user);
+        console.log('✅ User loaded:', user);
+        return true;
+      }
+      return false;
+    } catch (error) {
+      console.error('Error loading user:', error);
+      return false;
+    }
+  }, []);
 
   const exportToCSV = useCallback(() => {
     const data = getAnalyticsData();
@@ -172,6 +226,7 @@ export const useGameSession = () => {
   return {
     session,
     userId,
+    currentUser,
     dbSessionId,
     levels,
     swipes,
@@ -180,5 +235,6 @@ export const useGameSession = () => {
     setEmail,
     getAnalyticsData,
     exportToCSV,
+    loadUserByEmail,
   };
 };

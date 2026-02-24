@@ -28,7 +28,13 @@ export const recordSwipeAction = async (
   swipePosition?: number,
   levelAfter?: number
 ): Promise<void> => {
-  console.log('👆 [SwipeService] recordSwipeAction called', { itemId, direction });
+  console.log('👆 [SwipeService] recordSwipeAction called', { 
+    sessionId, 
+    userId, 
+    itemId, 
+    direction,
+    isSupabaseConfigured: isSupabaseConfigured() 
+  });
   try {
     const swipeData: SwipeActionInsert = {
       session_id: sessionId,
@@ -42,7 +48,7 @@ export const recordSwipeAction = async (
     };
 
     if (isSupabaseConfigured()) {
-      console.log('☁️ Saving swipe to Supabase');
+      console.log('☁️ Saving swipe to Supabase', swipeData);
       const { error } = await supabase
         .from('swipe_actions')
         .insert(swipeData);
@@ -54,6 +60,7 @@ export const recordSwipeAction = async (
 
       // If right swipe (match), update user_matches
       if (direction === 'right') {
+        console.log('❤️ Right swipe detected - recording match');
         await recordUserMatch(userId, itemId, itemName, itemType);
       }
 
