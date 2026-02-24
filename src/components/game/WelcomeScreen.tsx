@@ -182,7 +182,7 @@ export const WelcomeScreen = () => {
             />
             <h2 
               className="text-lg sm:text-xl md:text-2xl font-bold text-white tracking-wide" 
-              style={{ fontFamily: 'var(--font-display)' }}
+              style={{ fontFamily: 'var(--font-pixel)' }}
             >
               GROVARA.COM
             </h2>
@@ -217,10 +217,10 @@ export const WelcomeScreen = () => {
 
           {/* Tagline */}
           <div className="mb-3 sm:mb-4 space-y-1">
-            <p className="text-sm sm:text-base md:text-lg text-gray-300">
+            <p className="text-sm sm:text-base md:text-lg text-gray-300" style={{ fontFamily: 'var(--font-pixel)' }}>
               Old B2B is <span className="text-red-400 font-semibold">broken</span>...
             </p>
-            <p className="text-sm sm:text-base md:text-lg text-white font-medium">
+            <p className="text-sm sm:text-base md:text-lg text-white font-medium" style={{ fontFamily: 'var(--font-pixel)' }}>
               Grovara is built for what's next.
             </p>
           </div>
@@ -231,7 +231,7 @@ export const WelcomeScreen = () => {
               {/* Instruction 1 */}
               <div className="flex items-center gap-3 text-left">
                 <img src="/home/sword.png" alt="Sword" className="w-8 h-8 sm:w-10 sm:h-10 flex-shrink-0" />
-                <p className="text-white text-xs sm:text-sm md:text-base">
+                <p className="text-white text-xs sm:text-sm md:text-base" style={{ fontFamily: 'var(--font-pixel)' }}>
                   <span className="text-red-500 font-semibold">Tap to shoot</span> outdated B2B process
                 </p>
               </div>
@@ -239,7 +239,7 @@ export const WelcomeScreen = () => {
               {/* Instruction 2 */}
               <div className="flex items-center gap-3 text-left">
                 <img src="/home/diamond.png" alt="Diamond" className="w-8 h-8 sm:w-10 sm:h-10 flex-shrink-0" />
-                <p className="text-white text-xs sm:text-sm md:text-base">
+                <p className="text-white text-xs sm:text-sm md:text-base" style={{ fontFamily: 'var(--font-pixel)' }}>
                   <span className="text-blue-500 font-semibold">Drag in</span> Grovara-approved brands
                 </p>
               </div>
@@ -247,7 +247,7 @@ export const WelcomeScreen = () => {
               {/* Instruction 3 */}
               <div className="flex items-center gap-3 text-left">
                 <img src="/home/coin.png" alt="Coin" className="w-8 h-8 sm:w-10 sm:h-10 flex-shrink-0" />
-                <p className="text-white text-xs sm:text-sm md:text-base">
+                <p className="text-white text-xs sm:text-sm md:text-base" style={{ fontFamily: 'var(--font-pixel)' }}>
                   <span className="text-yellow-500 font-semibold">Discover</span> new brands after each level
                 </p>
               </div>
@@ -296,7 +296,7 @@ export const WelcomeScreen = () => {
         </div>
 
         {/* Footer Links */}
-        <div className="flex flex-wrap items-center justify-center gap-4 sm:gap-6 text-xs sm:text-sm text-gray-300">
+        <div className="flex flex-wrap items-center justify-center gap-4 sm:gap-6 text-xs sm:text-sm text-gray-300" style={{ fontFamily: 'var(--font-pixel)' }}>
           <motion.button
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
@@ -328,6 +328,7 @@ export const WelcomeScreen = () => {
           animate={{ opacity: 1 }}
           transition={{ delay: 1.1 }}
           className="mt-3 sm:mt-4 text-gray-400 text-xs"
+          style={{ fontFamily: 'var(--font-pixel)' }}
         >
           Expo West 2026 • Powered by Grovara
         </motion.p>

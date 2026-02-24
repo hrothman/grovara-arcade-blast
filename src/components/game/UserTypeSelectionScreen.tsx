@@ -1,74 +1,152 @@
 import { motion } from 'framer-motion';
 import { useGame } from '@/context/GameContext';
-import { ShoppingCart, Briefcase } from 'lucide-react';
 
 export const UserTypeSelectionScreen = () => {
   const { setUserType } = useGame();
 
   return (
-    <div className="min-h-screen gradient-arcade flex flex-col items-center justify-center p-6 relative overflow-hidden">
-      <div className="absolute inset-0 gradient-radial-glow opacity-50" />
+    <div className="min-h-screen relative flex flex-col items-center justify-center p-4 sm:p-6 overflow-hidden">
+      {/* Gradient Background Layer */}
+      <div 
+        className="absolute inset-0 z-0"
+        style={{
+          backgroundImage: 'url(/who-are-you/gradient.png)',
+          backgroundSize: '100% 100%',
+          backgroundPosition: 'center',
+          backgroundRepeat: 'no-repeat',
+        }}
+      />
       
+      {/* Stars Overlay Layer */}
+      <div 
+        className="absolute inset-0 z-10"
+        style={{
+          backgroundImage: 'url(/who-are-you/stars.png)',
+          backgroundSize: '100% 100%',
+          backgroundPosition: 'center',
+          backgroundRepeat: 'no-repeat',
+          opacity: 0.8,
+        }}
+      />
+
+      {/* Main Content */}
       <motion.div
-        initial={{ opacity: 0, y: -20 }}
+        initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
-        className="relative z-10 text-center mb-12"
+        transition={{ duration: 0.3 }}
+        className="relative z-30 text-center w-full max-w-2xl mx-auto px-2 sm:px-4"
       >
-        <h1 className="arcade-text text-4xl font-bold text-foreground neon-glow mb-4">
-          WHO ARE YOU?
-        </h1>
-        <p className="text-muted-foreground text-lg">
-          Select your role to discover matching opportunities
-        </p>
+        {/* Title */}
+        <motion.div
+          initial={{ scale: 0.9, opacity: 0 }}
+          animate={{ scale: 1, opacity: 1 }}
+          transition={{ 
+            delay: 0.1, 
+            type: 'spring', 
+            stiffness: 300,
+            damping: 20
+          }}
+          className="mb-4 sm:mb-6"
+        >
+          <h1 
+            className="text-4xl sm:text-5xl md:text-6xl font-bold text-white mb-3 sm:mb-4 tracking-wider leading-tight"
+            style={{ 
+              fontFamily: 'var(--font-pixel)',
+              textShadow: '3px 3px 0px rgba(0,0,0,0.8), 0 0 15px rgba(255,255,255,0.4)',
+              fontSize: 'clamp(1.75rem, 6vw, 3.5rem)',
+            }}
+          >
+            WHO ARE YOU?
+          </h1>
+          <p className="text-sm sm:text-base md:text-lg text-gray-300" style={{ fontFamily: 'var(--font-pixel)' }}>
+            Select your role to discover matching opportunities
+          </p>
+        </motion.div>
+
+        {/* Options */}
+        <div className="flex flex-col gap-4 sm:gap-6 max-w-xl mx-auto mb-6">
+          {/* Buyer Card */}
+          <motion.button
+            initial={{ opacity: 0, x: -100, scale: 0.8 }}
+            animate={{ opacity: 1, x: 0, scale: 1 }}
+            transition={{ 
+              delay: 0.2, 
+              type: 'spring',
+              stiffness: 260,
+              damping: 20
+            }}
+            whileHover={{ scale: 1.03, y: -4, boxShadow: '0 10px 30px rgba(250, 204, 21, 0.3)' }}
+            whileTap={{ scale: 0.97 }}
+            onClick={() => setUserType('buyer')}
+            className="w-full bg-gray-900 rounded-xl sm:rounded-2xl border-2 sm:border-4 border-white p-6 sm:p-8 text-left hover:border-yellow-400 transition-all"
+          >
+            <div className="flex items-center gap-4 sm:gap-6">
+              <img 
+                src="/who-are-you/coin.png" 
+                alt="Buyer" 
+                className="w-16 h-16 sm:w-20 sm:h-20 flex-shrink-0"
+              />
+              <div className="flex-1">
+                <h2 
+                  className="text-xl sm:text-2xl font-bold text-white mb-2 tracking-wide"
+                  style={{ fontFamily: 'var(--font-pixel)' }}
+                >
+                  I'M A BUYER
+                </h2>
+                <p className="text-xs sm:text-sm text-gray-300" style={{ fontFamily: 'var(--font-pixel)' }}>
+                  Discover brands that match your store or business needs
+                </p>
+              </div>
+            </div>
+          </motion.button>
+
+          {/* Brand Card */}
+          <motion.button
+            initial={{ opacity: 0, x: 100, scale: 0.8 }}
+            animate={{ opacity: 1, x: 0, scale: 1 }}
+            transition={{ 
+              delay: 0.3, 
+              type: 'spring',
+              stiffness: 260,
+              damping: 20
+            }}
+            whileHover={{ scale: 1.03, y: -4, boxShadow: '0 10px 30px rgba(96, 165, 250, 0.3)' }}
+            whileTap={{ scale: 0.97 }}
+            onClick={() => setUserType('brand')}
+            className="w-full bg-gray-900 rounded-xl sm:rounded-2xl border-2 sm:border-4 border-white p-6 sm:p-8 text-left hover:border-blue-400 transition-all"
+          >
+            <div className="flex items-center gap-4 sm:gap-6">
+              <img 
+                src="/who-are-you/diamond.png" 
+                alt="Brand" 
+                className="w-16 h-16 sm:w-20 sm:h-20 flex-shrink-0"
+              />
+              <div className="flex-1">
+                <h2 
+                  className="text-xl sm:text-2xl font-bold text-white mb-2 tracking-wide"
+                  style={{ fontFamily: 'var(--font-pixel)' }}
+                >
+                  I'M A BRAND
+                </h2>
+                <p className="text-xs sm:text-sm text-gray-300" style={{ fontFamily: 'var(--font-pixel)' }}>
+                  Find retailers and businesses that could carry your products
+                </p>
+              </div>
+            </div>
+          </motion.button>
+        </div>
+
+        {/* Footer */}
+        <motion.p
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ delay: 0.4, duration: 0.4 }}
+          className="text-gray-400 text-xs"
+          style={{ fontFamily: 'var(--font-pixel)' }}
+        >
+          Expo West 2026 • Powered by Grovara
+        </motion.p>
       </motion.div>
-
-      <div className="relative z-10 flex flex-col sm:flex-row gap-8 max-w-2xl mx-auto">
-        {/* Buyer Option */}
-        <motion.button
-          initial={{ opacity: 0, scale: 0.9 }}
-          animate={{ opacity: 1, scale: 1 }}
-          transition={{ delay: 0.1 }}
-          whileHover={{ scale: 1.05, y: -4 }}
-          whileTap={{ scale: 0.95 }}
-          onClick={() => setUserType('buyer')}
-          className="flex-1 p-8 rounded-2xl bg-card border-2 border-primary/50 hover:border-primary hover:bg-primary/10 transition-all card-swipe"
-        >
-          <div className="flex flex-col items-center">
-            <div className="mb-4 p-4 bg-primary/20 rounded-full">
-              <ShoppingCart className="w-8 h-8 text-primary" />
-            </div>
-            <h2 className="arcade-text text-2xl font-bold text-foreground mb-2">
-              BUYER
-            </h2>
-            <p className="text-muted-foreground text-sm text-center">
-              Discover brands that match your store or business needs
-            </p>
-          </div>
-        </motion.button>
-
-        {/* Brand Option */}
-        <motion.button
-          initial={{ opacity: 0, scale: 0.9 }}
-          animate={{ opacity: 1, scale: 1 }}
-          transition={{ delay: 0.2 }}
-          whileHover={{ scale: 1.05, y: -4 }}
-          whileTap={{ scale: 0.95 }}
-          onClick={() => setUserType('brand')}
-          className="flex-1 p-8 rounded-2xl bg-card border-2 border-success/50 hover:border-success hover:bg-success/10 transition-all card-swipe"
-        >
-          <div className="flex flex-col items-center">
-            <div className="mb-4 p-4 bg-success/20 rounded-full">
-              <Briefcase className="w-8 h-8 text-success" />
-            </div>
-            <h2 className="arcade-text text-2xl font-bold text-foreground mb-2">
-              BRAND
-            </h2>
-            <p className="text-muted-foreground text-sm text-center">
-              Find retailers and businesses that could carry your products
-            </p>
-          </div>
-        </motion.button>
-      </div>
     </div>
   );
 };
