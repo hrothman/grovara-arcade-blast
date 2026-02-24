@@ -1,11 +1,11 @@
 import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { Medal, ArrowLeft } from 'lucide-react';
+import { ArrowLeft } from 'lucide-react';
 import { getLeaderboard } from '@/services/leaderboardService';
 import { useGame } from '@/context/GameContext';
 
 export const LeaderboardScreen = () => {
-  const { resetGame } = useGame();
+  const { resetGame, startGame } = useGame();
   const [leaderboard, setLeaderboard] = useState<Array<{ username: string; score: number }>>([]);
 
   useEffect(() => {
@@ -26,140 +26,164 @@ export const LeaderboardScreen = () => {
   };
 
   return (
-    <div className="min-h-screen gradient-arcade flex flex-col p-6 relative overflow-hidden">
-      {/* Background glow effect */}
-      <div className="absolute inset-0 gradient-radial-glow" />
+    <div className="min-h-screen relative flex flex-col overflow-hidden">
+      {/* Gradient Background Layer */}
+      <div 
+        className="absolute inset-0 z-0"
+        style={{
+          backgroundImage: 'url(/leaderboard/gradient.png)',
+          backgroundSize: 'cover',
+          backgroundPosition: 'center',
+          backgroundRepeat: 'no-repeat',
+        }}
+      />
       
-      {/* Scanline overlay */}
-      <div className="absolute inset-0 scanline opacity-30" />
+      {/* Stars Overlay Layer */}
+      <div 
+        className="absolute inset-0 z-10"
+        style={{
+          backgroundImage: 'url(/leaderboard/stars.png)',
+          backgroundSize: 'cover',
+          backgroundPosition: 'center top',
+          backgroundRepeat: 'no-repeat',
+          opacity: 0.8,
+        }}
+      />
 
-      <div className="relative z-10 max-w-2xl mx-auto w-full">
+      {/* Back Button */}
+      <motion.button
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        transition={{ delay: 0.2 }}
+        onClick={goBack}
+        className="absolute top-6 left-6 z-40 p-3 bg-transparent rounded-full border-2 border-white hover:bg-white/10 transition-colors"
+      >
+        <ArrowLeft className="w-6 h-6 text-white" />
+      </motion.button>
+
+      {/* Content Container */}
+      <div className="relative z-30 flex flex-col items-center px-4 sm:px-6 pt-16 sm:pt-20 pb-8 sm:pb-12 flex-1">
         {/* Header */}
         <motion.div
           initial={{ opacity: 0, y: -20 }}
           animate={{ opacity: 1, y: 0 }}
-          className="flex items-center gap-4 mb-6 pt-4"
+          transition={{ delay: 0.3 }}
+          className="text-center mb-6 sm:mb-8"
         >
-          <button
-            onClick={goBack}
-            className="p-2 bg-card/50 rounded-lg hover:bg-card transition-colors"
+          <h1 
+            className="text-3xl sm:text-4xl md:text-5xl font-bold text-white mb-2 sm:mb-3"
+            style={{ 
+              fontFamily: 'var(--font-pixel)',
+              textShadow: '3px 3px 0px rgba(0,0,0,0.8), 0 0 15px rgba(255,255,255,0.4)',
+              fontSize: 'clamp(1.75rem, 6vw, 3rem)',
+            }}
           >
-            <ArrowLeft className="w-5 h-5 text-foreground" />
-          </button>
-          <div className="flex-1 text-center">
-            <div className="inline-flex items-center gap-2">
-              <Medal className="w-6 h-6 text-warning" />
-              <h1 className="arcade-text text-2xl font-bold text-foreground neon-glow">
-                LEADERBOARD
-              </h1>
-            </div>
-            <p className="text-muted-foreground text-sm mt-1">
-              Top Scores from Expo West 2026
-            </p>
-          </div>
-          <div className="w-9" /> {/* Spacer for centering */}
+            LEADERBOARD
+          </h1>
+          <p 
+            className="text-gray-300 text-sm sm:text-base font-light"
+            style={{ fontFamily: 'var(--font-pixel)', fontWeight: 300 }}
+          >
+            Top Scores from Expo West 2026
+          </p>
         </motion.div>
 
-        {/* Leaderboard */}
+        {/* Trophy Display */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.2 }}
-          className="bg-card/50 backdrop-blur-sm rounded-2xl p-6 neon-border"
+          transition={{ delay: 0.4 }}
+          className="flex items-end justify-center gap-4 sm:gap-6 md:gap-8 mb-8 sm:mb-10"
         >
-          {/* Top 3 Podium */}
-          <div className="grid grid-cols-3 gap-4 mb-6 pb-6 border-b border-border">
-            {/* 2nd Place */}
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.4 }}
-              className="flex flex-col items-center pt-8"
-            >
-              <div className="text-4xl mb-2">🥈</div>
-              <div className="text-xs text-muted-foreground mb-1">2nd</div>
-              <div className="font-medium text-foreground text-sm text-center">
-                {leaderboard[1]?.username || 'N/A'}
-              </div>
-              <div className="arcade-text text-warning text-sm mt-1">
-                {leaderboard[1]?.score.toLocaleString() || '0'}
-              </div>
-            </motion.div>
+          {/* 2nd Place */}
+          <motion.div
+            initial={{ opacity: 0, scale: 0.8 }}
+            animate={{ opacity: 1, scale: 1 }}
+            transition={{ delay: 0.6 }}
+            className="flex flex-col items-center"
+          >
+            <img 
+              src="/leaderboard/2nd.png" 
+              alt="2nd Place" 
+              className="w-24 sm:w-32 md:w-40 h-auto object-contain"
+            />
+          </motion.div>
 
-            {/* 1st Place */}
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.3 }}
-              className="flex flex-col items-center"
-            >
-              <div className="text-5xl mb-2">🏆</div>
-              <div className="text-xs text-warning mb-1">1st</div>
-              <div className="font-bold text-foreground text-center">
-                {leaderboard[0]?.username || 'N/A'}
-              </div>
-              <div className="arcade-text text-warning text-lg mt-1">
-                {leaderboard[0]?.score.toLocaleString() || '0'}
-              </div>
-            </motion.div>
+          {/* 1st Place */}
+          <motion.div
+            initial={{ opacity: 0, scale: 0.8 }}
+            animate={{ opacity: 1, scale: 1 }}
+            transition={{ delay: 0.5 }}
+            className="flex flex-col items-center"
+          >
+            <img 
+              src="/leaderboard/1st.png" 
+              alt="1st Place" 
+              className="w-28 sm:w-36 md:w-44 h-auto object-contain"
+            />
+          </motion.div>
 
-            {/* 3rd Place */}
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.5 }}
-              className="flex flex-col items-center pt-12"
-            >
-              <div className="text-3xl mb-2">🥉</div>
-              <div className="text-xs text-muted-foreground mb-1">3rd</div>
-              <div className="font-medium text-foreground text-xs text-center">
-                {leaderboard[2]?.username || 'N/A'}
-              </div>
-              <div className="arcade-text text-orange-400 text-sm mt-1">
-                {leaderboard[2]?.score.toLocaleString() || '0'}
-              </div>
-            </motion.div>
-          </div>
+          {/* 3rd Place */}
+          <motion.div
+            initial={{ opacity: 0, scale: 0.8 }}
+            animate={{ opacity: 1, scale: 1 }}
+            transition={{ delay: 0.7 }}
+            className="flex flex-col items-center"
+          >
+            <img 
+              src="/leaderboard/3rd.png" 
+              alt="3rd Place" 
+              className="w-24 sm:w-32 md:w-40 h-auto object-contain"
+            />
+          </motion.div>
+        </motion.div>
 
-          {/* Full Leaderboard List */}
-          <div className="max-h-96 overflow-y-auto space-y-1 pr-2 custom-scrollbar">
-            {leaderboard.map((entry, idx) => {
+        {/* Leaderboard List */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.8 }}
+          className="w-full max-w-2xl bg-black/80 rounded-2xl border-3 border-white p-4 sm:p-6 mb-6 sm:mb-8"
+        >
+          <div className="max-h-64 sm:max-h-80 overflow-y-auto space-y-2 pr-2">
+            {leaderboard.slice(0, 10).map((entry, idx) => {
               const rank = idx + 1;
+              const isTop3 = rank <= 3;
               
               return (
                 <motion.div
-                  key={entry.username}
+                  key={`${entry.username}-${idx}`}
                   initial={{ opacity: 0, x: -20 }}
                   animate={{ opacity: 1, x: 0 }}
-                  transition={{ delay: 0.6 + idx * 0.02 }}
-                  className={`flex items-center gap-3 p-3 rounded-lg transition-all ${
-                    rank <= 3
-                      ? 'bg-warning/10 border border-warning/30'
-                      : 'bg-background/50 hover:bg-background/70'
+                  transition={{ delay: 0.9 + idx * 0.03 }}
+                  className={`flex items-center gap-3 p-3 rounded-lg ${
+                    isTop3 ? 'bg-gray-800/50' : 'bg-gray-900/30'
                   }`}
                 >
-                  <span className={`arcade-text text-sm w-10 text-center ${
-                    rank === 1 ? 'text-warning text-lg' :
-                    rank === 2 ? 'text-muted-foreground' :
-                    rank === 3 ? 'text-orange-400' :
-                    'text-muted-foreground'
-                  }`}>
-                    {rank <= 3 ? (
-                      rank === 1 ? '🏆' : rank === 2 ? '🥈' : '🥉'
-                    ) : (
-                      `#${rank}`
-                    )}
-                  </span>
-                  <span className={`flex-1 font-medium ${
-                    rank <= 3 ? 'text-foreground' : 'text-muted-foreground'
-                  }`}>
+                  {isTop3 ? (
+                    <img 
+                      src={`/leaderboard/${rank === 1 ? '1st' : rank === 2 ? '2nd' : '3rd'}.png`}
+                      alt={`${rank} place`}
+                      className="w-8 h-8 object-contain"
+                    />
+                  ) : (
+                    <span 
+                      className="text-gray-500 text-sm w-8 text-center"
+                      style={{ fontFamily: 'var(--font-pixel)' }}
+                    >
+                      {rank}
+                    </span>
+                  )}
+                  <span 
+                    className={`flex-1 text-xs sm:text-sm ${isTop3 ? 'text-white' : 'text-gray-400'}`}
+                    style={{ fontFamily: 'var(--font-pixel)' }}
+                  >
                     {entry.username}
                   </span>
-                  <span className={`arcade-text text-sm ${
-                    rank === 1 ? 'text-warning text-base' :
-                    rank <= 3 ? 'text-warning' :
-                    'text-muted-foreground'
-                  }`}>
+                  <span 
+                    className="text-yellow-500 text-xs sm:text-sm"
+                    style={{ fontFamily: 'var(--font-pixel)' }}
+                  >
                     {entry.score.toLocaleString()}
                   </span>
                 </motion.div>
@@ -168,16 +192,40 @@ export const LeaderboardScreen = () => {
           </div>
         </motion.div>
 
-        {/* Footer */}
-        <motion.p
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ delay: 0.8 }}
-          className="text-center text-muted-foreground text-xs mt-6"
+        {/* Start Mission Button */}
+        <motion.button
+          initial={{ opacity: 0, scale: 0.9 }}
+          animate={{ opacity: 1, scale: 1 }}
+          transition={{ delay: 1.2 }}
+          whileHover={{ scale: 1.05 }}
+          whileTap={{ scale: 0.95 }}
+          onClick={startGame}
+          className="px-8 sm:px-12 md:px-16 py-3 sm:py-4 text-base sm:text-lg md:text-xl font-bold text-white rounded-lg sm:rounded-xl mb-auto"
+          style={{
+            fontFamily: 'var(--font-pixel)',
+            background: 'linear-gradient(135deg, #EC4899 0%, #8B5CF6 100%)',
+            boxShadow: '0 0 30px rgba(236, 72, 153, 0.6), 0 8px 16px rgba(0,0,0,0.4)',
+            border: '3px solid rgba(255,255,255,0.3)',
+          }}
         >
-          Compete for the top spot!
-        </motion.p>
+          START MISSION
+        </motion.button>
       </div>
+
+      {/* Footer */}
+      <motion.div
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        transition={{ delay: 1.4 }}
+        className="relative z-30 pb-6 sm:pb-8 text-center"
+      >
+        <p
+          className="text-gray-300 text-xs sm:text-sm"
+          style={{ fontFamily: 'var(--font-pixel)', textShadow: '1px 1px 2px rgba(0,0,0,0.8)' }}
+        >
+          Expo West 2026 • Powered by Grovara
+        </p>
+      </motion.div>
     </div>
   );
 };

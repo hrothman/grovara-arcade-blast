@@ -3,7 +3,7 @@ import { motion, AnimatePresence, PanInfo } from 'framer-motion';
 import { useGame } from '@/context/GameContext';
 import realBrandsData from '@/data/realBrands.json';
 import buyersData from '@/data/buyers.json';
-import { Heart, X, ArrowRight, Sparkles, CheckCircle } from 'lucide-react';
+import { Heart, X, CheckCircle } from 'lucide-react';
 
 const SWIPE_THRESHOLD = 100;
 
@@ -75,12 +75,12 @@ export const SwipeScreen = () => {
 
   if (isComplete) {
     return (
-      <div className="min-h-screen relative flex flex-col items-center justify-center p-4 sm:p-6 overflow-hidden">
+      <div className="min-h-screen relative flex flex-col overflow-hidden">
         {/* Gradient Background Layer */}
         <div 
           className="absolute inset-0 z-0"
           style={{
-            backgroundImage: 'url(/swipe/gradient.png)',
+            backgroundImage: 'url(/discovered/gradient.png)',
             backgroundSize: 'cover',
             backgroundPosition: 'center',
             backgroundRepeat: 'no-repeat',
@@ -91,7 +91,7 @@ export const SwipeScreen = () => {
         <div 
           className="absolute inset-0 z-10"
           style={{
-            backgroundImage: 'url(/swipe/stars.png)',
+            backgroundImage: 'url(/discovered/stars.png)',
             backgroundSize: 'cover',
             backgroundPosition: 'center top',
             backgroundRepeat: 'no-repeat',
@@ -99,28 +99,27 @@ export const SwipeScreen = () => {
           }}
         />
 
+        {/* Content Container */}
         <motion.div
-          initial={{ opacity: 0, scale: 0.9 }}
-          animate={{ opacity: 1, scale: 1 }}
-          className="relative z-30 text-center px-4"
+          initial={{ opacity: 0, y: 30 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.6 }}
+          className="relative z-30 flex flex-col items-center justify-center text-center px-4 sm:px-6 flex-1"
         >
-          <div className="inline-flex items-center justify-center w-16 h-16 sm:w-20 sm:h-20 bg-white/10 rounded-full border-2 border-white/30 mb-4 sm:mb-6">
-            <Sparkles className="w-8 h-8 sm:w-10 sm:h-10 text-white" />
-          </div>
-          
           <h2 
-            className="text-2xl sm:text-3xl font-bold text-white mb-3 sm:mb-4"
+            className="text-3xl sm:text-4xl md:text-5xl font-bold text-white mb-4 sm:mb-6"
             style={{ 
               fontFamily: 'var(--font-pixel)',
-              textShadow: '2px 2px 0px rgba(0,0,0,0.8)',
+              textShadow: '3px 3px 0px rgba(0,0,0,0.8), 0 0 15px rgba(255,255,255,0.4)',
+              fontSize: 'clamp(1.75rem, 6vw, 3rem)',
             }}
           >
-            {itemType} DISCOVERED!
+            {itemType === 'BRANDS' ? 'Brand' : 'Buyer'} Discovered!
           </h2>
           
           <p 
-            className="text-gray-300 mb-6 sm:mb-8 text-sm sm:text-base"
-            style={{ fontFamily: 'var(--font-pixel)' }}
+            className="text-gray-300 mb-8 sm:mb-10 md:mb-12 text-sm sm:text-base md:text-lg font-light"
+            style={{ fontFamily: 'var(--font-pixel)', fontWeight: 300 }}
           >
             See your matches and get follow-up information
           </p>
@@ -129,7 +128,7 @@ export const SwipeScreen = () => {
             whileHover={{ scale: 1.05 }}
             whileTap={{ scale: 0.95 }}
             onClick={goToSwipeSummary}
-            className="px-6 sm:px-8 py-3 sm:py-4 text-sm sm:text-base md:text-lg font-bold text-white rounded-lg sm:rounded-xl flex items-center justify-center gap-2 sm:gap-3 mx-auto"
+            className="px-8 sm:px-10 md:px-12 py-3 sm:py-4 text-base sm:text-lg md:text-xl font-bold text-white rounded-lg sm:rounded-xl"
             style={{
               fontFamily: 'var(--font-pixel)',
               background: 'linear-gradient(135deg, #EC4899 0%, #8B5CF6 100%)',
@@ -138,8 +137,22 @@ export const SwipeScreen = () => {
             }}
           >
             VIEW MATCHES
-            <ArrowRight className="w-4 h-4 sm:w-5 sm:h-5" />
           </motion.button>
+        </motion.div>
+
+        {/* Footer */}
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ delay: 0.8 }}
+          className="relative z-30 pb-6 sm:pb-8 text-center"
+        >
+          <p
+            className="text-gray-300 text-xs sm:text-sm"
+            style={{ fontFamily: 'var(--font-pixel)', textShadow: '1px 1px 2px rgba(0,0,0,0.8)' }}
+          >
+            Expo West 2026 • Powered by Grovara
+          </p>
         </motion.div>
       </div>
     );

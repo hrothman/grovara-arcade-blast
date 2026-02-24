@@ -124,7 +124,7 @@
 
 @layer components {
   .arcade-text {
-    font-family: var(--font-display);
+    font-family: var(--font-pixel);
     text-transform: uppercase;
     letter-spacing: 0.05em;
   }
