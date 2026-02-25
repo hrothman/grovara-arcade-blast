@@ -12,7 +12,7 @@ export const UserTypeSelectionScreen = () => {
         style={{
           backgroundImage: 'url(/who-are-you/gradient.png)',
           backgroundSize: 'cover',
-          backgroundPosition: 'center',
+          backgroundPosition: 'center top',
           backgroundRepeat: 'no-repeat',
         }}
       />

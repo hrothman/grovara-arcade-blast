@@ -3,6 +3,7 @@ import Phaser from 'phaser';
 import { useGame } from '@/context/GameContext';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Heart, Zap, Target } from 'lucide-react';
+import { InstructionsModal } from './InstructionsModal';
 import { getEnemyAssets, getProductAssets, getRareProductAssets, getRandomAsset, Asset } from '@/lib/assetLoader';
 import { ShelfManager } from '@/lib/shelfManager';
 import { ShelfSlot } from '@/types/game';
@@ -142,9 +143,14 @@ export const GameCanvas = () => {
 
   const levelConfig = LEVEL_CONFIG[gameState.currentLevel as keyof typeof LEVEL_CONFIG] || LEVEL_CONFIG[1];
   const [timeLeft, setTimeLeft] = useState(levelConfig.duration / 1000);
+  const [showInstructions, setShowInstructions] = useState(true);
+  const [gameStarted, setGameStarted] = useState(false);
 
   useEffect(() => {
     if (gameState.currentScreen !== 'game') return;
+    // Reset instructions modal when entering game screen
+    setShowInstructions(true);
+    setGameStarted(false);
     setDisplayScore(0);
     setDisplayProductsCount(0);
     setDisplayKills(0);
@@ -206,8 +212,13 @@ export const GameCanvas = () => {
     [addScore, showScorePopup]
   );
 
+  const handleStartGame = useCallback(() => {
+    setShowInstructions(false);
+    setGameStarted(true);
+  }, []);
+
   useEffect(() => {
-    if (!gameContainerRef.current) return;
+    if (!gameContainerRef.current || !gameStarted) return;
 
     let isCancelled = false;
     const timeoutIds: NodeJS.Timeout[] = [];
@@ -978,6 +989,7 @@ export const GameCanvas = () => {
     applyScoreChange,
     showEventPopup,
     gameState.currentScreen,
+    gameStarted,
   ]);
 
   useEffect(() => {
@@ -988,12 +1000,18 @@ export const GameCanvas = () => {
 
   return (
     <div className="min-h-screen bg-arcade-dark relative overflow-hidden">
+      {/* Instructions Modal */}
+      <InstructionsModal 
+        isOpen={showInstructions} 
+        onStart={handleStartGame}
+      />
+
       <div
         className="absolute inset-0 z-0"
         style={{
           backgroundImage: `url('${BACKGROUND_IMAGE_PATH}')`,
           backgroundSize: 'cover',
-          backgroundPosition: 'center',
+          backgroundPosition: 'center top',
           backgroundRepeat: 'no-repeat',
         }}
       />

@@ -1,9 +1,10 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import { motion, AnimatePresence, PanInfo } from 'framer-motion';
 import { useGame } from '@/context/GameContext';
 import realBrandsData from '@/data/realBrands.json';
 import buyersData from '@/data/buyers.json';
 import { Heart, X, CheckCircle } from 'lucide-react';
+import { SwipeInstructionsModal } from './SwipeInstructionsModal';
 
 const SWIPE_THRESHOLD = 100;
 
@@ -41,6 +42,8 @@ export const SwipeScreen = () => {
   const { gameState, recordSwipe, goToSwipeSummary } = useGame();
   const [currentIndex, setCurrentIndex] = useState(0);
   const [swipeDirection, setSwipeDirection] = useState<'left' | 'right' | null>(null);
+  const [showInstructions, setShowInstructions] = useState(true);
+  const [swipeStarted, setSwipeStarted] = useState(false);
 
   // Select items based on user type
   const items = gameState.userType === 'brand' ? BUYERS : REAL_BRANDS;
@@ -55,7 +58,21 @@ export const SwipeScreen = () => {
   const currentBrand = levelItems[currentIndex];
   const isComplete = currentIndex >= levelItems.length;
 
+  // Reset instructions when entering swipe screen
+  useEffect(() => {
+    setShowInstructions(true);
+    setSwipeStarted(false);
+    setCurrentIndex(0);
+    setSwipeDirection(null);
+  }, [gameState.currentLevel]);
+
+  const handleStartSwipe = () => {
+    setShowInstructions(false);
+    setSwipeStarted(true);
+  };
+
   const handleSwipe = (direction: 'left' | 'right') => {
+    if (!swipeStarted) return;
     if (!currentBrand) return;
     
     setSwipeDirection(direction);
@@ -82,7 +99,7 @@ export const SwipeScreen = () => {
           style={{
             backgroundImage: 'url(/discovered/gradient.png)',
             backgroundSize: 'cover',
-            backgroundPosition: 'center',
+            backgroundPosition: 'center top',
             backgroundRepeat: 'no-repeat',
           }}
         />
@@ -160,13 +177,20 @@ export const SwipeScreen = () => {
 
   return (
     <div className="min-h-screen relative flex flex-col items-center justify-center p-4 sm:p-6 overflow-hidden">
+      {/* Instructions Modal */}
+      <SwipeInstructionsModal 
+        isOpen={showInstructions} 
+        onStart={handleStartSwipe}
+        itemType={itemType}
+      />
+
       {/* Gradient Background Layer */}
       <div 
         className="absolute inset-0 z-0"
         style={{
           backgroundImage: 'url(/swipe/gradient.png)',
           backgroundSize: 'cover',
-          backgroundPosition: 'center',
+          backgroundPosition: 'center top',
           backgroundRepeat: 'no-repeat',
         }}
       />
@@ -237,10 +261,10 @@ export const SwipeScreen = () => {
               }}
               exit={{ opacity: 0 }}
               transition={{ type: 'spring', stiffness: 260, damping: 20 }}
-              drag="x"
+              drag={swipeStarted ? "x" : false}
               dragConstraints={{ left: 0, right: 0 }}
               onDragEnd={handleDragEnd}
-              className="absolute w-full cursor-grab active:cursor-grabbing"
+              className={`absolute w-full ${swipeStarted ? 'cursor-grab active:cursor-grabbing' : 'cursor-default'}`}
             >
               <div className="bg-gray-900 rounded-xl sm:rounded-2xl md:rounded-3xl overflow-hidden border-3 sm:border-4 border-white relative shadow-2xl">
                 {/* Swipe feedback overlay */}
@@ -334,10 +358,13 @@ export const SwipeScreen = () => {
       <div className="relative z-30 flex items-center justify-center gap-8 sm:gap-12 md:gap-16 mb-3 sm:mb-4 md:mb-6">
         <div className="flex flex-col items-center gap-1 sm:gap-2">
           <motion.button
-            whileHover={{ scale: 1.1 }}
-            whileTap={{ scale: 0.9 }}
+            whileHover={swipeStarted ? { scale: 1.1 } : {}}
+            whileTap={swipeStarted ? { scale: 0.9 } : {}}
             onClick={() => handleSwipe('left')}
-            className="w-14 h-14 sm:w-16 sm:h-16 md:w-20 md:h-20 rounded-full bg-gray-900 border-2 sm:border-3 md:border-4 border-red-500 flex items-center justify-center transition-all hover:bg-red-500/20 shadow-lg"
+            disabled={!swipeStarted}
+            className={`w-14 h-14 sm:w-16 sm:h-16 md:w-20 md:h-20 rounded-full bg-gray-900 border-2 sm:border-3 md:border-4 border-red-500 flex items-center justify-center transition-all shadow-lg ${
+              swipeStarted ? 'hover:bg-red-500/20 cursor-pointer' : 'opacity-50 cursor-not-allowed'
+            }`}
           >
             <X className="w-7 h-7 sm:w-8 sm:h-8 md:w-10 md:h-10 text-red-500" strokeWidth={3} />
           </motion.button>
@@ -351,10 +378,13 @@ export const SwipeScreen = () => {
         
         <div className="flex flex-col items-center gap-1 sm:gap-2">
           <motion.button
-            whileHover={{ scale: 1.1 }}
-            whileTap={{ scale: 0.9 }}
+            whileHover={swipeStarted ? { scale: 1.1 } : {}}
+            whileTap={swipeStarted ? { scale: 0.9 } : {}}
             onClick={() => handleSwipe('right')}
-            className="w-14 h-14 sm:w-16 sm:h-16 md:w-20 md:h-20 rounded-full bg-gray-900 border-2 sm:border-3 md:border-4 border-green-500 flex items-center justify-center transition-all hover:bg-green-500/20 shadow-lg"
+            disabled={!swipeStarted}
+            className={`w-14 h-14 sm:w-16 sm:h-16 md:w-20 md:h-20 rounded-full bg-gray-900 border-2 sm:border-3 md:border-4 border-green-500 flex items-center justify-center transition-all shadow-lg ${
+              swipeStarted ? 'hover:bg-green-500/20 cursor-pointer' : 'opacity-50 cursor-not-allowed'
+            }`}
           >
             <Heart className="w-7 h-7 sm:w-8 sm:h-8 md:w-10 md:h-10 text-green-500" strokeWidth={2.5} fill="currentColor" />
           </motion.button>

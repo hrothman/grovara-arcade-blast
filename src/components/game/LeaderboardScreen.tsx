@@ -33,7 +33,7 @@ export const LeaderboardScreen = () => {
         style={{
           backgroundImage: 'url(/leaderboard/gradient.png)',
           backgroundSize: 'cover',
-          backgroundPosition: 'center',
+          backgroundPosition: 'center top',
           backgroundRepeat: 'no-repeat',
         }}
       />

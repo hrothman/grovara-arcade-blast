@@ -122,7 +122,7 @@ export const WelcomeScreen = () => {
         style={{
           backgroundImage: 'url(/home/gradient.png)',
           backgroundSize: 'cover',
-          backgroundPosition: 'center',
+          backgroundPosition: 'center top',
           backgroundRepeat: 'no-repeat',
         }}
       />
@@ -288,7 +288,7 @@ export const WelcomeScreen = () => {
             height: '100%', 
             width: '60%',
             objectFit: 'cover',
-            objectPosition: 'right bottom'
+            objectPosition: 'right top'
           }}
           initial={{ x: -100, opacity: 0 }}
           animate={{ x: 0, opacity: 1 }}
@@ -304,7 +304,7 @@ export const WelcomeScreen = () => {
             height: '100%', 
             width: '60%',
             objectFit: 'cover',
-            objectPosition: 'left bottom'
+            objectPosition: 'left top'
           }}
           initial={{ x: 100, opacity: 0 }}
           animate={{ x: 0, opacity: 1 }}
