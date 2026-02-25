@@ -1,9 +1,9 @@
 import { useState, useMemo, useEffect } from 'react';
 import { motion, AnimatePresence, PanInfo } from 'framer-motion';
 import { useGame } from '@/context/GameContext';
-import realBrandsData from '@/data/realBrands.json';
+import featuredBrandsData from '@/data/featuredBrands.json';
 import buyersData from '@/data/buyers.json';
-import { Heart, X, CheckCircle } from 'lucide-react';
+import { Heart, X, CheckCircle, Tag } from 'lucide-react';
 import { SwipeInstructionsModal } from './SwipeInstructionsModal';
 
 const SWIPE_THRESHOLD = 100;
@@ -12,10 +12,12 @@ type SwipeItem = {
   id: string;
   name: string;
   description: string;
-  category: string;
+  category?: string;
   imageUrl: string;
   color: string;
   emoji?: string;
+  topSKUs?: string[];
+  tags?: string[];
 };
 
 const BRAND_COLORS = ['#10B981', '#22D3EE', '#8B5CF6', '#F59E0B', '#EC4899', '#3B82F6'];
@@ -27,15 +29,17 @@ const buildItems = (items: any[]): SwipeItem[] => {
       id: item.id,
       name: item.name,
       description: item.description || `Explore ${item.name} on Grovara`,
-      category: item.category || 'Item',
+      category: item.category,
       imageUrl: item.imageUrl,
       color,
       emoji: item.emoji,
+      topSKUs: item.topSKUs,
+      tags: item.tags,
     };
   });
 };
 
-const REAL_BRANDS = buildItems(realBrandsData);
+const FEATURED_BRANDS = buildItems(featuredBrandsData);
 const BUYERS = buildItems(buyersData);
 
 export const SwipeScreen = () => {
@@ -46,7 +50,7 @@ export const SwipeScreen = () => {
   const [swipeStarted, setSwipeStarted] = useState(false);
 
   // Select items based on user type
-  const items = gameState.userType === 'brand' ? BUYERS : REAL_BRANDS;
+  const items = gameState.userType === 'brand' ? BUYERS : FEATURED_BRANDS;
   const itemType = gameState.userType === 'brand' ? 'BUYERS' : 'BRANDS';
 
   // Select items for this level
@@ -176,7 +180,7 @@ export const SwipeScreen = () => {
   }
 
   return (
-    <div className="min-h-screen relative flex flex-col items-center justify-center p-4 sm:p-6 overflow-hidden">
+    <div className="min-h-screen relative flex flex-col items-center p-4 sm:p-6 overflow-hidden">
       {/* Instructions Modal */}
       <SwipeInstructionsModal 
         isOpen={showInstructions} 
@@ -212,7 +216,7 @@ export const SwipeScreen = () => {
         initial={{ opacity: 0, y: -20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.4 }}
-        className="relative z-30 text-center mb-3 sm:mb-4 md:mb-6 lg:mb-8"
+        className="relative z-30 text-center mb-2 sm:mb-3 md:mb-4 mt-2 sm:mt-4 flex-shrink-0"
       >
         <h2 
           className="text-3xl sm:text-4xl md:text-5xl font-bold text-white mb-1 sm:mb-2 md:mb-3"
@@ -247,7 +251,7 @@ export const SwipeScreen = () => {
       </motion.div>
 
       {/* Swipe cards */}
-      <div className="relative z-30 w-full max-w-md h-[400px] sm:h-[450px] md:h-[500px] lg:h-[550px] flex items-center justify-center mb-3 sm:mb-4 md:mb-6">
+      <div className="relative z-30 w-full max-w-md flex-1 flex items-center justify-center mb-2 sm:mb-3 md:mb-4 min-h-0">
         <AnimatePresence mode="wait">
           {currentBrand && (
             <motion.div
@@ -317,7 +321,7 @@ export const SwipeScreen = () => {
 
                 {/* Brand/Buyer image */}
                 <div 
-                  className="h-60 sm:h-64 md:h-72 lg:h-80 flex items-center justify-center bg-black/40 p-6 sm:p-8"
+                  className="h-48 sm:h-52 md:h-56 flex items-center justify-center bg-black/40 p-4 sm:p-6"
                 >
                   {currentBrand.imageUrl ? (
                     <img
@@ -336,10 +340,11 @@ export const SwipeScreen = () => {
                   )}
                 </div>
                 
-                {/* Brand/Buyer name */}
-                <div className="p-4 sm:p-6 md:p-8 text-center bg-gray-900">
+                {/* Brand/Buyer details */}
+                <div className="p-3 sm:p-4 md:p-5 bg-gray-900 overflow-hidden">
+                  {/* Brand name */}
                   <h3 
-                    className="text-lg sm:text-xl md:text-2xl lg:text-3xl font-bold text-white"
+                    className="text-lg sm:text-xl md:text-2xl font-bold text-white mb-1.5 sm:mb-2"
                     style={{ 
                       fontFamily: 'var(--font-pixel)',
                       textShadow: '2px 2px 0px rgba(0,0,0,0.5)',
@@ -347,6 +352,44 @@ export const SwipeScreen = () => {
                   >
                     {currentBrand.name}
                   </h3>
+                  
+                  {/* Description */}
+                  <p className="text-gray-300 text-[10px] sm:text-xs mb-2 leading-snug line-clamp-2" style={{ fontFamily: 'var(--font-pixel)' }}>
+                    {currentBrand.description}
+                  </p>
+                  
+                  {/* Top SKUs */}
+                  {currentBrand.topSKUs && currentBrand.topSKUs.length > 0 && (
+                    <div className="mb-2">
+                      <h4 className="text-white text-[10px] sm:text-xs font-bold mb-1" style={{ fontFamily: 'var(--font-pixel)' }}>
+                        Top SKUs
+                      </h4>
+                      <ul className="text-gray-400 text-[9px] sm:text-[10px] space-y-0.5" style={{ fontFamily: 'var(--font-pixel)' }}>
+                        {currentBrand.topSKUs.slice(0, 3).map((sku, idx) => (
+                          <li key={idx} className="flex items-start">
+                            <span className="text-primary mr-1">•</span>
+                            <span className="line-clamp-1">{sku}</span>
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+                  )}
+                  
+                  {/* Tags */}
+                  {currentBrand.tags && currentBrand.tags.length > 0 && (
+                    <div className="flex flex-wrap gap-1">
+                      {currentBrand.tags.slice(0, 4).map((tag, idx) => (
+                        <span 
+                          key={idx}
+                          className="inline-flex items-center gap-0.5 px-1.5 py-0.5 bg-primary/20 text-primary text-[8px] sm:text-[9px] rounded-full border border-primary/30"
+                          style={{ fontFamily: 'var(--font-pixel)' }}
+                        >
+                          <Tag className="w-2 h-2" />
+                          {tag}
+                        </span>
+                      ))}
+                    </div>
+                  )}
                 </div>
               </div>
             </motion.div>
@@ -355,7 +398,7 @@ export const SwipeScreen = () => {
       </div>
 
       {/* Action buttons */}
-      <div className="relative z-30 flex items-center justify-center gap-8 sm:gap-12 md:gap-16 mb-3 sm:mb-4 md:mb-6">
+      <div className="relative z-30 flex items-center justify-center gap-8 sm:gap-12 md:gap-16 mb-2 sm:mb-3 flex-shrink-0">
         <div className="flex flex-col items-center gap-1 sm:gap-2">
           <motion.button
             whileHover={swipeStarted ? { scale: 1.1 } : {}}
@@ -397,16 +440,17 @@ export const SwipeScreen = () => {
         </div>
       </div>
 
-      {/* Footer */}
-      <motion.p
+      {/* Footer - Sticks to bottom */}
+      <motion.div
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         transition={{ delay: 0.5 }}
-        className="relative z-30 text-gray-400 text-xs"
-        style={{ fontFamily: 'var(--font-pixel)' }}
+        className="relative z-30 mt-auto pb-2 sm:pb-3 flex-shrink-0"
       >
-        Expo West 2026 • Powered by Grovara
-      </motion.p>
+        <p className="text-gray-400 text-xs text-center" style={{ fontFamily: 'var(--font-pixel)' }}>
+          Expo West 2026 • Powered by Grovara
+        </p>
+      </motion.div>
     </div>
   );
 };

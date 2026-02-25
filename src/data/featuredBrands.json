@@ -1,0 +1,170 @@
+[
+  {
+    "id": "liquid-death",
+    "name": "Liquid Death",
+    "description": "Punk-rock canned water, teas, and sparkling that turns hydration into a lifestyle brand.",
+    "topSKUs": [
+      "Grave Fruit Sparkling Water",
+      "Rest in Peach Tea",
+      "Mango Chainsaw Sparking Water"
+    ],
+    "tags": ["Coffee & Tea", "Specialty Water", "Gluten Free", "Sustainable"],
+    "imageUrl": "/brands/liquid-death.png"
+  },
+  {
+    "id": "quantum-energy-squares",
+    "name": "Quantum Energy Squares",
+    "description": "Caffeine and protein snacks that slot perfectly at checkout and grab-and-go sections.",
+    "topSKUs": [
+      "Dark Chocolate Pink Himalayan Salt",
+      "Salted Peanut Butter Crunch",
+      "Cafe Mocha Almond Chip"
+    ],
+    "tags": ["Candy & Chocolate Bars", "High Protein", "Active Lifestyle", "Grab-And-Go"],
+    "imageUrl": "/brands/quantum-energy-squares.png"
+  },
+  {
+    "id": "the-frozen-bean",
+    "name": "The Frozen Bean",
+    "description": "Cafe-style frappe and latte drink mixes that boost margins, speed service, and satisfy repeat cravings.",
+    "topSKUs": [
+      "Keto Caramel Macchiato",
+      "Keto Matcha",
+      "Lavender Matcha Tea"
+    ],
+    "tags": ["Coffee & Tea", "Low Sugar", "Keto Friendly", "Minority Owned"],
+    "imageUrl": "/brands/the-frozen-bean.png"
+  },
+  {
+    "id": "catalina-snacks",
+    "name": "Catalina Snacks",
+    "description": "Better-for-you cereal and snacks that merchandises like indulgence but sells like wellness.",
+    "topSKUs": [
+      "Cinnamon Toast Protein Cereal",
+      "Chocolate Peanut Butter Protein Cereal",
+      "Dark Chocolate Protein Cereal"
+    ],
+    "tags": ["Low Carb", "Keto Friendly", "Better For You", "High Protein"],
+    "imageUrl": "/brands/catalina-snacks.png"
+  },
+  {
+    "id": "san-miguel",
+    "name": "San Miguel",
+    "description": "Modern Mexican staples designed for \"real food, real fast\" convenience with authentic flavor shoppers recognize.",
+    "topSKUs": [
+      "Roasted Anaheim Pepper Salsa",
+      "Zucchini Flower",
+      "Spicy Green Salsa Pouch"
+    ],
+    "tags": ["Kosher", "Dairy Free", "Plant Based", "Low Carb"],
+    "imageUrl": "/brands/san-miguel.png"
+  },
+  {
+    "id": "rip-van",
+    "name": "Rip Van",
+    "description": "Low-sugar, high-fiber snacks (wafels, wafers, cookies) that hits the \"better treat\" sweet spot without feeling niche.",
+    "topSKUs": [
+      "Dutch Caramel & Vanilla Wafel",
+      "Cookies & Cream Wafel",
+      "Honey & Oats Wafel"
+    ],
+    "tags": ["Better For You", "Low Sugar", "Vegan", "Non-GMO"],
+    "imageUrl": "/brands/rip-van.png"
+  },
+  {
+    "id": "whoa-dough",
+    "name": "Whoa Dough",
+    "description": "Plant-based, gluten-free snack bars that feel like dessert but fit better-for-you planograms and lunchbox demand.",
+    "topSKUs": [
+      "Brownie Batter Bar",
+      "Chocolate Chip Cookie Dough Bar",
+      "Peanut Butter Chocolate Chip Bar"
+    ],
+    "tags": ["Desserts", "Plant Based", "Gluten Free", "Vegan"],
+    "imageUrl": "/brands/whoa-dough.png"
+  },
+  {
+    "id": "palermos",
+    "name": "Palermo's",
+    "description": "Big, craveable frozen pizzas from a family company, designed for high-visibility merchandising and reliable demand.",
+    "topSKUs": [
+      "Thin Five Cheese Pizza",
+      "Rising Crust 4 Cheese",
+      "Thin Margherita"
+    ],
+    "tags": ["Family Owned", "Frozen", "Low Calorie", "Pizza"],
+    "imageUrl": "/brands/palermos.png"
+  },
+  {
+    "id": "beanvivo",
+    "name": "BeanVivo",
+    "description": "Bean-powered, high-protein pouches and snack mixes that make plant protein easy.",
+    "topSKUs": [
+      "Organic Three Bean Vegan Chili",
+      "Organic Smoky BBQ Pinto Beans",
+      "Organic Coconut Curry Chickpeas"
+    ],
+    "tags": ["High Protein", "Vegan", "Plant Based", "Gluten Free"],
+    "imageUrl": "/brands/beanvivo.png"
+  },
+  {
+    "id": "suckerpunch-gourmet",
+    "name": "SuckerPunch Gourmet",
+    "description": "Bold-flavor pickles, snacks and juice shots that punch up sandwiches, charcuterie, and athletic recovery sets.",
+    "topSKUs": [
+      "Sweet Spiced Bread and Butter Pickle Chips",
+      "Bloody Mary Mix",
+      "Bold Burger Kosher Dill Pickle Chips"
+    ],
+    "tags": ["Gluten Free", "Plant Based", "Snacking", "Hydration"],
+    "imageUrl": "/brands/suckerpunch-gourmet.png"
+  },
+  {
+    "id": "blakes-seed-based",
+    "name": "Blake's Seed Based",
+    "description": "Seed-based snacks that deliver the classic bar and crispy-treat experience with broad household appeal.",
+    "topSKUs": [
+      "Birthday Cake Rice Crispy",
+      "Chocolate Chip Rice Crispy",
+      "Apple Cinnamon Chewy Granola Bar"
+    ],
+    "tags": ["Cookies and Bars", "Allergy Friendly", "Better For You", "Plant Based"],
+    "imageUrl": "/brands/blakes-seed-based.png"
+  },
+  {
+    "id": "joolies",
+    "name": "Joolies",
+    "description": "Fresh organic Medjool dates with sustainable packaging, a premium \"nature's candy\" play for produce and snack aisles.",
+    "topSKUs": [
+      "Cinnamon Bun",
+      "Brownie",
+      "Lemon Bar"
+    ],
+    "tags": ["Organic", "Vegan", "Low Sugar", "Snacking"],
+    "imageUrl": "/brands/joolies.png"
+  },
+  {
+    "id": "positive-beverage",
+    "name": "Positive Beverage",
+    "description": "Clean-ingredient functional hydration with electrolytes and vitamins that reads \"daily wellness\" while playing in sports and convenience.",
+    "topSKUs": [
+      "Orange Oasis",
+      "Berry Bliss",
+      "Peach Perfect"
+    ],
+    "tags": ["Hydration", "Low Sugar", "Plant Based", "Energy"],
+    "imageUrl": "/brands/positive-beverage.jpg"
+  },
+  {
+    "id": "thats-it-nutrition",
+    "name": "That's It Nutrition",
+    "description": "Ultra-simple fruit snacks and bars made with plant-based ingredients for kids, travel, and checkout racks.",
+    "topSKUs": [
+      "Apple + Pumpkin Seed + Cinnamon",
+      "Crunchables Organic Apple",
+      "Apple Blueberry Bar"
+    ],
+    "tags": ["Plant Based", "Better For You", "Probiotic", "Snacking"],
+    "imageUrl": "/brands/thats-it-nutrition.png"
+  }
+]

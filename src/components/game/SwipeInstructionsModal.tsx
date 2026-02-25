@@ -24,6 +24,7 @@ export const SwipeInstructionsModal = ({ isOpen, onStart, itemType }: SwipeInstr
         className="sm:max-w-md bg-card/95 backdrop-blur-md neon-border p-0 overflow-hidden"
         onPointerDownOutside={(e) => e.preventDefault()}
         onEscapeKeyDown={(e) => e.preventDefault()}
+        hideClose
       >
         <div className="relative">
           {/* Decorative gradient background */}

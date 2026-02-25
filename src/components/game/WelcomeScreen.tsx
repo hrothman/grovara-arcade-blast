@@ -178,7 +178,7 @@ export const WelcomeScreen = () => {
               fontSize: 'clamp(1.75rem, 7vw, 3.5rem)',
             }}
           >
-            B2B BLASTER
+            B3B BLASTER
           </h1>
         </motion.div>
 
@@ -190,30 +190,27 @@ export const WelcomeScreen = () => {
           className="mb-2 sm:mb-3 md:mb-4 px-6 sm:px-8 md:px-10"
         >
           <h3 
-            className="text-sm sm:text-base md:text-lg font-bold text-white mb-1 sm:mb-2 tracking-widest"
+            className="text-sm sm:text-base md:text-lg font-bold text-white mb-2 sm:mb-3 tracking-widest"
             style={{ fontFamily: 'var(--font-pixel)' }}
           >
-            HOW TO PLAY
+            Welcome to B3B.
           </h3>
 
           {/* Tagline */}
-          <div className="mb-1 sm:mb-2 space-y-0.5">
-            <p className="text-[10px] sm:text-xs md:text-sm text-gray-400 font-light" style={{ fontFamily: 'var(--font-pixel)', fontWeight: 300 }}>
-              Old B2B is <span className="text-red-400">broken</span>...
-            </p>
-            <p className="text-[10px] sm:text-xs md:text-sm text-gray-300 font-light" style={{ fontFamily: 'var(--font-pixel)', fontWeight: 300 }}>
-              Grovara is built for what's next.
+          <div className="mb-3 sm:mb-4">
+            <p className="text-xs sm:text-sm md:text-base text-gray-300 font-light text-center" style={{ fontFamily: 'var(--font-pixel)', fontWeight: 300 }}>
+              Build your shelf.
             </p>
           </div>
 
           {/* Instructions Box */}
-          <div className="bg-black rounded-lg sm:rounded-xl md:rounded-2xl border-2 sm:border-3 md:border-4 border-white p-2 sm:p-3 md:p-4 max-w-xl mx-auto">
-            <div className="space-y-1.5 sm:space-y-2 md:space-y-3">
+          <div className="bg-black rounded-lg sm:rounded-xl md:rounded-2xl border-2 sm:border-3 md:border-4 border-white p-3 sm:p-4 md:p-5 max-w-xl mx-auto mb-4 sm:mb-5 md:mb-6">
+            <div className="space-y-2 sm:space-y-3 md:space-y-4">
               {/* Instruction 1 */}
               <div className="flex items-center gap-2 sm:gap-3 text-left">
                 <img src="/home/sword.png" alt="Sword" className="w-6 h-6 sm:w-8 sm:h-8 md:w-10 md:h-10 flex-shrink-0" />
                 <p className="text-white text-xs sm:text-sm md:text-base font-light" style={{ fontFamily: 'var(--font-pixel)', fontWeight: 300 }}>
-                  <span className="text-red-500">Tap to shoot</span> outdated B2B process
+                  Watch out for <span className="text-red-500">spreadsheets</span>
                 </p>
               </div>
 
@@ -221,7 +218,7 @@ export const WelcomeScreen = () => {
               <div className="flex items-center gap-2 sm:gap-3 text-left">
                 <img src="/home/diamond.png" alt="Diamond" className="w-6 h-6 sm:w-8 sm:h-8 md:w-10 md:h-10 flex-shrink-0" />
                 <p className="text-white text-xs sm:text-sm md:text-base font-light" style={{ fontFamily: 'var(--font-pixel)', fontWeight: 300 }}>
-                  <span className="text-blue-500">Drag in</span> Grovara-approved brands
+                  Watch out for <span className="text-yellow-500">broker-joker middlemen</span>
                 </p>
               </div>
 
@@ -229,10 +226,20 @@ export const WelcomeScreen = () => {
               <div className="flex items-center gap-2 sm:gap-3 text-left">
                 <img src="/home/coin.png" alt="Coin" className="w-6 h-6 sm:w-8 sm:h-8 md:w-10 md:h-10 flex-shrink-0" />
                 <p className="text-white text-xs sm:text-sm md:text-base font-light" style={{ fontFamily: 'var(--font-pixel)', fontWeight: 300 }}>
-                  <span className="text-yellow-500">Discover</span> new brands after each level
+                  Watch out for <span className="text-blue-500">other costly delays</span>
                 </p>
               </div>
             </div>
+          </div>
+
+          {/* New Section - Leaderboard and Hero */}
+          <div className="space-y-2 sm:space-y-3 text-center">
+            <p className="text-xs sm:text-sm md:text-base text-gray-300 font-light leading-relaxed" style={{ fontFamily: 'var(--font-pixel)', fontWeight: 300 }}>
+              Score high on the leaderboard to win exclusive prizes.
+            </p>
+            <p className="text-sm sm:text-base md:text-lg text-primary font-bold" style={{ fontFamily: 'var(--font-pixel)' }}>
+              Be the ultimate Shelf Hero.
+            </p>
           </div>
         </motion.div>
 
