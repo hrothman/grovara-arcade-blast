@@ -144,7 +144,7 @@ export const WelcomeScreen = () => {
         initial={{ opacity: 0, y: 30 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.6 }}
-        className="relative z-30 flex flex-col items-center justify-center text-center px-4 sm:px-6"
+        className="relative z-30 flex flex-col items-center justify-center text-center"
         style={{ height: '55vh' }}
       >
         {/* Logo and Title */}
@@ -152,7 +152,7 @@ export const WelcomeScreen = () => {
           initial={{ scale: 0.8, opacity: 0 }}
           animate={{ scale: 1, opacity: 1 }}
           transition={{ delay: 0.3, type: 'spring', stiffness: 200 }}
-          className="mb-2 sm:mb-3 md:mb-4"
+          className="mb-2 sm:mb-3 md:mb-4 px-6 sm:px-8 md:px-10"
         >
           {/* Grovara.com Logo */}
           <div className="flex items-center justify-center gap-2 sm:gap-3 mb-1 sm:mb-2">
@@ -187,7 +187,7 @@ export const WelcomeScreen = () => {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.5 }}
-          className="mb-2 sm:mb-3 md:mb-4"
+          className="mb-2 sm:mb-3 md:mb-4 px-6 sm:px-8 md:px-10"
         >
           <h3 
             className="text-sm sm:text-base md:text-lg font-bold text-white mb-1 sm:mb-2 tracking-widest"
@@ -237,7 +237,7 @@ export const WelcomeScreen = () => {
         </motion.div>
 
         {/* Buttons */}
-        <div className="flex flex-row items-center justify-center gap-3 sm:gap-4 w-full max-w-3xl mx-auto">
+        <div className="flex flex-row items-center justify-center gap-3 sm:gap-4 w-full max-w-3xl mx-auto px-6 sm:px-8 md:px-10">
           {/* Start Mission Button */}
           <motion.button
             initial={{ opacity: 0, scale: 0.9 }}
@@ -327,19 +327,19 @@ export const WelcomeScreen = () => {
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ delay: 1.1 }}
-          className="absolute bottom-4 sm:bottom-6 left-0 right-0 z-40 text-center"
+          className="absolute bottom-4 sm:bottom-6 left-0 right-0 z-40 text-center px-2 sm:px-4"
         >
           {/* Footer Links */}
-          <div className="flex flex-wrap items-center justify-center gap-4 sm:gap-6 mb-2 sm:mb-3 text-xs sm:text-sm text-gray-300" style={{ fontFamily: 'var(--font-pixel)' }}>
+          <div className="flex flex-row items-center justify-center gap-3 sm:gap-4 md:gap-6 mb-2 sm:mb-3" style={{ fontFamily: 'var(--font-pixel)' }}>
             <motion.button
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               transition={{ delay: 0.9 }}
               onClick={goToLeaderboard}
-              className="flex items-center gap-2 hover:text-white transition-colors"
+              className="flex items-center gap-1 sm:gap-2 hover:text-white transition-colors text-gray-300 text-[10px] sm:text-xs md:text-sm"
             >
-              <Medal className="w-3 h-3 sm:w-4 sm:h-4" />
-              View Leaderboard
+              <Medal className="w-3 h-3 sm:w-4 sm:h-4 flex-shrink-0" />
+              <span className="whitespace-nowrap">View Leaderboard</span>
             </motion.button>
 
             {!sessionUser && currentUser?.is_anonymous && (
@@ -348,19 +348,21 @@ export const WelcomeScreen = () => {
                 animate={{ opacity: 1 }}
                 transition={{ delay: 1 }}
                 onClick={openAccountLoadModal}
-                className="flex items-center gap-2 hover:text-white transition-colors"
+                className="flex items-center gap-1 sm:gap-2 hover:text-white transition-colors text-gray-300 text-[10px] sm:text-xs md:text-sm"
               >
-                <UserPlus className="w-3 h-3 sm:w-4 sm:h-4" />
-                Continue Progress
+                <UserPlus className="w-3 h-3 sm:w-4 sm:h-4 flex-shrink-0" />
+                <span className="whitespace-nowrap">Continue Progress</span>
               </motion.button>
             )}
           </div>
 
           <p
-            className="text-gray-300 text-xs sm:text-sm"
+            className="text-gray-300 text-[9px] xs:text-[10px] sm:text-xs md:text-sm px-2"
             style={{ fontFamily: 'var(--font-pixel)', textShadow: '1px 1px 2px rgba(0,0,0,0.8)' }}
           >
-            Expo West 2026 • Powered by Grovara
+            <span className="inline-block">Expo West 2026</span>
+            <span className="hidden xs:inline"> • </span>
+            <span className="block xs:inline">Powered by Grovara</span>
           </p>
         </motion.div>
       </div>
