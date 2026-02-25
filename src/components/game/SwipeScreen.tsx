@@ -5,6 +5,7 @@ import featuredBrandsData from '@/data/featuredBrands.json';
 import buyersData from '@/data/buyers.json';
 import { Heart, X, CheckCircle, Tag } from 'lucide-react';
 import { SwipeInstructionsModal } from './SwipeInstructionsModal';
+import { soundManager } from '@/lib/soundManager';
 
 const SWIPE_THRESHOLD = 100;
 
@@ -78,6 +79,13 @@ export const SwipeScreen = () => {
   const handleSwipe = (direction: 'left' | 'right') => {
     if (!swipeStarted) return;
     if (!currentBrand) return;
+    
+    // Play sound effect based on direction
+    if (direction === 'right') {
+      soundManager.playSound('placeProduct'); // Positive sound for liking
+    } else {
+      soundManager.playSound('enemyHit'); // Negative sound for passing
+    }
     
     setSwipeDirection(direction);
     recordSwipe(currentBrand.id, direction);

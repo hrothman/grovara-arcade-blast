@@ -1,37 +1,146 @@
 [
   {
-    "id": "urban-cafe",
-    "name": "Urban Cafe Collective",
-    "emoji": "☕",
+    "id": "01K9JTTZGXM2517BB52YPHFZFG",
+    "account_id": "01K9JTTZGXM2517BB52YPHFZFG",
+    "name": "Fine Co Enterprises",
+    "account_name": "Fine Co Enterprises",
+    "imageUrl": "/buyers/placeholder.svg",
+    "logo_url": null,
+    "country": "US",
+    "total_amount": 8237300.5,
     "category": "Retail",
-    "description": "Premium coffee shops across major cities"
+    "description": "Premium enterprise distributor"
   },
   {
-    "id": "fitness-hub",
-    "name": "Fitness Hub Network",
-    "emoji": "💪",
+    "id": "01K9JTRTEWXPNB7Z3S64J03FG3",
+    "account_id": "01K9JTRTEWXPNB7Z3S64J03FG3",
+    "name": "LS Andina",
+    "account_name": "LS Andina",
+    "imageUrl": "/buyers/placeholder.svg",
+    "logo_url": null,
+    "country": "PE",
+    "total_amount": 3925305,
+    "category": "Distribution",
+    "description": "Leading South American distributor"
+  },
+  {
+    "id": "01K9JTRTEWNCPJP5NGEA42N3H5",
+    "account_id": "01K9JTRTEWNCPJP5NGEA42N3H5",
+    "name": "TDL International",
+    "account_name": "TDL International",
+    "imageUrl": "/buyers/placeholder.svg",
+    "logo_url": null,
+    "country": "PA",
+    "total_amount": 2754511.5,
+    "category": "International",
+    "description": "Global trading company"
+  },
+  {
+    "id": "01K9JTRTEXRKKPCNHYN9ZS2YDV",
+    "account_id": "01K9JTRTEXRKKPCNHYN9ZS2YDV",
+    "name": "Oasis JDV Nutrition",
+    "account_name": "Oasis JDV Nutrition",
+    "imageUrl": "/buyers/placeholder.svg",
+    "logo_url": null,
+    "country": "MX",
+    "total_amount": 1989516.5,
     "category": "Wellness",
-    "description": "Chain of health and fitness centers"
+    "description": "Nutrition and wellness products"
   },
   {
-    "id": "organic-markets",
-    "name": "Organic Markets Co",
-    "emoji": "🥬",
+    "id": "01K9JTRTEWDD8JMTQYXFFBPGBD",
+    "account_id": "01K9JTRTEWDD8JMTQYXFFBPGBD",
+    "name": "AL Riham General Trading & Contracting Co.",
+    "account_name": "AL Riham General Trading & Contracting Co.",
+    "imageUrl": "/buyers/placeholder.svg",
+    "logo_url": null,
+    "country": "KW",
+    "total_amount": 1601824.1,
+    "category": "Trading",
+    "description": "General trading and contracting"
+  },
+  {
+    "id": "01K9JTTZGPY9A9ANG1SE0V16HE",
+    "account_id": "01K9JTTZGPY9A9ANG1SE0V16HE",
+    "name": "Crevel Europe GmbH",
+    "account_name": "Crevel Europe GmbH",
+    "imageUrl": "/buyers/placeholder.svg",
+    "logo_url": null,
+    "country": "DE",
+    "total_amount": 996786.1,
+    "category": "Distribution",
+    "description": "European distribution network"
+  },
+  {
+    "id": "01K9JTRTEX96REKFE647NAJ2DR",
+    "account_id": "01K9JTRTEX96REKFE647NAJ2DR",
+    "name": "Isimbi Cosmetics & Import Ltd",
+    "account_name": "Isimbi Cosmetics & Import Ltd",
+    "imageUrl": "/buyers/placeholder.svg",
+    "logo_url": null,
+    "country": "RW",
+    "total_amount": 990499.7,
     "category": "Retail",
-    "description": "Regional organic food store chain"
+    "description": "Cosmetics and imports"
   },
   {
-    "id": "tech-lounges",
-    "name": "Tech Lounge Spaces",
-    "emoji": "💻",
-    "category": "Entertainment",
-    "description": "Co-working and gaming lounge franchises"
+    "id": "01K9JTRTEYFCCE9D8VYJZZQZSA",
+    "account_id": "01K9JTRTEYFCCE9D8VYJZZQZSA",
+    "name": "Sunao Trading SAS",
+    "account_name": "Sunao Trading SAS",
+    "imageUrl": "/buyers/sunao-trading.png",
+    "logo_url": "https://platform.grovara.com/api/files/public/accounts/01K9JTRTEYFCCE9D8VYJZZQZSA/assets/logo/logo Sunao Trading, PE-01KHWC7110B8480FKZ1KCMV8AT.png",
+    "country": "CO",
+    "total_amount": 910981.3,
+    "category": "Trading",
+    "description": "Colombian trading company"
   },
   {
-    "id": "wellness-retreat",
-    "name": "Wellness Retreat Centers",
-    "emoji": "🧘",
-    "category": "Wellness",
-    "description": "Premium wellness and spa centers"
+    "id": "01K9JTRTEZS7M5XS86RD45FCZK",
+    "account_id": "01K9JTRTEZS7M5XS86RD45FCZK",
+    "name": "Earthfoods General Trading LLC",
+    "account_name": "Earthfoods General Trading LLC",
+    "imageUrl": "/buyers/placeholder.svg",
+    "logo_url": null,
+    "country": "AE",
+    "total_amount": 880678,
+    "category": "Food",
+    "description": "Organic and natural foods"
+  },
+  {
+    "id": "01K9JTRTEWNVTTXBTCAENGY0WD",
+    "account_id": "01K9JTRTEWNVTTXBTCAENGY0WD",
+    "name": "TEC Aruba",
+    "account_name": "TEC Aruba",
+    "imageUrl": "/buyers/tec-aruba.jpg",
+    "logo_url": "https://platform.grovara.com/api/files/public/accounts/01K9JTRTEWNVTTXBTCAENGY0WD/assets/logo/TEC Logo-01KJ5ANK8M56M197A8E2J2K37X.jpg",
+    "country": "AW",
+    "total_amount": 878155.7,
+    "category": "Distribution",
+    "description": "Caribbean distribution leader"
+  },
+  {
+    "id": "01K9JTX0QCA1E4GX7HT6TF2DCA",
+    "account_id": "01K9JTX0QCA1E4GX7HT6TF2DCA",
+    "name": "Cedar Basic Food",
+    "account_name": "Cedar Basic Food",
+    "imageUrl": "/buyers/placeholder.svg",
+    "logo_url": null,
+    "country": "US",
+    "total_amount": 736078.5,
+    "category": "Food",
+    "description": "Basic food products supplier"
+  },
+  {
+    "id": "01K9JTRTEWQYB07APD5R75MTCW",
+    "account_id": "01K9JTRTEWQYB07APD5R75MTCW",
+    "name": "Automercado",
+    "account_name": "Automercado",
+    "imageUrl": "/buyers/placeholder.svg",
+    "logo_url": null,
+    "country": "CR",
+    "total_amount": 730141.8,
+    "category": "Retail",
+    "description": "Supermarket chain"
   }
 ]

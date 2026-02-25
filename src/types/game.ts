@@ -109,7 +109,8 @@ export interface EnemySpawner {
   health: number; // 1-3 hearts
   targetShelfSlotId?: string;
   isMoving: boolean;
-  direction: 'toShelf' | 'awayFromShelf';
+  direction: 'toShelf' | 'awayFromShelf' | 'patrol';
+  patrolTarget?: { x: number; y: number };
 }
 
 export interface GameScore {

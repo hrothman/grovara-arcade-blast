@@ -7,6 +7,7 @@ import { InstructionsModal } from './InstructionsModal';
 import { getEnemyAssets, getProductAssets, getRareProductAssets, getRandomAsset, Asset } from '@/lib/assetLoader';
 import { ShelfManager } from '@/lib/shelfManager';
 import { ShelfSlot } from '@/types/game';
+import { soundManager } from '@/lib/soundManager';
 
 interface GameTarget {
   id: string;
@@ -36,13 +37,14 @@ interface GameEnemy extends GameTarget {
   targetProductId?: string;
   targetShelfSlotId?: string;
   isMoving: boolean;
-  direction: 'toShelf' | 'awayFromShelf';
+  direction: 'toShelf' | 'awayFromShelf' | 'patrol';
   speed: number;
   stealDurationSec: number;
   healthText?: Phaser.GameObjects.Text;
   baseSpriteScaleX: number;
   baseSpriteScaleY: number;
   escapeTarget?: { x: number; y: number };
+  patrolTarget?: { x: number; y: number };
 }
 
 const LEVEL_CONFIG = {
@@ -116,6 +118,7 @@ export const GameCanvas = () => {
     shelfManager: ShelfManager;
     kills: number;
   } | null>(null);
+  const userInteractedRef = useRef(false);
   const { gameState, addScore, loseLife, completeLevel } = useGame();
   const [displayScore, setDisplayScore] = useState(0);
   const [displayProductsCount, setDisplayProductsCount] = useState(0);
@@ -215,6 +218,8 @@ export const GameCanvas = () => {
   const handleStartGame = useCallback(() => {
     setShowInstructions(false);
     setGameStarted(true);
+    // Mark that user has interacted (needed for mobile audio)
+    userInteractedRef.current = true;
   }, []);
 
   useEffect(() => {
@@ -353,6 +358,9 @@ export const GameCanvas = () => {
           RARE_PRODUCT_ASSETS.forEach(asset => {
             scene.load.image(asset.id, asset.path);
           });
+          
+          // Preload audio
+          soundManager.preload(scene);
         },
         create: function(this: Phaser.Scene) {
           const scene = this;
@@ -364,6 +372,17 @@ export const GameCanvas = () => {
           const width = scene.scale.width;
           const height = scene.scale.height;
           const layout = backgroundLayoutRef.current;
+          
+          // Initialize sound manager
+          soundManager.init(scene);
+          
+          // Start music after user interaction (required for mobile browsers)
+          if (userInteractedRef.current) {
+            // Small delay to ensure audio context is ready
+            setTimeout(() => {
+              soundManager.playBackgroundMusic();
+            }, 100);
+          }
 
           // Draw shelves first
           if (layout) {
@@ -386,33 +405,34 @@ export const GameCanvas = () => {
           const drawShelves = () => {
             if (!layout) return;
             const graphics = scene.add.graphics();
-            const gridScale = layout.gridScale;
-            const lineWidth = Math.max(1, 2 * gridScale);
-            const shelfTop = shelfMgr.getConfig().topMargin;
-            const shelfHeight = shelfMgr.getConfig().shelfHeight;
-            const shelfArea = layout.shelfArea;
+            // Debug boundaries removed for cleaner gameplay
+            // const gridScale = layout.gridScale;
+            // const lineWidth = Math.max(1, 2 * gridScale);
+            // const shelfTop = shelfMgr.getConfig().topMargin;
+            // const shelfHeight = shelfMgr.getConfig().shelfHeight;
+            // const shelfArea = layout.shelfArea;
 
-            graphics.lineStyle(lineWidth, 0xd3d3d3, 0.5);
+            // graphics.lineStyle(lineWidth, 0xd3d3d3, 0.5);
 
-            shelfMgr.getSlots().forEach(slot => {
-              graphics.strokeRect(
-                slot.x - shelfMgr.getConfig().slotWidth / 2,
-                slot.y - shelfMgr.getConfig().slotHeight / 2,
-                shelfMgr.getConfig().slotWidth,
-                shelfMgr.getConfig().slotHeight
-              );
-            });
+            // shelfMgr.getSlots().forEach(slot => {
+            //   graphics.strokeRect(
+            //     slot.x - shelfMgr.getConfig().slotWidth / 2,
+            //     slot.y - shelfMgr.getConfig().slotHeight / 2,
+            //     shelfMgr.getConfig().slotWidth,
+            //     shelfMgr.getConfig().slotHeight
+            //   );
+            // });
 
-            graphics.lineStyle(lineWidth, 0xd3d3d3, 0.5);
-            for (let i = 1; i < shelfMgr.getConfig().slotsPerRow; i++) {
-              const slotWidth = shelfArea.width / shelfMgr.getConfig().slotsPerRow;
-              graphics.lineBetween(
-                shelfArea.x + i * slotWidth,
-                shelfMgr.getConfig().topMargin,
-                shelfArea.x + i * slotWidth,
-                shelfMgr.getConfig().topMargin + shelfMgr.getConfig().shelfHeight
-              );
-            }
+            // graphics.lineStyle(lineWidth, 0xd3d3d3, 0.5);
+            // for (let i = 1; i < shelfMgr.getConfig().slotsPerRow; i++) {
+            //   const slotWidth = shelfArea.width / shelfMgr.getConfig().slotsPerRow;
+            //   graphics.lineBetween(
+            //     shelfArea.x + i * slotWidth,
+            //     shelfMgr.getConfig().topMargin,
+            //     shelfArea.x + i * slotWidth,
+            //     shelfMgr.getConfig().topMargin + shelfMgr.getConfig().shelfHeight
+            //   );
+            // }
 
             graphics.setDepth(0);
           };
@@ -477,6 +497,11 @@ export const GameCanvas = () => {
             };
 
             data.products.push(product);
+
+            // Play sound for ultra rare item
+            if (isUltraRare) {
+              soundManager.playSound('rareItem');
+            }
 
             container.setAlpha(0);
             scene.tweens.add({
@@ -574,6 +599,9 @@ export const GameCanvas = () => {
                       product.x = nearestSlot.x;
                       product.y = nearestSlot.y;
                       setDisplayProductsCount(shelfMgr.getOccupiedProducts().length);
+                      
+                      // Play sound for placing product
+                      soundManager.playSound('placeProduct');
                       
                       // Give immediate score feedback
                       const scoreValue = product.rarity === 'ultra' ? 5000 : 1000;
@@ -678,6 +706,13 @@ export const GameCanvas = () => {
 
               enemy.health--;
               showHitFeedback('damage', `-${enemy.health <= 0 ? 'KILL' : '❤️'}`, enemy.x, enemy.y);
+              
+              // Play hit or kill sound
+              if (enemy.health <= 0) {
+                soundManager.playSound('enemyKill');
+              } else {
+                soundManager.playSound('enemyHit');
+              }
 
               if (enemy.healthText) {
                 enemy.healthText.setText('❤'.repeat(Math.max(enemy.health, 0)));
@@ -826,6 +861,7 @@ export const GameCanvas = () => {
                       const stolenValue = stolenProduct.rarity === 'ultra' ? 5000 : 1000;
                       applyScoreChange(-stolenValue, enemy.x, enemy.y);
                       showEventPopup('ITEM STOLEN');
+                      soundManager.playSound('itemStolen');
                     }
                   }
                   enemy.container?.destroy();
@@ -851,9 +887,70 @@ export const GameCanvas = () => {
                 return;
               }
 
+              // Patrol behavior when no products available
+              if (enemy.direction === 'patrol') {
+                if (!enemy.patrolTarget) {
+                  const patrolY = spawnBounds ? spawnBounds.y + 20 : 20;
+                  const patrolMinX = spawnBounds ? spawnBounds.x + 60 : 60;
+                  const patrolMaxX = spawnBounds ? spawnBounds.x + spawnBounds.width - 60 : width - 60;
+                  enemy.patrolTarget = {
+                    x: patrolMinX + Math.random() * (patrolMaxX - patrolMinX),
+                    y: patrolY,
+                  };
+                  enemy.speed = 80 + Math.random() * 40;
+                }
+
+                const dx = enemy.patrolTarget.x - enemy.x;
+                const dy = enemy.patrolTarget.y - enemy.y;
+                const distance = Math.hypot(dx, dy);
+
+                if (distance < 10) {
+                  // Reached patrol target, pick a new one
+                  const patrolY = spawnBounds ? spawnBounds.y + 20 : 20;
+                  const patrolMinX = spawnBounds ? spawnBounds.x + 60 : 60;
+                  const patrolMaxX = spawnBounds ? spawnBounds.x + spawnBounds.width - 60 : width - 60;
+                  enemy.patrolTarget = {
+                    x: patrolMinX + Math.random() * (patrolMaxX - patrolMinX),
+                    y: patrolY,
+                  };
+                }
+
+                const moveX = (dx / distance) * enemy.speed * deltaSeconds;
+                const moveY = (dy / distance) * enemy.speed * deltaSeconds;
+                enemy.x += moveX;
+                enemy.y += moveY;
+                enemy.container?.setPosition(enemy.x, enemy.y);
+
+                // Check if products are now available
+                const occupiedProducts = shelfMgr.getOccupiedProducts();
+                if (occupiedProducts.length > 0) {
+                  const targetProduct = occupiedProducts[Math.floor(Math.random() * occupiedProducts.length)];
+                  const targetGameProduct = data.products.find(p => p.id === targetProduct);
+                  if (targetGameProduct?.shelfSlotId) {
+                    enemy.targetProductId = targetProduct;
+                    enemy.targetShelfSlotId = targetGameProduct.shelfSlotId;
+                    enemy.direction = 'toShelf';
+                    enemy.patrolTarget = undefined;
+
+                    const targetSlot = shelfMgr.getSlot(targetGameProduct.shelfSlotId);
+                    if (targetSlot) {
+                      const dx = targetSlot.x - enemy.x;
+                      const dy = targetSlot.y - enemy.y;
+                      const distance = Math.hypot(dx, dy);
+                      enemy.speed = distance / enemy.stealDurationSec;
+                    }
+                  }
+                }
+                return;
+              }
+
               if (!enemy.targetShelfSlotId) {
                 const occupiedProducts = shelfMgr.getOccupiedProducts();
-                if (occupiedProducts.length === 0) return;
+                if (occupiedProducts.length === 0) {
+                  // Switch to patrol mode
+                  enemy.direction = 'patrol';
+                  return;
+                }
 
                 const targetProduct = occupiedProducts[Math.floor(Math.random() * occupiedProducts.length)];
                 const targetGameProduct = data.products.find(p => p.id === targetProduct);
@@ -871,6 +968,40 @@ export const GameCanvas = () => {
                 }
 
                 if (!enemy.targetShelfSlotId) return;
+              }
+
+              // Verify target product still exists and is on the shelf
+              if (enemy.targetProductId) {
+                const targetProduct = data.products.find(p => p.id === enemy.targetProductId);
+                if (!targetProduct || !targetProduct.onShelf || targetProduct.shelfSlotId !== enemy.targetShelfSlotId) {
+                  // Target was stolen or moved, pick a new target
+                  enemy.targetProductId = undefined;
+                  enemy.targetShelfSlotId = undefined;
+                  
+                  const occupiedProducts = shelfMgr.getOccupiedProducts();
+                  if (occupiedProducts.length === 0) {
+                    // No products available, switch to patrol
+                    enemy.direction = 'patrol';
+                    return;
+                  }
+                  
+                  // Pick a new target
+                  const newTargetProduct = occupiedProducts[Math.floor(Math.random() * occupiedProducts.length)];
+                  const newTargetGameProduct = data.products.find(p => p.id === newTargetProduct);
+                  if (newTargetGameProduct?.shelfSlotId) {
+                    enemy.targetProductId = newTargetProduct;
+                    enemy.targetShelfSlotId = newTargetGameProduct.shelfSlotId;
+
+                    const targetSlot = shelfMgr.getSlot(newTargetGameProduct.shelfSlotId);
+                    if (targetSlot) {
+                      const dx = targetSlot.x - enemy.x;
+                      const dy = targetSlot.y - enemy.y;
+                      const distance = Math.hypot(dx, dy);
+                      enemy.speed = distance / enemy.stealDurationSec;
+                    }
+                  }
+                  return;
+                }
               }
 
               const targetSlot = shelfMgr.getSlot(enemy.targetShelfSlotId);
@@ -930,6 +1061,7 @@ export const GameCanvas = () => {
               clearInterval(productInterval);
               clearInterval(enemyInterval);
               clearInterval(timerInterval);
+              soundManager.playSound('levelComplete');
 
               const timeoutId = setTimeout(() => {
                 if (isMountedRef.current && gameState.currentScreen === 'game') {
@@ -962,6 +1094,7 @@ export const GameCanvas = () => {
             clearInterval(enemyInterval);
             clearInterval(timerInterval);
             scene.events.off('update', updateHandler);
+            // Keep music playing across screens - don't stop it here
           });
         },
       },

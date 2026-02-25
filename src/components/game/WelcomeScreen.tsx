@@ -1,13 +1,16 @@
 import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { useGame } from '@/context/GameContext';
-import { Medal, UserPlus } from 'lucide-react';
+import { Medal, UserPlus, Settings, Share2 } from 'lucide-react';
 import { getCurrentUser, setCurrentUser as setCurrentUserSession } from '@/lib/leaderboardManager';
 import { AccountLoadModal } from './AccountLoadModal';
 import { UserInfoModal } from './UserInfoModal';
+import { SettingsModal } from './SettingsModal';
+import { ShareModal } from './ShareModal';
 import { registerUser, checkUsernameAvailable } from '@/services/userService';
 import { updateLeaderboardScore } from '@/services/leaderboardService';
 import { toast } from 'sonner';
+import { soundManager } from '@/lib/soundManager';
 
 export const WelcomeScreen = () => {
   const { startGame, goToSwipe, goToLeaderboard, currentUser, loadUserByEmail } = useGame();
@@ -15,6 +18,23 @@ export const WelcomeScreen = () => {
   const [showLoadModal, setShowLoadModal] = useState(false);
   const [showRegisterModal, setShowRegisterModal] = useState(false);
   const [hasShownInitialPrompt, setHasShownInitialPrompt] = useState(false);
+  const [showSettings, setShowSettings] = useState(false);
+  const [showShare, setShowShare] = useState(false);
+
+  // Start music on first user interaction
+  const handleStartMusic = () => {
+    soundManager.playBackgroundMusic();
+  };
+
+  const handleStartGame = () => {
+    handleStartMusic();
+    startGame();
+  };
+
+  const handleGoToSwipe = () => {
+    handleStartMusic();
+    goToSwipe();
+  };
 
   // Check session user on mount
   useEffect(() => {
@@ -116,6 +136,34 @@ export const WelcomeScreen = () => {
 
   return (
     <div className="min-h-screen relative flex flex-col overflow-hidden">
+      {/* Share Button - Top Right */}
+      <motion.button
+        initial={{ opacity: 0, scale: 0.8 }}
+        animate={{ opacity: 1, scale: 1 }}
+        transition={{ delay: 0.6 }}
+        whileHover={{ scale: 1.1 }}
+        whileTap={{ scale: 0.9 }}
+        onClick={() => setShowShare(true)}
+        className="absolute top-4 right-20 z-50 p-3 rounded-full bg-card/80 backdrop-blur-sm border-2 border-primary/40 hover:border-primary/80 transition-colors"
+        aria-label="Share"
+      >
+        <Share2 className="w-6 h-6 text-primary" />
+      </motion.button>
+
+      {/* Settings Button - Top Right */}
+      <motion.button
+        initial={{ opacity: 0, scale: 0.8 }}
+        animate={{ opacity: 1, scale: 1 }}
+        transition={{ delay: 0.5 }}
+        whileHover={{ scale: 1.1 }}
+        whileTap={{ scale: 0.9 }}
+        onClick={() => setShowSettings(true)}
+        className="absolute top-4 right-4 z-50 p-3 rounded-full bg-card/80 backdrop-blur-sm border-2 border-primary/40 hover:border-primary/80 transition-colors"
+        aria-label="Settings"
+      >
+        <Settings className="w-6 h-6 text-primary" />
+      </motion.button>
+
       {/* Gradient Background Layer */}
       <div 
         className="absolute inset-0 z-0"
@@ -144,7 +192,7 @@ export const WelcomeScreen = () => {
         initial={{ opacity: 0, y: 30 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.6 }}
-        className="relative z-30 flex flex-col items-center justify-center text-center"
+        className="relative z-30 flex flex-col items-center justify-center text-center pt-8 md:pt-16 lg:pt-20"
         style={{ height: '55vh' }}
       >
         {/* Logo and Title */}
@@ -252,7 +300,7 @@ export const WelcomeScreen = () => {
             transition={{ delay: 0.7, type: 'spring' }}
             whileHover={{ scale: 1.05 }}
             whileTap={{ scale: 0.95 }}
-            onClick={startGame}
+            onClick={handleStartGame}
             className="flex-1 px-4 sm:px-6 md:px-8 py-2.5 sm:py-3 md:py-4 text-sm sm:text-base md:text-lg font-bold text-white rounded-lg sm:rounded-xl relative overflow-hidden"
             style={{
               fontFamily: 'var(--font-pixel)',
@@ -271,7 +319,7 @@ export const WelcomeScreen = () => {
             transition={{ delay: 0.8, type: 'spring' }}
             whileHover={{ scale: 1.05 }}
             whileTap={{ scale: 0.95 }}
-            onClick={goToSwipe}
+            onClick={handleGoToSwipe}
             className="flex-1 px-4 sm:px-6 md:px-8 py-2.5 sm:py-3 md:py-4 text-sm sm:text-base md:text-lg font-bold bg-transparent text-white rounded-lg sm:rounded-xl"
             style={{
               fontFamily: 'var(--font-pixel)',
@@ -294,8 +342,8 @@ export const WelcomeScreen = () => {
           style={{ 
             height: '100%', 
             width: '60%',
-            objectFit: 'cover',
-            objectPosition: 'right top'
+            objectFit: 'contain',
+            objectPosition: 'bottom left'
           }}
           initial={{ x: -100, opacity: 0 }}
           animate={{ x: 0, opacity: 1 }}
@@ -310,8 +358,8 @@ export const WelcomeScreen = () => {
           style={{ 
             height: '100%', 
             width: '60%',
-            objectFit: 'cover',
-            objectPosition: 'left top'
+            objectFit: 'contain',
+            objectPosition: 'bottom right'
           }}
           initial={{ x: 100, opacity: 0 }}
           animate={{ x: 0, opacity: 1 }}
@@ -389,6 +437,16 @@ export const WelcomeScreen = () => {
         title="Create Your Account"
         description="Save your progress and connect with amazing brands!"
         submitButtonText="Create Account"
+      />
+
+      <SettingsModal
+        open={showSettings}
+        onOpenChange={setShowSettings}
+      />
+
+      <ShareModal
+        open={showShare}
+        onOpenChange={setShowShare}
       />
     </div>
   );
