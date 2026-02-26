@@ -70,14 +70,15 @@ export const LevelCompleteScreen = () => {
   }, []);
 
   return (
-    <div className="h-screen max-h-screen gradient-arcade flex flex-col items-center justify-center p-3 sm:p-4 md:p-6 relative overflow-x-hidden overflow-y-auto" style={{ maxHeight: '100vh', paddingTop: 'max(1.5rem, env(safe-area-inset-top))', paddingBottom: 'max(1.5rem, env(safe-area-inset-bottom))' }}>
+    <div className="h-screen max-h-screen gradient-arcade flex flex-col items-center justify-center p-3 sm:p-4 md:p-6 relative overflow-hidden" style={{ maxHeight: '100vh', paddingTop: 'max(1.5rem, env(safe-area-inset-top))', paddingBottom: 'max(1.5rem, env(safe-area-inset-bottom))' }}>
       <div className="absolute inset-0 gradient-radial-glow" />
       
       <motion.div
         initial={{ opacity: 0, scale: 0.8 }}
         animate={{ opacity: 1, scale: 1 }}
         transition={{ type: 'spring', duration: 0.6 }}
-        className="relative z-10 text-center max-w-md mx-auto w-full flex flex-col my-auto"
+        className="relative z-10 text-center max-w-md mx-auto w-full flex flex-col my-auto overflow-y-auto"
+        style={{ maxHeight: '90vh' }}
       >
         {/* Success icon */}
         <motion.div
@@ -136,7 +137,8 @@ export const LevelCompleteScreen = () => {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.7 }}
-          className="bg-card/50 backdrop-blur-sm rounded-xl p-4 mb-4 neon-border w-full flex-1 min-h-0 flex flex-col"
+          className="bg-card/50 backdrop-blur-sm rounded-xl p-4 mb-4 neon-border w-full"
+          style={{ maxHeight: '35vh' }}
         >
           <div className="flex items-center gap-2 mb-2 justify-center">
             <Medal className="w-4 h-4 text-warning" />
@@ -148,7 +150,8 @@ export const LevelCompleteScreen = () => {
 
           <div 
             ref={leaderboardRef}
-            className="flex-1 min-h-0 overflow-y-auto space-y-1 pr-2 custom-scrollbar"
+            className="overflow-y-auto space-y-1 pr-2 custom-scrollbar"
+            style={{ maxHeight: '28vh' }}
           >
             {leaderboard.map((entry, idx) => {
               const isPlayer = entry.username === displayUsername;

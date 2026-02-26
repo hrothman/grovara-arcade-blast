@@ -606,6 +606,34 @@ export const GameCanvas = () => {
                       // Give immediate score feedback
                       const scoreValue = product.rarity === 'ultra' ? 5000 : 1000;
                       applyScoreChange(scoreValue, nearestSlot.x, nearestSlot.y);
+                      
+                      // Check if shelf is completely filled
+                      if (shelfMgr.isShelfFull()) {
+                        // Delay slightly so the last product animation completes
+                        setTimeout(() => {
+                          // Show celebration popup
+                          showEventPopup('🎉 SHELF COMPLETE! +10000 BONUS! 🎉');
+                          soundManager.playSound('shelfComplete');
+                          
+                          // Award bonus points
+                          applyScoreChange(10000, width / 2, height / 2);
+                          
+                          // Clear all products on shelf
+                          const productsToRemove = data.products.filter(p => p.onShelf);
+                          productsToRemove.forEach(p => {
+                            if (p.container) {
+                              p.container.destroy();
+                            }
+                          });
+                          
+                          // Remove products from data array
+                          data.products = data.products.filter(p => !p.onShelf);
+                          
+                          // Reset shelf manager
+                          shelfMgr.reset();
+                          setDisplayProductsCount(0);
+                        }, 300);
+                      }
                     },
                   });
                 }

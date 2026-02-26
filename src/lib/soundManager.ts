@@ -35,6 +35,7 @@ export class SoundManager {
     itemStolen: () => zzfx(this.sfxVolume, 0, 440, .02, .08, .2, 3, 1.4, -1, 0, 0, 0, 0, .5, 0, 0, 0, .5, .02), // Negative
     levelComplete: () => zzfx(this.sfxVolume, 0, 830, .04, .12, .3, 0, 2, 0, 0, 0, 0, 0, 0, 0, .1, 0, .7, .04), // Victory
     rareItem: () => zzfx(this.sfxVolume, 0, 1319, .03, .1, .3, 0, 2.5, 5, 0, 0, 0, 0, 0, 0, 0, 0, .6, .05), // Sparkle
+    shelfComplete: () => zzfx(this.sfxVolume, 0, 659, .08, .15, .4, 0, 2.2, 0, 0, 0, 0, 0, 0, 0, .2, 0, .75, .08), // Triumphant
   };
 
   init(scene: Phaser.Scene) {

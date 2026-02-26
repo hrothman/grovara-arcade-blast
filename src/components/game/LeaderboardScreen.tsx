@@ -63,7 +63,7 @@ export const LeaderboardScreen = () => {
       </motion.button>
 
       {/* Content Container */}
-      <div className="relative z-30 flex flex-col items-center px-3 sm:px-4 md:px-6 pt-14 sm:pt-16 md:pt-20 pb-4 sm:pb-6 md:pb-8 flex-1">
+      <div className="relative z-30 flex flex-col items-center px-3 sm:px-4 md:px-6 pt-14 sm:pt-16 md:pt-20 pb-4 sm:pb-6 md:pb-8 flex-1 overflow-y-auto">
         {/* Header */}
         <motion.div
           initial={{ opacity: 0, y: -20 }}
@@ -144,9 +144,10 @@ export const LeaderboardScreen = () => {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.8 }}
-          className="w-full max-w-2xl bg-black/80 rounded-xl sm:rounded-2xl border-2 sm:border-3 border-white p-3 sm:p-4 md:p-6 mb-4 sm:mb-6 flex-1 flex flex-col min-h-0"
+          className="w-full max-w-2xl bg-black/80 rounded-xl sm:rounded-2xl border-2 sm:border-3 border-white p-3 sm:p-4 md:p-6 mb-4 sm:mb-6"
+          style={{ maxHeight: '40vh' }}
         >
-          <div className="overflow-y-auto space-y-2 pr-2 flex-1" style={{ maxHeight: '100%' }}>
+          <div className="overflow-y-auto space-y-2 pr-2" style={{ maxHeight: '36vh' }}>
             {leaderboard.map((entry, idx) => {
               const rank = idx + 1;
               const isTop3 = rank <= 3;
