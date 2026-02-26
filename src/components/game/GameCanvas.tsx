@@ -358,9 +358,6 @@ export const GameCanvas = () => {
           RARE_PRODUCT_ASSETS.forEach(asset => {
             scene.load.image(asset.id, asset.path);
           });
-          
-          // Preload audio
-          soundManager.preload(scene);
         },
         create: function(this: Phaser.Scene) {
           const scene = this;
@@ -375,6 +372,9 @@ export const GameCanvas = () => {
           
           // Initialize sound manager
           soundManager.init(scene);
+          
+          // Load audio in background (non-blocking)
+          soundManager.preloadAsync(scene);
           
           // Start music after user interaction (required for mobile browsers)
           if (userInteractedRef.current) {
@@ -633,7 +633,7 @@ export const GameCanvas = () => {
 
             const sprite = scene.add.image(0, 0, asset.id);
             const layoutScale = backgroundLayoutRef.current?.gridScale ?? 1;
-            const enemySize = 70 * layoutScale;
+            const enemySize = 140 * layoutScale;
             sprite.setDisplaySize(enemySize, enemySize);
             sprite.setOrigin(0.5);
 

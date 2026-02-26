@@ -7,6 +7,8 @@ export class SoundManager {
   private sfxVolume = 0.5;
   private musicMuted = false;
   private sfxMuted = false;
+  private audioLoaded = false;
+  private audioLoading = false;
 
   constructor() {
     // Load settings from localStorage
@@ -44,20 +46,71 @@ export class SoundManager {
     scene.load.audio('bgMusic', '/sounds/background-music.mp3');
   }
 
+  /**
+   * Load audio asynchronously in the background without blocking game start
+   */
+  async preloadAsync(scene: Phaser.Scene) {
+    if (this.audioLoading || this.audioLoaded) return;
+    
+    this.audioLoading = true;
+    
+    try {
+      // Use Phaser's loader to load audio dynamically after game start
+      scene.load.once('complete', () => {
+        this.audioLoaded = true;
+        console.log('Background music loaded successfully');
+      });
+      
+      scene.load.once('loaderror', () => {
+        console.warn('Failed to preload background music');
+        this.audioLoaded = false;
+      });
+      
+      scene.load.audio('bgMusic', '/sounds/background-music.mp3');
+      scene.load.start(); // Manually start the loader
+    } catch (error) {
+      console.warn('Failed to preload background music:', error);
+      this.audioLoaded = false;
+    } finally {
+      this.audioLoading = false;
+    }
+  }
+
   playBackgroundMusic() {
     if (!this.scene || this.musicMuted) return;
     
+    // Wait for audio to be loaded before attempting to play
+    if (!this.audioLoaded) {
+      // Retry after audio loads
+      const checkAndPlay = () => {
+        if (this.audioLoaded && !this.musicMuted) {
+          this.playBackgroundMusic();
+        }
+      };
+      setTimeout(checkAndPlay, 500);
+      return;
+    }
+    
     if (!this.sounds.has('bgMusic')) {
-      const music = this.scene.sound.add('bgMusic', {
-        loop: true,
-        volume: this.musicVolume,
-      });
-      this.sounds.set('bgMusic', music);
+      try {
+        const music = this.scene.sound.add('bgMusic', {
+          loop: true,
+          volume: this.musicVolume,
+        });
+        this.sounds.set('bgMusic', music);
+      } catch (error) {
+        console.warn('Failed to add background music:', error);
+        return;
+      }
     }
     
     const music = this.sounds.get('bgMusic');
     if (music && !music.isPlaying) {
-      music.play();
+      try {
+        music.play();
+      } catch (error) {
+        console.warn('Failed to play background music:', error);
+      }
     }
   }
 
