@@ -135,7 +135,7 @@ export const WelcomeScreen = () => {
   };
 
   return (
-    <div className="min-h-screen relative flex flex-col overflow-hidden">
+    <div className="h-screen max-h-screen relative flex flex-col overflow-x-hidden overflow-y-auto" style={{ maxHeight: '100dvh' }}>
       {/* Share Button - Top Right */}
       <motion.button
         initial={{ opacity: 0, scale: 0.8 }}
@@ -144,10 +144,11 @@ export const WelcomeScreen = () => {
         whileHover={{ scale: 1.1 }}
         whileTap={{ scale: 0.9 }}
         onClick={() => setShowShare(true)}
-        className="absolute top-4 right-20 z-50 p-3 rounded-full bg-card/80 backdrop-blur-sm border-2 border-primary/40 hover:border-primary/80 transition-colors"
+        className="fixed top-4 right-16 sm:right-20 z-50 p-2 sm:p-3 rounded-full bg-card/80 backdrop-blur-sm border-2 border-primary/40 hover:border-primary/80 transition-colors"
+        style={{ top: 'max(1rem, env(safe-area-inset-top))' }}
         aria-label="Share"
       >
-        <Share2 className="w-6 h-6 text-primary" />
+        <Share2 className="w-5 h-5 sm:w-6 sm:h-6 text-primary" />
       </motion.button>
 
       {/* Settings Button - Top Right */}
@@ -158,10 +159,11 @@ export const WelcomeScreen = () => {
         whileHover={{ scale: 1.1 }}
         whileTap={{ scale: 0.9 }}
         onClick={() => setShowSettings(true)}
-        className="absolute top-4 right-4 z-50 p-3 rounded-full bg-card/80 backdrop-blur-sm border-2 border-primary/40 hover:border-primary/80 transition-colors"
+        className="fixed top-4 right-4 z-50 p-2 sm:p-3 rounded-full bg-card/80 backdrop-blur-sm border-2 border-primary/40 hover:border-primary/80 transition-colors"
+        style={{ top: 'max(1rem, env(safe-area-inset-top))' }}
         aria-label="Settings"
       >
-        <Settings className="w-6 h-6 text-primary" />
+        <Settings className="w-5 h-5 sm:w-6 sm:h-6 text-primary" />
       </motion.button>
 
       {/* Gradient Background Layer */}
@@ -187,20 +189,20 @@ export const WelcomeScreen = () => {
         }}
       />
 
-      {/* TOP SECTION - 60% - Content */}
+      {/* TOP SECTION - Content */}
       <motion.div
         initial={{ opacity: 0, y: 30 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.6 }}
-        className="relative z-30 flex flex-col items-center justify-center text-center pt-8 md:pt-16 lg:pt-20"
-        style={{ height: '55vh' }}
+        className="relative z-30 flex flex-col items-center justify-center text-center pt-16 sm:pt-20 md:pt-16 lg:pt-20 pb-4 sm:pb-6 flex-1 min-h-0"
+        style={{ paddingTop: 'max(4rem, calc(env(safe-area-inset-top) + 3rem))' }}
       >
         {/* Logo and Title */}
         <motion.div
           initial={{ scale: 0.8, opacity: 0 }}
           animate={{ scale: 1, opacity: 1 }}
           transition={{ delay: 0.3, type: 'spring', stiffness: 200 }}
-          className="mb-2 sm:mb-3 md:mb-4 px-6 sm:px-8 md:px-10"
+          className="mb-1 sm:mb-2 md:mb-3 px-4 sm:px-6 md:px-8"
         >
           {/* Grovara.com Logo */}
           <div className="flex items-center justify-center gap-2 sm:gap-3 mb-1 sm:mb-2">
@@ -219,11 +221,11 @@ export const WelcomeScreen = () => {
 
           {/* Main Title */}
           <h1 
-            className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold text-white mb-1 sm:mb-2 tracking-wider leading-tight px-2"
+            className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold text-white mb-0.5 sm:mb-1 tracking-wider leading-tight px-2"
             style={{ 
               fontFamily: 'var(--font-pixel)',
               textShadow: '3px 3px 0px rgba(0,0,0,0.8), 0 0 15px rgba(255,255,255,0.4)',
-              fontSize: 'clamp(1.75rem, 7vw, 3.5rem)',
+              fontSize: 'clamp(1.5rem, 6.5vw, 3.5rem)',
             }}
           >
             B3B BLASTER
@@ -235,7 +237,7 @@ export const WelcomeScreen = () => {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.5 }}
-          className="mb-2 sm:mb-3 md:mb-4 px-6 sm:px-8 md:px-10"
+          className="mb-1 sm:mb-2 md:mb-3 px-4 sm:px-6 md:px-8"
         >
           <h3 
             className="text-sm sm:text-base md:text-lg font-bold text-white mb-2 sm:mb-3 tracking-widest"
@@ -252,8 +254,8 @@ export const WelcomeScreen = () => {
           </div>
 
           {/* Instructions Box */}
-          <div className="bg-black rounded-lg sm:rounded-xl md:rounded-2xl border-2 sm:border-3 md:border-4 border-white p-3 sm:p-4 md:p-5 max-w-xl mx-auto mb-4 sm:mb-5 md:mb-6">
-            <div className="space-y-2 sm:space-y-3 md:space-y-4">
+          <div className="bg-black rounded-lg sm:rounded-xl md:rounded-2xl border-2 sm:border-3 md:border-4 border-white p-2 sm:p-3 md:p-4 max-w-xl mx-auto mb-2 sm:mb-3 md:mb-4">
+            <div className="space-y-1.5 sm:space-y-2 md:space-y-3">
               {/* Instruction 1 */}
               <div className="flex items-center gap-2 sm:gap-3 text-left">
                 <img src="/home/sword.png" alt="Sword" className="w-6 h-6 sm:w-8 sm:h-8 md:w-10 md:h-10 flex-shrink-0" />
@@ -292,7 +294,7 @@ export const WelcomeScreen = () => {
         </motion.div>
 
         {/* Buttons */}
-        <div className="flex flex-row items-center justify-center gap-3 sm:gap-4 w-full max-w-3xl mx-auto px-6 sm:px-8 md:px-10">
+        <div className="flex flex-row items-center justify-center gap-2 sm:gap-3 md:gap-4 w-full max-w-3xl mx-auto px-4 sm:px-6 md:px-8">
           {/* Start Mission Button */}
           <motion.button
             initial={{ opacity: 0, scale: 0.9 }}
@@ -301,7 +303,7 @@ export const WelcomeScreen = () => {
             whileHover={{ scale: 1.05 }}
             whileTap={{ scale: 0.95 }}
             onClick={handleStartGame}
-            className="flex-1 px-4 sm:px-6 md:px-8 py-2.5 sm:py-3 md:py-4 text-sm sm:text-base md:text-lg font-bold text-white rounded-lg sm:rounded-xl relative overflow-hidden"
+            className="flex-1 px-3 sm:px-5 md:px-7 py-2 sm:py-2.5 md:py-3 text-xs sm:text-sm md:text-base font-bold text-white rounded-lg sm:rounded-xl relative overflow-hidden"
             style={{
               fontFamily: 'var(--font-pixel)',
               background: 'linear-gradient(135deg, #EC4899 0%, #8B5CF6 100%)',
@@ -320,7 +322,7 @@ export const WelcomeScreen = () => {
             whileHover={{ scale: 1.05 }}
             whileTap={{ scale: 0.95 }}
             onClick={handleGoToSwipe}
-            className="flex-1 px-4 sm:px-6 md:px-8 py-2.5 sm:py-3 md:py-4 text-sm sm:text-base md:text-lg font-bold bg-transparent text-white rounded-lg sm:rounded-xl"
+            className="flex-1 px-3 sm:px-5 md:px-7 py-2 sm:py-2.5 md:py-3 text-xs sm:text-sm md:text-base font-bold bg-transparent text-white rounded-lg sm:rounded-xl"
             style={{
               fontFamily: 'var(--font-pixel)',
               border: '3px solid white',
@@ -332,8 +334,8 @@ export const WelcomeScreen = () => {
         </div>
       </motion.div>
 
-      {/* BOTTOM SECTION - 40% - Characters & Footer */}
-      <div className="relative z-20 flex-1" style={{ height: '45vh' }}>
+      {/* BOTTOM SECTION - Characters & Footer */}
+      <div className="relative z-20 flex-shrink-0" style={{ height: 'clamp(200px, 40vh, 400px)', minHeight: '200px' }}>
         {/* Villain Character - Left */}
         <motion.img
           src="/home/villain.png"
@@ -382,7 +384,8 @@ export const WelcomeScreen = () => {
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ delay: 1.1 }}
-          className="absolute bottom-4 sm:bottom-6 left-0 right-0 z-40 text-center px-2 sm:px-4"
+          className="absolute bottom-2 sm:bottom-4 md:bottom-6 left-0 right-0 z-40 text-center px-2 sm:px-4"
+          style={{ paddingBottom: 'max(0.5rem, env(safe-area-inset-bottom))' }}
         >
           {/* Footer Links */}
           <div className="flex flex-row items-center justify-center gap-3 sm:gap-4 md:gap-6 mb-2 sm:mb-3" style={{ fontFamily: 'var(--font-pixel)' }}>

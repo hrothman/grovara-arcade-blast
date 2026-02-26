@@ -188,7 +188,7 @@ export const SwipeScreen = () => {
   }
 
   return (
-    <div className="min-h-screen relative flex flex-col items-center p-4 sm:p-6 overflow-hidden">
+    <div className="h-screen max-h-screen relative flex flex-col items-center p-3 sm:p-4 md:p-6 overflow-x-hidden overflow-y-auto" style={{ maxHeight: '100vh', paddingTop: 'max(1rem, env(safe-area-inset-top))', paddingBottom: 'max(1rem, env(safe-area-inset-bottom))' }}>
       {/* Instructions Modal */}
       <SwipeInstructionsModal 
         isOpen={showInstructions} 
@@ -224,14 +224,14 @@ export const SwipeScreen = () => {
         initial={{ opacity: 0, y: -20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.4 }}
-        className="relative z-30 text-center mb-2 sm:mb-3 md:mb-4 mt-2 sm:mt-4 flex-shrink-0"
+        className="relative z-30 text-center mb-2 sm:mb-3 md:mb-4 flex-shrink-0"
       >
         <h2 
-          className="text-3xl sm:text-4xl md:text-5xl font-bold text-white mb-1 sm:mb-2 md:mb-3"
+          className="text-2xl sm:text-3xl md:text-4xl font-bold text-white mb-1 sm:mb-2 md:mb-3"
           style={{ 
             fontFamily: 'var(--font-pixel)',
             textShadow: '3px 3px 0px rgba(0,0,0,0.8)',
-            fontSize: 'clamp(1.25rem, 5vw, 2.5rem)',
+            fontSize: 'clamp(1.125rem, 4.5vw, 2.25rem)',
           }}
         >
           Discover {itemType === 'BRANDS' ? 'Brands' : 'Buyers'}

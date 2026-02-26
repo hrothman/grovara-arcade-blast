@@ -70,23 +70,23 @@ export const LevelCompleteScreen = () => {
   }, []);
 
   return (
-    <div className="min-h-screen gradient-arcade flex flex-col items-center justify-center p-4 sm:p-6 relative overflow-hidden">
+    <div className="h-screen max-h-screen gradient-arcade flex flex-col items-center justify-center p-3 sm:p-4 md:p-6 relative overflow-x-hidden overflow-y-auto" style={{ maxHeight: '100vh', paddingTop: 'max(1.5rem, env(safe-area-inset-top))', paddingBottom: 'max(1.5rem, env(safe-area-inset-bottom))' }}>
       <div className="absolute inset-0 gradient-radial-glow" />
       
       <motion.div
         initial={{ opacity: 0, scale: 0.8 }}
         animate={{ opacity: 1, scale: 1 }}
         transition={{ type: 'spring', duration: 0.6 }}
-        className="relative z-10 text-center max-w-md mx-auto w-full max-h-[calc(100vh-40px)] overflow-y-auto flex flex-col"
+        className="relative z-10 text-center max-w-md mx-auto w-full flex flex-col my-auto"
       >
         {/* Success icon */}
         <motion.div
           initial={{ scale: 0 }}
           animate={{ scale: 1 }}
           transition={{ delay: 0.2, type: 'spring', stiffness: 200 }}
-          className="mb-2"
+          className="mb-1 sm:mb-2"
         >
-          <div className="inline-flex items-center justify-center w-16 h-16 bg-primary/20 rounded-full neon-border">
+          <div className="inline-flex items-center justify-center w-12 h-12 sm:w-14 sm:h-14 md:w-16 md:h-16 bg-primary/20 rounded-full neon-border">
             <Trophy className="w-8 h-8 text-primary" />
           </div>
         </motion.div>
@@ -95,7 +95,8 @@ export const LevelCompleteScreen = () => {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.3 }}
-          className="arcade-text text-2xl font-bold text-foreground neon-glow mb-4"
+          className="arcade-text text-xl sm:text-2xl font-bold text-foreground neon-glow mb-2 sm:mb-3 md:mb-4"
+          style={{ fontSize: 'clamp(1.125rem, 4.5vw, 1.5rem)' }}
         >
           LEVEL {gameState.currentLevel} COMPLETE!
         </motion.h2>

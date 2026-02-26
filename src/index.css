@@ -115,6 +115,14 @@
     -webkit-tap-highlight-color: transparent;
     user-select: none;
     -webkit-user-select: none;
+    scroll-behavior: smooth;
+  }
+
+  /* Ensure root can handle dynamic viewport */
+  #root {
+    min-height: 100vh;
+    min-height: 100dvh;
+    overflow: hidden;
   }
 
   h1, h2, h3, h4, h5, h6 {
@@ -227,9 +235,53 @@
   .custom-scrollbar::-webkit-scrollbar-thumb:hover {
     background: rgba(0, 181, 115, 0.5);
   }
+
+  /* Safe scroll utility - ensures content is always accessible */
+  .safe-scroll {
+    overflow-x: hidden;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+    overscroll-behavior-y: contain;
+    max-height: 100vh;
+    max-height: 100dvh; /* Dynamic viewport height for mobile */
+  }
+
+  /* Screen container with safe scrolling */
+  .screen-container {
+    @apply min-h-screen relative flex flex-col;
+    overflow-x: hidden;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+    overscroll-behavior: contain;
+    max-height: 100vh;
+    max-height: 100dvh;
+  }
 }
 
 @layer utilities {
+  /* Responsive scroll utilities */
+  .overflow-safe {
+    overflow-x: hidden;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .max-h-screen-safe {
+    max-height: 100vh;
+    max-height: 100dvh;
+  }
+
+  .h-screen-safe {
+    height: 100vh;
+    height: 100dvh;
+  }
+
+  .min-h-screen-safe {
+    min-height: 100vh;
+    min-height: 100dvh;
+  }
+
+  /* Animation utilities */
   .animate-pulse-neon {
     animation: pulse-neon 2s ease-in-out infinite;
   }

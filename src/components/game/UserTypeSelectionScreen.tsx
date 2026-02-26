@@ -5,7 +5,7 @@ export const UserTypeSelectionScreen = () => {
   const { setUserType } = useGame();
 
   return (
-    <div className="min-h-screen relative flex flex-col items-center justify-center p-4 sm:p-6 overflow-hidden">
+    <div className="h-screen max-h-screen relative flex flex-col items-center justify-center p-3 sm:p-4 md:p-6 overflow-x-hidden overflow-y-auto" style={{ maxHeight: '100vh', paddingTop: 'max(1.5rem, env(safe-area-inset-top))', paddingBottom: 'max(1.5rem, env(safe-area-inset-bottom))' }}>
       {/* Gradient Background Layer */}
       <div 
         className="absolute inset-0 z-0"
@@ -49,11 +49,11 @@ export const UserTypeSelectionScreen = () => {
           className="mb-3 sm:mb-4 md:mb-6"
         >
           <h1 
-            className="text-4xl sm:text-5xl md:text-6xl font-bold text-white mb-2 sm:mb-3 md:mb-4 tracking-wider leading-tight"
+            className="text-3xl sm:text-4xl md:text-5xl font-bold text-white mb-2 sm:mb-3 md:mb-4 tracking-wider leading-tight"
             style={{ 
               fontFamily: 'var(--font-pixel)',
               textShadow: '3px 3px 0px rgba(0,0,0,0.8), 0 0 15px rgba(255,255,255,0.4)',
-              fontSize: 'clamp(1.5rem, 6vw, 3.5rem)',
+              fontSize: 'clamp(1.25rem, 5.5vw, 3rem)',
             }}
           >
             WHO ARE YOU?

@@ -26,7 +26,7 @@ export const LeaderboardScreen = () => {
   };
 
   return (
-    <div className="min-h-screen relative flex flex-col overflow-hidden">
+    <div className="h-screen max-h-screen relative flex flex-col overflow-x-hidden overflow-y-auto" style={{ maxHeight: '100vh', paddingTop: 'env(safe-area-inset-top)', paddingBottom: 'env(safe-area-inset-bottom)' }}>
       {/* Gradient Background Layer */}
       <div 
         className="absolute inset-0 z-0"
@@ -56,26 +56,27 @@ export const LeaderboardScreen = () => {
         animate={{ opacity: 1 }}
         transition={{ delay: 0.2 }}
         onClick={goBack}
-        className="absolute top-6 left-6 z-40 p-3 bg-transparent rounded-full border-2 border-white hover:bg-white/10 transition-colors"
+        className="fixed top-4 left-4 z-40 p-2 sm:p-3 bg-transparent rounded-full border-2 border-white hover:bg-white/10 transition-colors"
+        style={{ top: 'max(1rem, env(safe-area-inset-top))' }}
       >
         <ArrowLeft className="w-6 h-6 text-white" />
       </motion.button>
 
       {/* Content Container */}
-      <div className="relative z-30 flex flex-col items-center px-4 sm:px-6 pt-16 sm:pt-20 pb-8 sm:pb-12 flex-1">
+      <div className="relative z-30 flex flex-col items-center px-3 sm:px-4 md:px-6 pt-14 sm:pt-16 md:pt-20 pb-4 sm:pb-6 md:pb-8 flex-1">
         {/* Header */}
         <motion.div
           initial={{ opacity: 0, y: -20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.3 }}
-          className="text-center mb-6 sm:mb-8"
+          className="text-center mb-3 sm:mb-4 md:mb-6"
         >
           <h1 
-            className="text-3xl sm:text-4xl md:text-5xl font-bold text-white mb-2 sm:mb-3"
+            className="text-2xl sm:text-3xl md:text-4xl font-bold text-white mb-1 sm:mb-2"
             style={{ 
               fontFamily: 'var(--font-pixel)',
               textShadow: '3px 3px 0px rgba(0,0,0,0.8), 0 0 15px rgba(255,255,255,0.4)',
-              fontSize: 'clamp(1.75rem, 6vw, 3rem)',
+              fontSize: 'clamp(1.5rem, 5.5vw, 2.5rem)',
             }}
           >
             LEADERBOARD
@@ -93,7 +94,7 @@ export const LeaderboardScreen = () => {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.4 }}
-          className="flex items-end justify-center gap-4 sm:gap-6 md:gap-8 mb-8 sm:mb-10"
+          className="flex items-end justify-center gap-3 sm:gap-4 md:gap-6 mb-4 sm:mb-6 md:mb-8"
         >
           {/* 2nd Place */}
           <motion.div
@@ -105,7 +106,7 @@ export const LeaderboardScreen = () => {
             <img 
               src="/leaderboard/2nd.png" 
               alt="2nd Place" 
-              className="w-24 sm:w-32 md:w-40 h-auto object-contain"
+              className="w-20 sm:w-28 md:w-36 h-auto object-contain"
             />
           </motion.div>
 
@@ -119,7 +120,7 @@ export const LeaderboardScreen = () => {
             <img 
               src="/leaderboard/1st.png" 
               alt="1st Place" 
-              className="w-28 sm:w-36 md:w-44 h-auto object-contain"
+              className="w-24 sm:w-32 md:w-40 h-auto object-contain"
             />
           </motion.div>
 
@@ -133,7 +134,7 @@ export const LeaderboardScreen = () => {
             <img 
               src="/leaderboard/3rd.png" 
               alt="3rd Place" 
-              className="w-24 sm:w-32 md:w-40 h-auto object-contain"
+              className="w-20 sm:w-28 md:w-36 h-auto object-contain"
             />
           </motion.div>
         </motion.div>
@@ -143,7 +144,7 @@ export const LeaderboardScreen = () => {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.8 }}
-          className="w-full max-w-2xl bg-black/80 rounded-2xl border-3 border-white p-4 sm:p-6 mb-6 sm:mb-8"
+          className="w-full max-w-2xl bg-black/80 rounded-xl sm:rounded-2xl border-2 sm:border-3 border-white p-3 sm:p-4 md:p-6 mb-4 sm:mb-6"
         >
           <div className="max-h-64 sm:max-h-80 overflow-y-auto space-y-2 pr-2">
             {leaderboard.slice(0, 10).map((entry, idx) => {

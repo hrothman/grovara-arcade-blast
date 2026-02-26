@@ -66,27 +66,27 @@ export const GameOverScreen = () => {
   }, []);
 
   return (
-    <div className="min-h-screen gradient-arcade flex flex-col items-center justify-center p-6 relative overflow-hidden">
+    <div className="h-screen max-h-screen gradient-arcade flex flex-col items-center justify-center p-3 sm:p-4 md:p-6 relative overflow-x-hidden overflow-y-auto" style={{ maxHeight: '100vh', paddingTop: 'max(1.5rem, env(safe-area-inset-top))', paddingBottom: 'max(1.5rem, env(safe-area-inset-bottom))' }}>
       <div className="absolute inset-0 gradient-radial-glow opacity-30" />
       
-      <div className="relative z-10 text-center max-w-md mx-auto w-full">
+      <div className="relative z-10 text-center max-w-md mx-auto w-full my-auto">
         {/* Game over icon */}
-        <div className="mb-6">
+        <div className="mb-3 sm:mb-4 md:mb-6">
           <div className="inline-flex items-center justify-center w-20 h-20 bg-destructive/20 rounded-full">
             <Frown className="w-10 h-10 text-destructive" />
           </div>
         </div>
 
-        <h2 className="arcade-text text-3xl font-bold text-foreground mb-2">
+        <h2 className="arcade-text text-2xl sm:text-3xl font-bold text-foreground mb-2" style={{ fontSize: 'clamp(1.25rem, 5vw, 1.875rem)' }}>
           GAME OVER
         </h2>
         
-        <p className="text-muted-foreground mb-8">
+        <p className="text-sm sm:text-base text-muted-foreground mb-4 sm:mb-6 md:mb-8">
           Too many friendly hits! Remember: protect the good brands.
         </p>
 
         {/* Stats */}
-        <div className="bg-card/50 backdrop-blur-sm rounded-2xl p-6 mb-6 neon-border">
+        <div className="bg-card/50 backdrop-blur-sm rounded-xl sm:rounded-2xl p-3 sm:p-4 md:p-6 mb-3 sm:mb-4 md:mb-6 neon-border">
           <div className="space-y-4">
             <div className="flex justify-between items-center">
               <span className="text-muted-foreground">Final Score</span>
@@ -105,7 +105,7 @@ export const GameOverScreen = () => {
         </div>
 
         {/* Leaderboard */}
-        <div className="bg-card/50 backdrop-blur-sm rounded-2xl p-6 mb-6 neon-border">
+        <div className="bg-card/50 backdrop-blur-sm rounded-xl sm:rounded-2xl p-3 sm:p-4 md:p-6 mb-3 sm:mb-4 md:mb-6 neon-border">
           <div className="flex items-center gap-2 mb-4">
             <Medal className="w-5 h-5 text-warning" />
             <h2 className="font-semibold text-foreground">Leaderboard</h2>
