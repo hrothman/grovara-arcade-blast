@@ -4,9 +4,10 @@ import "./index.css";
 import { testSupabaseConnection } from "@/lib/supabaseClient";
 import { getOrCreateUser } from "@/services";
 
-// Initialize Supabase and user on app start
+// Initialize Supabase and user on app start (non-blocking)
 console.log('🎮 Initializing Grovara Arcade Blast...');
 
+// Start initialization in background without blocking render
 testSupabaseConnection().then(connected => {
   if (connected) {
     console.log('✅ Supabase connection established');
@@ -23,4 +24,14 @@ testSupabaseConnection().then(connected => {
   }
 });
 
+// Render app immediately (don't wait for Supabase)
 createRoot(document.getElementById("root")!).render(<App />);
+
+// Remove initial loader after React mounts
+setTimeout(() => {
+  const loader = document.getElementById('initial-loader');
+  if (loader) {
+    loader.classList.add('loader-hidden');
+    setTimeout(() => loader.remove(), 500);
+  }
+}, 100);
