@@ -118,7 +118,7 @@ export const GameProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       if (prev.currentLevel >= TOTAL_LEVELS) {
         return {
           ...prev,
-          currentScreen: 'results',
+          currentScreen: 'gameComplete',
         };
       }
       return {

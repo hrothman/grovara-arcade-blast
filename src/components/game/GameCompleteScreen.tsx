@@ -1,31 +1,28 @@
 import { useState, useEffect, useRef } from 'react';
 import { motion } from 'framer-motion';
 import { useGame } from '@/context/GameContext';
-import { Trophy, Star, ArrowRight, Sparkles, Medal } from 'lucide-react';
+import { Trophy, Star, ArrowRight, Sparkles, Medal, Crown } from 'lucide-react';
 import { getLeaderboard } from '@/services/leaderboardService';
 import { getCurrentUser } from '@/lib/leaderboardManager';
 
-export const LevelCompleteScreen = () => {
-  const { gameState, goToSwipe, nextLevel } = useGame();
-  const currentLevelData = gameState.levels[gameState.levels.length - 1];
+export const GameCompleteScreen = () => {
+  const { gameState, goToSwipe, goToResults } = useGame();
   const [username] = useState(`user${Math.floor(Math.random() * 10000000)}`);
   const [leaderboard, setLeaderboard] = useState<Array<{ username: string; score: number }>>([]);
   const leaderboardRef = useRef<HTMLDivElement>(null);
   const playerRowRef = useRef<HTMLDivElement>(null);
 
-  // Update score if user is logged in, then load leaderboard
+  // Load leaderboard
   useEffect(() => {
-    const loadAndUpdateLeaderboard = async () => {
+    const loadLeaderboard = async () => {
       const currentUser = getCurrentUser();
       
       const entries = await getLeaderboard(50);
-      // Map to simple format
       const mapped = entries.map(entry => ({
         username: entry.username,
         score: entry.score
       }));
       
-      // Only add temporary player if not logged in (logged-in user should already be in leaderboard)
       const displayUsername = currentUser?.username || username;
       const withPlayer = currentUser 
         ? mapped
@@ -35,14 +32,13 @@ export const LevelCompleteScreen = () => {
           ];
       setLeaderboard(withPlayer.sort((a, b) => b.score - a.score));
     };
-    loadAndUpdateLeaderboard();
+    loadLeaderboard();
   }, [username, gameState.totalScore]);
 
-  // Get the correct username to display (logged in user or temporary)
   const displayUsername = getCurrentUser()?.username || username;
   const playerRank = leaderboard.findIndex(entry => entry.username === displayUsername) + 1;
 
-  // Auto-scroll to player position with acceleration
+  // Auto-scroll to player position
   useEffect(() => {
     if (leaderboardRef.current && playerRowRef.current) {
       const container = leaderboardRef.current;
@@ -73,61 +69,116 @@ export const LevelCompleteScreen = () => {
     <div className="h-screen max-h-screen gradient-arcade flex flex-col items-center justify-center p-3 sm:p-4 md:p-6 relative overflow-x-hidden overflow-y-auto" style={{ maxHeight: '100vh', paddingTop: 'max(1.5rem, env(safe-area-inset-top))', paddingBottom: 'max(1.5rem, env(safe-area-inset-bottom))' }}>
       <div className="absolute inset-0 gradient-radial-glow" />
       
+      {/* Animated particles */}
+      <div className="absolute inset-0 overflow-hidden pointer-events-none">
+        {[...Array(20)].map((_, i) => (
+          <motion.div
+            key={i}
+            className="absolute"
+            initial={{ 
+              x: Math.random() * window.innerWidth,
+              y: window.innerHeight + 100,
+              scale: 0,
+            }}
+            animate={{ 
+              y: -100,
+              scale: [0, 1, 1, 0],
+            }}
+            transition={{
+              duration: 3 + Math.random() * 2,
+              delay: i * 0.2,
+              repeat: Infinity,
+              repeatDelay: 2,
+            }}
+          >
+            <Star className="w-4 h-4 text-warning fill-warning" />
+          </motion.div>
+        ))}
+      </div>
+      
       <motion.div
         initial={{ opacity: 0, scale: 0.8 }}
         animate={{ opacity: 1, scale: 1 }}
         transition={{ type: 'spring', duration: 0.6 }}
         className="relative z-10 text-center max-w-md mx-auto w-full flex flex-col my-auto"
       >
-        {/* Success icon */}
+        {/* Success icon with crown */}
         <motion.div
-          initial={{ scale: 0 }}
-          animate={{ scale: 1 }}
+          initial={{ scale: 0, rotate: -180 }}
+          animate={{ scale: 1, rotate: 0 }}
           transition={{ delay: 0.2, type: 'spring', stiffness: 200 }}
-          className="mb-1 sm:mb-2"
+          className="mb-2 sm:mb-3"
         >
-          <div className="inline-flex items-center justify-center w-12 h-12 sm:w-14 sm:h-14 md:w-16 md:h-16 bg-primary/20 rounded-full neon-border">
-            <Trophy className="w-8 h-8 text-primary" />
+          <div className="inline-flex items-center justify-center w-20 h-20 sm:w-24 sm:h-24 bg-warning/20 rounded-full neon-border relative">
+            <Trophy className="w-10 h-10 sm:w-12 sm:h-12 text-warning" />
+            <motion.div
+              initial={{ y: -20, opacity: 0 }}
+              animate={{ y: 0, opacity: 1 }}
+              transition={{ delay: 0.5, type: 'spring' }}
+              className="absolute -top-2 -right-2"
+            >
+              <Crown className="w-8 h-8 text-warning fill-warning" />
+            </motion.div>
           </div>
         </motion.div>
 
-        <motion.h2
+        <motion.h1
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.3 }}
-          className="arcade-text text-xl sm:text-2xl font-bold text-foreground neon-glow mb-2 sm:mb-3 md:mb-4"
-          style={{ fontSize: 'clamp(1.125rem, 4.5vw, 1.5rem)' }}
+          className="arcade-text text-2xl sm:text-3xl font-bold text-warning neon-glow mb-1 sm:mb-2"
+          style={{ fontSize: 'clamp(1.25rem, 5vw, 1.875rem)' }}
         >
-          LEVEL {gameState.currentLevel} COMPLETE!
-        </motion.h2>
+          GAME COMPLETE!
+        </motion.h1>
 
-        {/* Stats Card */}
+        <motion.p
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ delay: 0.4 }}
+          className="text-muted-foreground text-sm mb-3 sm:mb-4"
+        >
+          You've conquered all {gameState.levels.length} levels! 🎉
+        </motion.p>
+
+        {/* Final Score Card */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.5 }}
-          className="bg-card/50 backdrop-blur-sm rounded-xl p-4 mb-4 neon-border text-sm"
+          className="bg-card/50 backdrop-blur-sm rounded-xl p-4 mb-3 sm:mb-4 neon-border"
         >
           <div className="flex items-center justify-center gap-2 mb-3">
-            <Star className="w-4 h-4 text-warning fill-warning" />
-            <span className="arcade-text text-xs text-muted-foreground">Level Stats</span>
-            <Star className="w-4 h-4 text-warning fill-warning" />
+            <Sparkles className="w-4 h-4 text-warning" />
+            <span className="arcade-text text-xs text-muted-foreground">Final Stats</span>
+            <Sparkles className="w-4 h-4 text-warning" />
           </div>
           
           <div className="space-y-2">
             <div className="flex justify-between items-center">
-              <span className="text-muted-foreground text-xs">Score</span>
-              <span className="arcade-text text-lg text-warning score-glow">
-                {currentLevelData?.score?.toLocaleString() || 0}
+              <span className="text-muted-foreground text-xs">Total Score</span>
+              <span className="arcade-text text-2xl text-warning score-glow">
+                {gameState.totalScore.toLocaleString()}
               </span>
             </div>
             <div className="h-px bg-border" />
             <div className="flex justify-between items-center">
-              <span className="text-muted-foreground text-xs">Total</span>
+              <span className="text-muted-foreground text-xs">Levels Completed</span>
               <span className="arcade-text text-base text-foreground">
-                {gameState.totalScore.toLocaleString()}
+                {gameState.levels.length} / 3
               </span>
             </div>
+            {gameState.levels.length > 0 && (
+              <>
+                <div className="h-px bg-border" />
+                <div className="flex justify-between items-center">
+                  <span className="text-muted-foreground text-xs">Best Level</span>
+                  <span className="arcade-text text-base text-primary">
+                    {Math.max(...gameState.levels.map(l => l.score || 0)).toLocaleString()}
+                  </span>
+                </div>
+              </>
+            )}
           </div>
         </motion.div>
 
@@ -136,11 +187,11 @@ export const LevelCompleteScreen = () => {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.7 }}
-          className="bg-card/50 backdrop-blur-sm rounded-xl p-4 mb-4 neon-border w-full flex-1 min-h-0 flex flex-col"
+          className="bg-card/50 backdrop-blur-sm rounded-xl p-3 sm:p-4 mb-3 sm:mb-4 neon-border w-full flex-1 min-h-0 flex flex-col max-h-48"
         >
           <div className="flex items-center gap-2 mb-2 justify-center">
             <Medal className="w-4 h-4 text-warning" />
-            <h2 className="font-semibold text-foreground text-sm">Leaderboard</h2>
+            <h2 className="font-semibold text-foreground text-sm">Final Leaderboard</h2>
             <span className="text-xs text-muted-foreground">
               #{playerRank}
             </span>
@@ -158,9 +209,9 @@ export const LevelCompleteScreen = () => {
                 <div
                   key={entry.username}
                   ref={isPlayer ? playerRowRef : null}
-                  className={`flex items-center gap-3 p-2 rounded-lg transition-all text-xs ${
+                  className={`flex items-center gap-2 p-2 rounded-lg transition-all text-xs ${
                     isPlayer 
-                      ? 'bg-primary/20 border-2 border-primary' 
+                      ? 'bg-warning/20 border-2 border-warning' 
                       : 'bg-background/50 hover:bg-background/70'
                   }`}
                 >
@@ -172,13 +223,13 @@ export const LevelCompleteScreen = () => {
                   }`}>
                     {rank <= 3 ? '🏆' : rank}
                   </span>
-                  <span className={`flex-1 font-medium ${
-                    isPlayer ? 'text-primary' : 'text-foreground'
+                  <span className={`flex-1 font-medium truncate ${
+                    isPlayer ? 'text-warning' : 'text-foreground'
                   }`}>
                     {isPlayer ? `${entry.username} (You)` : entry.username}
                   </span>
-                  <span className={`arcade-text text-sm ${
-                    isPlayer ? 'text-primary' : 'text-warning'
+                  <span className={`arcade-text text-xs ${
+                    isPlayer ? 'text-warning' : 'text-warning/70'
                   }`}>
                     {entry.score.toLocaleString()}
                   </span>
@@ -188,52 +239,32 @@ export const LevelCompleteScreen = () => {
           </div>
         </motion.div>
 
-        {/* Message */}
-        <motion.div
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ delay: 0.9 }}
-          className="mb-3"
-        >
-          <div className="flex items-center justify-center gap-2 text-primary">
-            <Sparkles className="w-4 h-4" />
-            <p className="text-sm font-medium">Great job!</p>
-            <Sparkles className="w-4 h-4" />
-          </div>
-          <p className="text-muted-foreground text-xs mt-1">
-            Choose your next move
-          </p>
-        </motion.div>
-
         {/* Action buttons */}
-        <div className="space-y-2 w-full">
+        <div className="space-y-2">
           <motion.button
             initial={{ opacity: 0, scale: 0.9 }}
             animate={{ opacity: 1, scale: 1 }}
-            transition={{ delay: 1.0, type: 'spring' }}
+            transition={{ delay: 0.9, type: 'spring' }}
             whileHover={{ scale: 1.05 }}
             whileTap={{ scale: 0.95 }}
-            onClick={nextLevel}
-            className="btn-arcade text-base px-6 py-2 flex items-center justify-center gap-2 w-full"
-          >
-            NEXT LEVEL
-            <ArrowRight className="w-4 h-4" />
-          </motion.button>
-          
-          <motion.button
-            initial={{ opacity: 0, scale: 0.9 }}
-            animate={{ opacity: 1, scale: 1 }}
-            transition={{ delay: 1.1, type: 'spring' }}
-            whileHover={{ scale: 1.02 }}
-            whileTap={{ scale: 0.98 }}
             onClick={goToSwipe}
-            className="w-full px-6 py-2 text-sm font-bold bg-transparent text-white rounded-xl border-2 border-white hover:bg-white/10 transition-colors flex items-center justify-center gap-2"
-            style={{
-              fontFamily: 'var(--font-pixel)',
-            }}
+            className="btn-arcade text-sm sm:text-base px-6 py-2 flex items-center justify-center gap-2 w-full"
           >
             <Sparkles className="w-4 h-4" />
             DISCOVER BRANDS
+            <ArrowRight className="w-4 h-4" />
+          </motion.button>
+
+          <motion.button
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ delay: 1.0 }}
+            whileHover={{ scale: 1.02 }}
+            whileTap={{ scale: 0.98 }}
+            onClick={goToResults}
+            className="text-muted-foreground hover:text-primary transition-colors text-sm"
+          >
+            View Full Results
           </motion.button>
         </div>
       </motion.div>

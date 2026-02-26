@@ -40,7 +40,7 @@ export interface SwipeAction {
 }
 
 export interface GameState {
-  currentScreen: 'welcome' | 'game' | 'swipe' | 'levelComplete' | 'gameOver' | 'results' | 'userTypeSelection' | 'leaderboard' | 'swipeSummary' | 'loadProgress';
+  currentScreen: 'welcome' | 'game' | 'swipe' | 'levelComplete' | 'gameComplete' | 'gameOver' | 'results' | 'userTypeSelection' | 'leaderboard' | 'swipeSummary' | 'loadProgress';
   currentLevel: number;
   totalScore: number;
   lives: number;

@@ -1,6 +1,7 @@
 import { WelcomeScreen } from './WelcomeScreen';
 import { GameCanvas } from './GameCanvas';
 import { LevelCompleteScreen } from './LevelCompleteScreen';
+import { GameCompleteScreen } from './GameCompleteScreen';
 import { SwipeScreen } from './SwipeScreen';
 import { SwipeSummaryScreen } from './SwipeSummaryScreen';
 import { GameOverScreen } from './GameOverScreen';
@@ -22,6 +23,8 @@ export const GameContainer = () => {
         return <GameCanvas />;
       case 'levelComplete':
         return <LevelCompleteScreen />;
+      case 'gameComplete':
+        return <GameCompleteScreen />;
       case 'userTypeSelection':
         return <UserTypeSelectionScreen />;
       case 'swipe':
