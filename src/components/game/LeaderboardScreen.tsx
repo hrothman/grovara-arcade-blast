@@ -26,7 +26,7 @@ export const LeaderboardScreen = () => {
   };
 
   return (
-    <div className="h-screen max-h-screen relative flex flex-col overflow-x-hidden overflow-y-auto" style={{ maxHeight: '100vh', paddingTop: 'env(safe-area-inset-top)', paddingBottom: 'env(safe-area-inset-bottom)' }}>
+    <div className="h-screen max-h-screen relative flex flex-col overflow-hidden" style={{ maxHeight: '100vh', paddingTop: 'env(safe-area-inset-top)', paddingBottom: 'env(safe-area-inset-bottom)' }}>
       {/* Gradient Background Layer */}
       <div 
         className="absolute inset-0 z-0"
@@ -144,10 +144,10 @@ export const LeaderboardScreen = () => {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.8 }}
-          className="w-full max-w-2xl bg-black/80 rounded-xl sm:rounded-2xl border-2 sm:border-3 border-white p-3 sm:p-4 md:p-6 mb-4 sm:mb-6"
+          className="w-full max-w-2xl bg-black/80 rounded-xl sm:rounded-2xl border-2 sm:border-3 border-white p-3 sm:p-4 md:p-6 mb-4 sm:mb-6 flex-1 flex flex-col min-h-0"
         >
-          <div className="max-h-64 sm:max-h-80 overflow-y-auto space-y-2 pr-2">
-            {leaderboard.slice(0, 10).map((entry, idx) => {
+          <div className="overflow-y-auto space-y-2 pr-2 flex-1" style={{ maxHeight: '100%' }}>
+            {leaderboard.map((entry, idx) => {
               const rank = idx + 1;
               const isTop3 = rank <= 3;
               
