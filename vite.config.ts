@@ -8,6 +8,13 @@ export default defineConfig(({ mode }) => ({
   server: {
     host: "::",
     port: 8080,
+    proxy: {
+      '/api/leadwise': {
+        target: 'https://4d11e845-db5e-4150-9f89-403aeb3ff7cb-00-1mmbu14lh40n0.kirk.replit.dev',
+        changeOrigin: true,
+        rewrite: (p) => p.replace(/^\/api\/leadwise/, '/api/forms/public/jGrNMS4v31Et/submit'),
+      },
+    },
   },
   plugins: [react(), mode === "development" && componentTagger()].filter(Boolean),
   resolve: {

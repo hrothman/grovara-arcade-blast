@@ -37,6 +37,8 @@ export const GameProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     currentUser,
     recordLevel,
     recordSwipe: sessionRecordSwipe,
+    finishGame,
+    resetSession,
     setEmail: sessionSetEmail,
     getAnalyticsData,
     loadUserByEmail,
@@ -77,6 +79,8 @@ export const GameProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     setGameState(prev => {
       const newLives = prev.lives - 1;
       if (newLives <= 0) {
+        // Game over — update user stats (games_played +1)
+        finishGame(prev.totalScore);
         return {
           ...prev,
           lives: 0,
@@ -88,19 +92,30 @@ export const GameProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         lives: newLives,
       };
     });
-  }, []);
+  }, [finishGame]);
 
   const completeLevel = useCallback((levelData: LevelData) => {
     recordLevel(levelData);
-    setGameState(prev => ({
-      ...prev,
-      levels: [...prev.levels, levelData],
-      currentScreen: 'levelComplete',
-    }));
-  }, [recordLevel]);
+    setGameState(prev => {
+      if (prev.currentLevel >= TOTAL_LEVELS) {
+        // Final level — go straight to victory screen
+        finishGame(prev.totalScore);
+        return {
+          ...prev,
+          levels: [...prev.levels, levelData],
+          currentScreen: 'gameComplete',
+        };
+      }
+      return {
+        ...prev,
+        levels: [...prev.levels, levelData],
+        currentScreen: 'levelComplete',
+      };
+    });
+  }, [recordLevel, finishGame]);
 
   const recordSwipe = useCallback((brandId: string, direction: 'left' | 'right') => {
-    sessionRecordSwipe(brandId, direction);
+    sessionRecordSwipe(brandId, direction, gameState.userType);
     const swipeAction: SwipeAction = {
       sessionId: session?.sessionId || '',
       brandId,
@@ -111,11 +126,13 @@ export const GameProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       ...prev,
       swipes: [...prev.swipes, swipeAction],
     }));
-  }, [session, sessionRecordSwipe]);
+  }, [session, sessionRecordSwipe, gameState.userType]);
 
   const nextLevel = useCallback(() => {
     setGameState(prev => {
       if (prev.currentLevel >= TOTAL_LEVELS) {
+        // All levels complete — update user stats (games_played +1)
+        finishGame(prev.totalScore);
         return {
           ...prev,
           currentScreen: 'gameComplete',
@@ -127,7 +144,7 @@ export const GameProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         currentScreen: 'game',
       };
     });
-  }, []);
+  }, [finishGame]);
 
   const goToSwipe = useCallback(() => {
     setGameState(prev => {
@@ -175,6 +192,7 @@ export const GameProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   }, []);
 
   const resetGame = useCallback(() => {
+    resetSession(); // Clear accumulated levels/swipes in session hook
     setGameState({
       currentScreen: 'welcome',
       currentLevel: 1,
@@ -185,7 +203,7 @@ export const GameProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       session,
       userType: null,
     });
-  }, [session]);
+  }, [session, resetSession]);
 
   const setEmail = useCallback((email: string) => {
     sessionSetEmail(email);

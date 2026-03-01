@@ -280,25 +280,40 @@ export const registerUser = async (
         throw new Error('Username already taken');
       }
 
-      // Update user
-      const updates: UserUpdate = {
-        username,
-        email: email || null,
-        is_anonymous: false,
-        updated_at: new Date().toISOString(),
-      };
-
-      const { data, error } = await supabase
+      // Try to update existing anonymous user first
+      const { data: updated, error: updateError } = await supabase
         .from('users')
-        .update(updates)
+        .update({
+          username,
+          email: email || null,
+          is_anonymous: false,
+          updated_at: new Date().toISOString(),
+        } as UserUpdate)
         .eq('device_id', deviceId)
+        .select()
+        .maybeSingle();
+
+      if (updated) {
+        console.log('✅ User registered in Supabase (updated existing)');
+        return updated;
+      }
+
+      // No existing row for this device — insert a new registered user
+      const { data: inserted, error: insertError } = await supabase
+        .from('users')
+        .insert({
+          device_id: deviceId,
+          username,
+          email: email || null,
+          is_anonymous: false,
+        } as UserInsert)
         .select()
         .single();
 
-      if (error) throw error;
+      if (insertError) throw insertError;
 
-      console.log('✅ User registered in Supabase');
-      return data;
+      console.log('✅ User registered in Supabase (new row)');
+      return inserted;
     } else {
       // Fallback to localStorage
       return registerUserLocal(deviceId, username, email);

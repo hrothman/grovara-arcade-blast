@@ -154,21 +154,21 @@ export const updatePlayerScore = async (
   return players[playerIndex];
 };
 
+export interface UserSession {
+  username: string;
+  email?: string;
+  firstName?: string;
+  lastName?: string;
+  company?: string;
+}
+
 /**
  * Get current logged-in user session
- * In production, this would check authentication tokens/cookies
  */
-export const getCurrentUser = (): { username: string; email?: string } | null => {
-  // TODO: Replace with actual session/auth check
-  // const token = getCookie('auth_token');
-  // if (!token) return null;
-  // const user = await fetch('/api/auth/me', { headers: { Authorization: token }});
-  // return user.json();
-
-  // For now, check localStorage for active session
+export const getCurrentUser = (): UserSession | null => {
   const currentSession = localStorage.getItem('current_user_session');
   if (!currentSession) return null;
-  
+
   try {
     return JSON.parse(currentSession);
   } catch {
@@ -178,13 +178,18 @@ export const getCurrentUser = (): { username: string; email?: string } | null =>
 
 /**
  * Set current user session
- * In production, this would be handled by auth system
  */
-export const setCurrentUser = (username: string, email?: string): void => {
-  // TODO: Replace with actual session/auth system
-  
-  // For now, save to localStorage
-  localStorage.setItem('current_user_session', JSON.stringify({ username, email }));
+export const setCurrentUser = (
+  username: string,
+  email?: string,
+  firstName?: string,
+  lastName?: string,
+  company?: string
+): void => {
+  localStorage.setItem(
+    'current_user_session',
+    JSON.stringify({ username, email, firstName, lastName, company })
+  );
 };
 
 /**

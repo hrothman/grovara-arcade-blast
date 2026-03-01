@@ -10,11 +10,8 @@ export interface Asset {
 }
 
 const ENEMY_ASSETS: Asset[] = [
-  { id: 'enemy_0', filename: '7bfbb5b34e13f5f37efd8ef70a492251b99b8d12.png', path: '/enemies/7bfbb5b34e13f5f37efd8ef70a492251b99b8d12.png' },
-  { id: 'enemy_1', filename: 'b1876fe608b0368b4d55ce902557a49a4ae981bb.png', path: '/enemies/b1876fe608b0368b4d55ce902557a49a4ae981bb.png' },
-  { id: 'enemy_2', filename: 'b9669f092502299b8ff6451ced88435926727b04.png', path: '/enemies/b9669f092502299b8ff6451ced88435926727b04.png' },
-  { id: 'enemy_3', filename: 'broker.png', path: '/enemies/broker.png' },
-  { id: 'enemy_4', filename: 'paperwork.png', path: '/enemies/paperwork.png' },
+  { id: 'enemy_broker', filename: 'broker.png', path: '/enemies/broker.png' },
+  { id: 'enemy_villain', filename: 'villain.png', path: '/home/villain.png' },
 ];
 
 const PRODUCT_ASSETS: Asset[] = [

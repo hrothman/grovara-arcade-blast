@@ -1,96 +1,93 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { motion } from 'framer-motion';
 import { useGame } from '@/context/GameContext';
-import { Medal, UserPlus, Settings, Share2 } from 'lucide-react';
-import { getCurrentUser, setCurrentUser as setCurrentUserSession } from '@/lib/leaderboardManager';
-import { AccountLoadModal } from './AccountLoadModal';
-import { UserInfoModal } from './UserInfoModal';
+import { Medal, Settings, Share2 } from 'lucide-react';
+import { getCurrentUser, setCurrentUser as setCurrentUserSession, UserSession } from '@/lib/leaderboardManager';
+import { RegistrationGateModal } from './RegistrationGateModal';
 import { SettingsModal } from './SettingsModal';
 import { ShareModal } from './ShareModal';
 import { registerUser, checkUsernameAvailable } from '@/services/userService';
-import { updateLeaderboardScore } from '@/services/leaderboardService';
+import { submitToLeadwise } from '@/services/leadwiseService';
 import { toast } from 'sonner';
 import { soundManager } from '@/lib/soundManager';
 
 export const WelcomeScreen = () => {
-  const { startGame, goToSwipe, goToLeaderboard, currentUser, loadUserByEmail } = useGame();
-  const [sessionUser, setSessionUser] = useState<{ username: string; email?: string } | null>(null);
-  const [showLoadModal, setShowLoadModal] = useState(false);
-  const [showRegisterModal, setShowRegisterModal] = useState(false);
-  const [hasShownInitialPrompt, setHasShownInitialPrompt] = useState(false);
+  const { startGame, goToLeaderboard, loadUserByEmail } = useGame();
+  const [sessionUser, setSessionUser] = useState<UserSession | null>(null);
+  const [showRegistration, setShowRegistration] = useState(false);
   const [showSettings, setShowSettings] = useState(false);
   const [showShare, setShowShare] = useState(false);
+  const musicStartedRef = useRef(false);
 
-  // Start music on first user interaction
-  const handleStartMusic = () => {
-    soundManager.playBackgroundMusic();
-  };
+  // Start music on the very first user interaction (click/tap anywhere)
+  useEffect(() => {
+    const startMusicOnce = () => {
+      if (musicStartedRef.current) return;
+      musicStartedRef.current = true;
+      soundManager.playBackgroundMusic();
+      document.removeEventListener('pointerdown', startMusicOnce);
+      document.removeEventListener('touchstart', startMusicOnce);
+    };
 
-  const handleStartGame = () => {
-    handleStartMusic();
-    startGame();
-  };
+    document.addEventListener('pointerdown', startMusicOnce, { once: true });
+    document.addEventListener('touchstart', startMusicOnce, { once: true });
 
-  const handleGoToSwipe = () => {
-    handleStartMusic();
-    goToSwipe();
-  };
+    return () => {
+      document.removeEventListener('pointerdown', startMusicOnce);
+      document.removeEventListener('touchstart', startMusicOnce);
+    };
+  }, []);
 
   // Check session user on mount
   useEffect(() => {
     const user = getCurrentUser();
     setSessionUser(user);
-    console.log('💾 Session user:', user);
+    console.log('Session user:', user);
   }, []);
 
-  // Show account load/create modal immediately on first visit
-  useEffect(() => {
-    // Don't show if we already showed a prompt
-    if (hasShownInitialPrompt) return;
+  const handleStartGame = () => {
+    soundManager.unlockAudio();
+    soundManager.playBackgroundMusic();
 
-    // Don't show if user already has a session (registered and logged in)
+    // If user already has a session, start immediately
     if (sessionUser) {
-      console.log('✅ User has session, no modal needed');
-      setHasShownInitialPrompt(true);
+      startGame();
       return;
     }
 
-    // Show the load/create modal after a short delay
-    console.log('🎮 First visit - showing account modal');
-    const timer = setTimeout(() => {
-      setShowLoadModal(true);
-      setHasShownInitialPrompt(true);
-    }, 1000);
-    
-    return () => clearTimeout(timer);
-  }, [sessionUser, hasShownInitialPrompt]);
+    // Otherwise show registration gate
+    setShowRegistration(true);
+  };
 
-  const handleLoadAccount = async (emailOrUsername: string): Promise<boolean> => {
-    const loaded = await loadUserByEmail(emailOrUsername);
-    if (loaded) {
-      toast.success(`Welcome back! Your account has been loaded.`);
-      setShowLoadModal(false);
-      // Refresh session user
-      const user = getCurrentUser();
-      setSessionUser(user);
+  /**
+   * Generate a leaderboard username from firstName.
+   * If "John" is taken, try "JohnS", then "JohnSm", etc.
+   */
+  const generateUsername = async (firstName: string, lastName: string): Promise<string> => {
+    let candidate = firstName;
+    const available = await checkUsernameAvailable(candidate);
+    if (available) return candidate;
+
+    // Append last initial(s)
+    for (let i = 1; i <= lastName.length; i++) {
+      candidate = firstName + lastName.slice(0, i).toUpperCase();
+      const ok = await checkUsernameAvailable(candidate);
+      if (ok) return candidate;
     }
-    return loaded;
+
+    // Fallback: append random digits
+    candidate = firstName + Math.floor(Math.random() * 1000);
+    return candidate;
   };
 
-  const handleCreateNewAccount = () => {
-    console.log('📝 User chose to create new account - showing registration modal');
-    setShowLoadModal(false);
-    setShowRegisterModal(true);
-  };
-
-  const handleRegisterUser = async (username: string, email: string) => {
+  const handleRegisterUser = async (
+    email: string,
+    firstName: string,
+    lastName: string,
+    company: string
+  ) => {
     try {
-      // Check if username is available
-      const available = await checkUsernameAvailable(username);
-      if (!available) {
-        toast.error('Username already taken. Try another!');
-        throw new Error('Username taken');
-      }
+      const username = await generateUsername(firstName, lastName);
 
       // Register user in database
       const registeredUser = await registerUser(username, email);
@@ -98,76 +95,94 @@ export const WelcomeScreen = () => {
         throw new Error('Failed to register user');
       }
 
-      console.log('✅ User registered:', registeredUser);
+      console.log('User registered:', registeredUser);
 
-      // Update leaderboard entry with new username (if they had anonymous entry)
-      // This will update any existing anonymous entry or create a new one
-      await updateLeaderboardScore(
-        registeredUser.id,
-        username,
-        0,
-        undefined
-      );
-      
-      console.log('✅ Leaderboard entry added');
+      // Set current user session (expanded)
+      setCurrentUserSession(username, email, firstName, lastName, company);
+      setSessionUser({ username, email, firstName, lastName, company });
 
-      // Set current user session
-      setCurrentUserSession(username, email);
-      setSessionUser({ username, email });
+      // Refresh useGameSession's currentUser so recordLevel uses the registered username
+      await loadUserByEmail(email);
 
-      setShowRegisterModal(false);
-      toast.success(`Welcome, ${username}! Your account has been created.`);
+      // Fire-and-forget Leadwise CRM submission
+      submitToLeadwise({ email, firstName, lastName, company });
+
+      setShowRegistration(false);
+      toast.success(`Welcome, ${firstName}! Let's play!`);
+
+      // Start the game
+      startGame();
     } catch (error) {
       console.error('Error registering user:', error);
-      if (error instanceof Error && error.message !== 'Username taken') {
-        toast.error('Failed to create account. Please try again.');
-      }
+      toast.error('Failed to create account. Please try again.');
       throw error;
     }
   };
 
-  const openRegisterModal = () => {
-    setShowRegisterModal(true);
-  };
-
-  const openAccountLoadModal = () => {
-    setShowLoadModal(true);
+  const handleLoadAccount = async (email: string): Promise<boolean> => {
+    const loaded = await loadUserByEmail(email);
+    if (loaded) {
+      toast.success('Welcome back! Your account has been loaded.');
+      setShowRegistration(false);
+      // Refresh session user
+      const user = getCurrentUser();
+      setSessionUser(user);
+      // Start the game
+      startGame();
+    }
+    return loaded;
   };
 
   return (
-    <div className="h-screen max-h-screen relative flex flex-col overflow-x-hidden overflow-y-auto" style={{ maxHeight: '100dvh' }}>
-      {/* Share Button - Top Right */}
+    <div className="h-screen max-h-screen relative flex flex-col overflow-hidden" style={{ maxHeight: '100dvh' }}>
+      {/* Top Bar: Expo West Logo (left) + Share with Friends (right) */}
+      <div
+        className="fixed left-0 right-0 z-50 flex items-center justify-between px-3 sm:px-4"
+        style={{ top: 'max(0.5rem, env(safe-area-inset-top))' }}
+      >
+        <motion.img
+          src="/who-are-you/ew26-45year-logo-rgb.webp"
+          alt="Natural Products Expo West"
+          initial={{ opacity: 0, x: -20 }}
+          animate={{ opacity: 1, x: 0 }}
+          transition={{ delay: 0.4, duration: 0.5 }}
+          className="w-24 sm:w-28 md:w-32 h-auto drop-shadow-lg"
+        />
+
+        <motion.button
+          initial={{ opacity: 0, x: 20 }}
+          animate={{ opacity: 1, x: 0 }}
+          transition={{ delay: 0.5, duration: 0.5 }}
+          whileHover={{ scale: 1.05 }}
+          whileTap={{ scale: 0.95 }}
+          onClick={() => setShowShare(true)}
+          className="flex items-center gap-1.5 sm:gap-2 px-2.5 sm:px-3 py-1.5 sm:py-2 rounded-full bg-card/80 backdrop-blur-sm border-2 border-primary/40 hover:border-primary/80 transition-colors"
+          aria-label="Share with Friends"
+        >
+          <Share2 className="w-4 h-4 sm:w-5 sm:h-5 text-primary" />
+          <span className="text-[9px] sm:text-[10px] text-primary font-bold whitespace-nowrap" style={{ fontFamily: 'var(--font-pixel)' }}>
+            Share with Friends
+          </span>
+        </motion.button>
+      </div>
+
+      {/* Settings - Bottom Right */}
       <motion.button
         initial={{ opacity: 0, scale: 0.8 }}
         animate={{ opacity: 1, scale: 1 }}
         transition={{ delay: 0.6 }}
         whileHover={{ scale: 1.1 }}
         whileTap={{ scale: 0.9 }}
-        onClick={() => setShowShare(true)}
-        className="fixed top-4 right-16 sm:right-20 z-50 p-2 sm:p-3 rounded-full bg-card/80 backdrop-blur-sm border-2 border-primary/40 hover:border-primary/80 transition-colors"
-        style={{ top: 'max(1rem, env(safe-area-inset-top))' }}
-        aria-label="Share"
-      >
-        <Share2 className="w-5 h-5 sm:w-6 sm:h-6 text-primary" />
-      </motion.button>
-
-      {/* Settings Button - Top Right */}
-      <motion.button
-        initial={{ opacity: 0, scale: 0.8 }}
-        animate={{ opacity: 1, scale: 1 }}
-        transition={{ delay: 0.5 }}
-        whileHover={{ scale: 1.1 }}
-        whileTap={{ scale: 0.9 }}
         onClick={() => setShowSettings(true)}
-        className="fixed top-4 right-4 z-50 p-2 sm:p-3 rounded-full bg-card/80 backdrop-blur-sm border-2 border-primary/40 hover:border-primary/80 transition-colors"
-        style={{ top: 'max(1rem, env(safe-area-inset-top))' }}
+        className="fixed right-3 sm:right-4 bottom-3 sm:bottom-4 z-50 p-2 sm:p-2.5 rounded-full bg-card/80 backdrop-blur-sm border-2 border-primary/40 hover:border-primary/80 transition-colors"
+        style={{ bottom: 'max(0.75rem, env(safe-area-inset-bottom))' }}
         aria-label="Settings"
       >
         <Settings className="w-5 h-5 sm:w-6 sm:h-6 text-primary" />
       </motion.button>
 
       {/* Gradient Background Layer */}
-      <div 
+      <div
         className="absolute inset-0 z-0"
         style={{
           backgroundImage: 'url(/home/gradient.png)',
@@ -176,9 +191,9 @@ export const WelcomeScreen = () => {
           backgroundRepeat: 'no-repeat',
         }}
       />
-      
+
       {/* Stars Overlay Layer */}
-      <div 
+      <div
         className="absolute inset-0 z-10"
         style={{
           backgroundImage: 'url(/home/stars.png)',
@@ -194,8 +209,8 @@ export const WelcomeScreen = () => {
         initial={{ opacity: 0, y: 30 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.6 }}
-        className="relative z-30 flex flex-col items-center justify-center text-center pt-16 sm:pt-20 md:pt-16 lg:pt-20 pb-4 sm:pb-6 flex-1 min-h-0"
-        style={{ paddingTop: 'max(4rem, calc(env(safe-area-inset-top) + 3rem))' }}
+        className="relative z-30 flex flex-col items-center justify-center text-center pt-24 sm:pt-20 md:pt-16 lg:pt-20 pb-4 sm:pb-6 flex-1 min-h-0"
+        style={{ paddingTop: 'max(6rem, calc(env(safe-area-inset-top) + 4.5rem))' }}
       >
         {/* Logo and Title */}
         <motion.div
@@ -206,13 +221,13 @@ export const WelcomeScreen = () => {
         >
           {/* Grovara.com Logo */}
           <div className="flex items-center justify-center gap-2 sm:gap-3 mb-1 sm:mb-2">
-            <img 
-              src="/grovara-logo.svg" 
-              alt="Grovara" 
+            <img
+              src="/grovara-logo.svg"
+              alt="Grovara"
               className="w-7 h-7 sm:w-9 sm:h-9 md:w-11 md:h-11 drop-shadow-lg"
             />
-            <h2 
-              className="text-lg sm:text-xl md:text-2xl font-normal text-white tracking-wide" 
+            <h2
+              className="text-lg sm:text-xl md:text-2xl font-normal text-white tracking-wide"
               style={{ fontFamily: 'var(--font-pixel)' }}
             >
               GROVARA.COM
@@ -220,9 +235,9 @@ export const WelcomeScreen = () => {
           </div>
 
           {/* Main Title */}
-          <h1 
+          <h1
             className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold text-white mb-0.5 sm:mb-1 tracking-wider leading-tight px-2"
-            style={{ 
+            style={{
               fontFamily: 'var(--font-pixel)',
               textShadow: '3px 3px 0px rgba(0,0,0,0.8), 0 0 15px rgba(255,255,255,0.4)',
               fontSize: 'clamp(1.5rem, 6.5vw, 3.5rem)',
@@ -232,63 +247,19 @@ export const WelcomeScreen = () => {
           </h1>
         </motion.div>
 
-        {/* How to Play Section */}
+        {/* Tagline Section */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.5 }}
-          className="mb-1 sm:mb-2 md:mb-3 px-4 sm:px-6 md:px-8"
+          className="mb-2 sm:mb-3 md:mb-4 px-4 sm:px-6 md:px-8"
         >
-          <h3 
-            className="text-sm sm:text-base md:text-lg font-bold text-white mb-2 sm:mb-3 tracking-widest"
-            style={{ fontFamily: 'var(--font-pixel)' }}
-          >
-            Welcome to B3B.
-          </h3>
-
-          {/* Tagline */}
-          <div className="mb-3 sm:mb-4">
-            <p className="text-xs sm:text-sm md:text-base text-gray-300 font-light text-center" style={{ fontFamily: 'var(--font-pixel)', fontWeight: 300 }}>
-              Build your shelf.
-            </p>
-          </div>
-
-          {/* Instructions Box */}
-          <div className="bg-black rounded-lg sm:rounded-xl md:rounded-2xl border-2 sm:border-3 md:border-4 border-white p-2 sm:p-3 md:p-4 max-w-xl mx-auto mb-2 sm:mb-3 md:mb-4">
-            <div className="space-y-1.5 sm:space-y-2 md:space-y-3">
-              {/* Instruction 1 */}
-              <div className="flex items-center gap-2 sm:gap-3 text-left">
-                <img src="/home/sword.png" alt="Sword" className="w-6 h-6 sm:w-8 sm:h-8 md:w-10 md:h-10 flex-shrink-0" />
-                <p className="text-white text-xs sm:text-sm md:text-base font-light" style={{ fontFamily: 'var(--font-pixel)', fontWeight: 300 }}>
-                  Watch out for <span className="text-red-500">spreadsheets</span>
-                </p>
-              </div>
-
-              {/* Instruction 2 */}
-              <div className="flex items-center gap-2 sm:gap-3 text-left">
-                <img src="/home/diamond.png" alt="Diamond" className="w-6 h-6 sm:w-8 sm:h-8 md:w-10 md:h-10 flex-shrink-0" />
-                <p className="text-white text-xs sm:text-sm md:text-base font-light" style={{ fontFamily: 'var(--font-pixel)', fontWeight: 300 }}>
-                  Watch out for <span className="text-yellow-500">broker-joker middlemen</span>
-                </p>
-              </div>
-
-              {/* Instruction 3 */}
-              <div className="flex items-center gap-2 sm:gap-3 text-left">
-                <img src="/home/coin.png" alt="Coin" className="w-6 h-6 sm:w-8 sm:h-8 md:w-10 md:h-10 flex-shrink-0" />
-                <p className="text-white text-xs sm:text-sm md:text-base font-light" style={{ fontFamily: 'var(--font-pixel)', fontWeight: 300 }}>
-                  Watch out for <span className="text-blue-500">other costly delays</span>
-                </p>
-              </div>
-            </div>
-          </div>
-
-          {/* New Section - Leaderboard and Hero */}
           <div className="space-y-2 sm:space-y-3 text-center">
             <p className="text-xs sm:text-sm md:text-base text-gray-300 font-light leading-relaxed" style={{ fontFamily: 'var(--font-pixel)', fontWeight: 300 }}>
               Score high on the leaderboard to win exclusive prizes.
             </p>
-            <p className="text-sm sm:text-base md:text-lg text-primary font-bold" style={{ fontFamily: 'var(--font-pixel)' }}>
-              Be the ultimate Shelf Hero.
+            <p className="text-primary font-bold leading-snug" style={{ fontFamily: 'var(--font-pixel)', fontSize: 'clamp(0.7rem, 3.8vw, 1.125rem)' }}>
+              Slash the Slimy Broker-Jokers.<br />Save The Goods.
             </p>
           </div>
         </motion.div>
@@ -303,7 +274,7 @@ export const WelcomeScreen = () => {
             whileHover={{ scale: 1.05 }}
             whileTap={{ scale: 0.95 }}
             onClick={handleStartGame}
-            className="flex-1 px-3 sm:px-5 md:px-7 py-2 sm:py-2.5 md:py-3 text-xs sm:text-sm md:text-base font-bold text-white rounded-lg sm:rounded-xl relative overflow-hidden"
+            className="px-12 sm:px-16 md:px-20 py-3 sm:py-3.5 md:py-4 text-sm sm:text-base md:text-lg font-bold text-white rounded-lg sm:rounded-xl relative overflow-hidden mt-3 sm:mt-4 md:mt-5"
             style={{
               fontFamily: 'var(--font-pixel)',
               background: 'linear-gradient(135deg, #EC4899 0%, #8B5CF6 100%)',
@@ -311,25 +282,7 @@ export const WelcomeScreen = () => {
               border: '3px solid rgba(255,255,255,0.3)',
             }}
           >
-            START MISSION
-          </motion.button>
-
-          {/* Swipe for Brands Button */}
-          <motion.button
-            initial={{ opacity: 0, scale: 0.9 }}
-            animate={{ opacity: 1, scale: 1 }}
-            transition={{ delay: 0.8, type: 'spring' }}
-            whileHover={{ scale: 1.05 }}
-            whileTap={{ scale: 0.95 }}
-            onClick={handleGoToSwipe}
-            className="flex-1 px-3 sm:px-5 md:px-7 py-2 sm:py-2.5 md:py-3 text-xs sm:text-sm md:text-base font-bold bg-transparent text-white rounded-lg sm:rounded-xl"
-            style={{
-              fontFamily: 'var(--font-pixel)',
-              border: '3px solid white',
-              boxShadow: '0 4px 12px rgba(0,0,0,0.3)',
-            }}
-          >
-            SWIPE FOR BRANDS
+            PLAY
           </motion.button>
         </div>
       </motion.div>
@@ -337,39 +290,77 @@ export const WelcomeScreen = () => {
       {/* BOTTOM SECTION - Characters & Footer */}
       <div className="relative z-20 flex-shrink-0" style={{ height: 'clamp(200px, 40vh, 400px)', minHeight: '200px' }}>
         {/* Villain Character - Left */}
-        <motion.img
-          src="/home/villain.png"
-          alt="Villain"
+        <motion.div
           className="absolute bottom-0 left-0 z-20 pointer-events-none"
-          style={{ 
-            height: '100%', 
-            width: '60%',
-            objectFit: 'contain',
-            objectPosition: 'bottom left'
-          }}
+          style={{ height: '100%', width: '60%' }}
           initial={{ x: -100, opacity: 0 }}
-          animate={{ x: 0, opacity: 1 }}
-          transition={{ duration: 0.8, delay: 0.2 }}
-        />
+          animate={{
+            x: 0,
+            opacity: 1,
+            y: [0, -8, 0],
+            rotate: [0, -2, 0, 2, 0],
+          }}
+          transition={{
+            x: { duration: 0.8, delay: 0.2 },
+            opacity: { duration: 0.8, delay: 0.2 },
+            y: { duration: 2.5, repeat: Infinity, ease: 'easeInOut', delay: 1 },
+            rotate: { duration: 3, repeat: Infinity, ease: 'easeInOut', delay: 1 },
+          }}
+        >
+          <motion.img
+            src="/home/villain.png"
+            alt="Villain"
+            className="w-full h-full object-contain object-bottom"
+            style={{ objectPosition: 'bottom left' }}
+            animate={{
+              filter: [
+                'drop-shadow(0 0 8px rgba(236,72,153,0.6)) hue-rotate(0deg)',
+                'drop-shadow(0 0 18px rgba(139,92,246,0.7)) hue-rotate(20deg)',
+                'drop-shadow(0 0 12px rgba(236,72,153,0.5)) hue-rotate(-10deg)',
+                'drop-shadow(0 0 8px rgba(236,72,153,0.6)) hue-rotate(0deg)',
+              ],
+            }}
+            transition={{ duration: 4, repeat: Infinity, ease: 'easeInOut' }}
+          />
+        </motion.div>
 
         {/* Bird Character - Right */}
-        <motion.img
-          src="/home/bird.png"
-          alt="Bird"
+        <motion.div
           className="absolute bottom-0 right-0 z-20 pointer-events-none"
-          style={{ 
-            height: '100%', 
-            width: '60%',
-            objectFit: 'contain',
-            objectPosition: 'bottom right'
-          }}
+          style={{ height: '100%', width: '60%' }}
           initial={{ x: 100, opacity: 0 }}
-          animate={{ x: 0, opacity: 1 }}
-          transition={{ duration: 0.8, delay: 0.2 }}
-        />
+          animate={{
+            x: 0,
+            opacity: 1,
+            y: [0, -10, 0],
+            rotate: [0, 3, 0, -3, 0],
+          }}
+          transition={{
+            x: { duration: 0.8, delay: 0.2 },
+            opacity: { duration: 0.8, delay: 0.2 },
+            y: { duration: 2, repeat: Infinity, ease: 'easeInOut', delay: 1.3 },
+            rotate: { duration: 2.8, repeat: Infinity, ease: 'easeInOut', delay: 1.3 },
+          }}
+        >
+          <motion.img
+            src="/home/bird.png"
+            alt="Bird"
+            className="w-full h-full object-contain object-bottom"
+            style={{ objectPosition: 'bottom right' }}
+            animate={{
+              filter: [
+                'drop-shadow(0 0 8px rgba(16,185,129,0.6)) hue-rotate(0deg)',
+                'drop-shadow(0 0 18px rgba(59,130,246,0.7)) hue-rotate(-20deg)',
+                'drop-shadow(0 0 12px rgba(6,182,212,0.5)) hue-rotate(15deg)',
+                'drop-shadow(0 0 8px rgba(16,185,129,0.6)) hue-rotate(0deg)',
+              ],
+            }}
+            transition={{ duration: 3.5, repeat: Infinity, ease: 'easeInOut' }}
+          />
+        </motion.div>
 
         {/* Bottom Gradient Overlay - MUST be on top of characters */}
-        <div 
+        <div
           className="absolute inset-0 z-30 pointer-events-none"
           style={{
             backgroundImage: 'url(/home/home_gradient.png)',
@@ -399,19 +390,6 @@ export const WelcomeScreen = () => {
               <Medal className="w-3 h-3 sm:w-4 sm:h-4 flex-shrink-0" />
               <span className="whitespace-nowrap">View Leaderboard</span>
             </motion.button>
-
-            {!sessionUser && currentUser?.is_anonymous && (
-              <motion.button
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                transition={{ delay: 1 }}
-                onClick={openAccountLoadModal}
-                className="flex items-center gap-1 sm:gap-2 hover:text-white transition-colors text-gray-300 text-[10px] sm:text-xs md:text-sm"
-              >
-                <UserPlus className="w-3 h-3 sm:w-4 sm:h-4 flex-shrink-0" />
-                <span className="whitespace-nowrap">Continue Progress</span>
-              </motion.button>
-            )}
           </div>
 
           <p
@@ -425,21 +403,11 @@ export const WelcomeScreen = () => {
         </motion.div>
       </div>
 
-      {/* Modals */}
-      <AccountLoadModal
-        isOpen={showLoadModal}
-        onClose={() => setShowLoadModal(false)}
+      {/* Registration Gate Modal */}
+      <RegistrationGateModal
+        isOpen={showRegistration}
+        onRegister={handleRegisterUser}
         onLoadAccount={handleLoadAccount}
-        onCreateAccount={handleCreateNewAccount}
-      />
-
-      <UserInfoModal
-        isOpen={showRegisterModal}
-        onClose={() => setShowRegisterModal(false)}
-        onSubmit={handleRegisterUser}
-        title="Create Your Account"
-        description="Save your progress and connect with amazing brands!"
-        submitButtonText="Create Account"
       />
 
       <SettingsModal

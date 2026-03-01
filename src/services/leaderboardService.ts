@@ -10,8 +10,14 @@ import { Database } from '@/types/database';
 type LeaderboardEntry = Database['public']['Tables']['leaderboard_entries']['Row'];
 type LeaderboardEntryInsert = Database['public']['Tables']['leaderboard_entries']['Insert'];
 
+// Extended type with play count
+export interface LeaderboardEntryWithPlays extends LeaderboardEntry {
+  games_played: number;
+}
+
 // LocalStorage key
 const LEADERBOARD_STORAGE_KEY = 'grovara_leaderboard';
+const USERS_STORAGE_KEY = 'grovara_users';
 
 // Import fake leaderboard data
 import leaderboardData from '@/data/leaderboard.json';
@@ -96,11 +102,12 @@ const addLeaderboardEntryLocal = (entryData: LeaderboardEntryInsert): void => {
 };
 
 /**
- * Get leaderboard (merged with fake data if needed)
+ * Get leaderboard (merged with fake data if needed), includes games_played
  */
-export const getLeaderboard = async (limit: number = 50): Promise<LeaderboardEntry[]> => {
+export const getLeaderboard = async (limit: number = 50): Promise<LeaderboardEntryWithPlays[]> => {
   try {
     if (isSupabaseConfigured()) {
+      // Fetch leaderboard entries
       const { data, error } = await supabase
         .from('leaderboard_entries')
         .select('*')
@@ -108,7 +115,35 @@ export const getLeaderboard = async (limit: number = 50): Promise<LeaderboardEnt
         .limit(limit);
 
       if (error) throw error;
-      return data || [];
+
+      const entries = data || [];
+      if (entries.length === 0) return [];
+
+      // Deduplicate by user_id — keep only the highest score per user
+      // (needed because RLS may block UPDATE, so we INSERT new entries instead)
+      const bestByUser = new Map<string, LeaderboardEntry>();
+      for (const entry of entries) {
+        const existing = bestByUser.get(entry.user_id);
+        if (!existing || entry.score > existing.score) {
+          bestByUser.set(entry.user_id, entry);
+        }
+      }
+      const deduped = [...bestByUser.values()].sort((a, b) => b.score - a.score);
+
+      // Fetch games_played for these users separately (avoids RLS join issues)
+      const userIds = [...bestByUser.keys()];
+      const { data: usersData } = await supabase
+        .from('users')
+        .select('id, games_played')
+        .in('id', userIds);
+
+      const playMap = new Map<string, number>();
+      (usersData || []).forEach(u => playMap.set(u.id, u.games_played || 0));
+
+      return deduped.map(entry => ({
+        ...entry,
+        games_played: playMap.get(entry.user_id) || 0,
+      }));
     } else {
       // Fallback to localStorage + fake data
       return getLeaderboardLocal(limit);
@@ -122,12 +157,23 @@ export const getLeaderboard = async (limit: number = 50): Promise<LeaderboardEnt
 /**
  * LocalStorage fallback for leaderboard
  */
-const getLeaderboardLocal = (limit: number): LeaderboardEntry[] => {
+const getLeaderboardLocal = (limit: number): LeaderboardEntryWithPlays[] => {
   const entriesJson = localStorage.getItem(LEADERBOARD_STORAGE_KEY);
   const realEntries: LeaderboardEntry[] = entriesJson ? JSON.parse(entriesJson) : [];
 
+  // Look up games_played from localStorage users
+  const usersJson = localStorage.getItem(USERS_STORAGE_KEY);
+  const users: Array<{ id: string; games_played: number }> = usersJson ? JSON.parse(usersJson) : [];
+  const userPlayMap = new Map(users.map(u => [u.id, u.games_played || 0]));
+
+  // Add games_played to real entries
+  const realWithPlays: LeaderboardEntryWithPlays[] = realEntries.map(entry => ({
+    ...entry,
+    games_played: userPlayMap.get(entry.user_id) || 0,
+  }));
+
   // Merge with fake entries from JSON
-  const fakeEntries: LeaderboardEntry[] = (leaderboardData as Array<{ username: string; score: number }>).map((item, index) => ({
+  const fakeEntries: LeaderboardEntryWithPlays[] = (leaderboardData as Array<{ username: string; score: number }>).map((item, index) => ({
     id: `fake_${index}`,
     user_id: `fake_user_${index}`,
     username: item.username,
@@ -136,10 +182,11 @@ const getLeaderboardLocal = (limit: number): LeaderboardEntry[] => {
     session_id: null,
     achieved_at: new Date(Date.now() - Math.random() * 30 * 24 * 60 * 60 * 1000).toISOString(),
     is_fake: true,
+    games_played: 0,
   }));
 
   // Combine and sort
-  const combined = [...realEntries, ...fakeEntries];
+  const combined = [...realWithPlays, ...fakeEntries];
   const sorted = combined.sort((a, b) => b.score - a.score).slice(0, limit);
 
   // Assign ranks
@@ -243,31 +290,40 @@ export const updateLeaderboardScore = async (
   try {
     if (isSupabaseConfigured()) {
       // Check if user already has an entry (by user_id, regardless of session)
-      // This allows updating anonymous entries when they register with a real username
       const { data: existingEntry } = await supabase
         .from('leaderboard_entries')
         .select('*')
         .eq('user_id', userId)
+        .order('score', { ascending: false })
+        .limit(1)
         .maybeSingle();
 
       if (existingEntry) {
-        // Update existing entry with new cumulative score and username
-        console.log('📝 Updating existing leaderboard entry', existingEntry.id);
-        const { error } = await supabase
+        // Try to update existing entry
+        console.log('📝 Trying to update existing leaderboard entry', existingEntry.id);
+        const { data: updated, error } = await supabase
           .from('leaderboard_entries')
-          .update({ 
-            username: username, // Update username in case user registered
+          .update({
+            username: username,
             score: cumulativeScore,
-            session_id: sessionId || existingEntry.session_id, // Update session if provided
+            session_id: sessionId || existingEntry.session_id,
             achieved_at: new Date().toISOString()
           })
-          .eq('id', existingEntry.id);
+          .eq('id', existingEntry.id)
+          .select();
 
         if (error) {
           console.error('❌ Error updating leaderboard entry:', error);
           throw error;
         }
-        console.log('✅ Leaderboard entry updated');
+
+        // If UPDATE returned 0 rows, RLS blocked it — fall back to INSERT
+        if (!updated || updated.length === 0) {
+          console.warn('⚠️ UPDATE blocked by RLS, inserting new entry instead');
+          await addLeaderboardEntry(userId, username, cumulativeScore, sessionId);
+        } else {
+          console.log('✅ Leaderboard entry updated');
+        }
       } else {
         // Create new entry
         console.log('➕ Creating new leaderboard entry');
@@ -328,6 +384,36 @@ const updateLeaderboardScoreLocal = (
 
   localStorage.setItem(LEADERBOARD_STORAGE_KEY, JSON.stringify(sorted));
   console.log('✅ Leaderboard score updated in localStorage');
+};
+
+/**
+ * Reset the entire leaderboard (delete all entries)
+ */
+export const resetLeaderboard = async (): Promise<void> => {
+  console.log('🗑️ [LeaderboardService] Resetting leaderboard...');
+  try {
+    if (isSupabaseConfigured()) {
+      // Delete all leaderboard entries from Supabase
+      const { error } = await supabase
+        .from('leaderboard_entries')
+        .delete()
+        .neq('id', '00000000-0000-0000-0000-000000000000'); // delete all rows
+
+      if (error) {
+        console.error('❌ Error resetting Supabase leaderboard:', error);
+        throw error;
+      }
+      console.log('✅ Supabase leaderboard cleared');
+    }
+
+    // Also clear localStorage
+    localStorage.removeItem(LEADERBOARD_STORAGE_KEY);
+    console.log('✅ localStorage leaderboard cleared');
+  } catch (error) {
+    console.error('❌ Error resetting leaderboard:', error);
+    // Still clear localStorage even if Supabase fails
+    localStorage.removeItem(LEADERBOARD_STORAGE_KEY);
+  }
 };
 
 /**

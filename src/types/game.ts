@@ -14,10 +14,7 @@ export interface LevelData {
   completed: boolean;
   enemiesHit: number; // Maps to enemies_killed in DB
   friendliesHit: number; // TODO: Currently unused - always 0
-  // TODO: Add for DB integration:
-  // productsOnShelf?: number;
-  // ultraRareCount?: number;
-  // durationSeconds?: number;
+  productsOnShelf?: number;
 }
 
 export interface Brand {

@@ -1,15 +1,17 @@
 import { useState, useEffect, useCallback } from 'react';
 import { GameSession, SwipeAction, LevelData } from '@/types/game';
-import { 
+import {
   getOrCreateUser,
   getUserByEmail,
   getUserByEmailOrUsername,
   createGameSession,
   recordLevelResult,
   updateGameSession,
-  recordSwipeAction 
+  recordSwipeAction,
+  updateUserScores
 } from '@/services';
 import { updateLeaderboardScore } from '@/services/leaderboardService';
+import { setCurrentUser as setCurrentUserSession } from '@/lib/leaderboardManager';
 import { Database } from '@/types/database';
 
 type User = Database['public']['Tables']['users']['Row'];
@@ -125,21 +127,21 @@ export const useGameSession = () => {
         levelData.level,
         {
           score: levelData.score,
-          enemiesKilled: levelData.enemiesHit, // Map enemiesHit to enemiesKilled
-          productsOnShelf: levelData.score, // Approximate - score comes from products placed
-          ultraRareCount: 0, // TODO: Add this field to LevelData
+          enemiesKilled: levelData.enemiesHit,
+          productsOnShelf: levelData.productsOnShelf ?? 0,
+          ultraRareCount: 0,
           completed: levelData.completed,
-          durationSeconds: 0, // TODO: Add this field to LevelData
+          durationSeconds: 0,
         }
       );
     }
   }, [userId, dbSessionId, currentUser]);
 
-  const recordSwipe = useCallback(async (brandId: string, direction: 'left' | 'right') => {
+  const recordSwipe = useCallback(async (brandId: string, direction: 'left' | 'right', userType?: 'buyer' | 'brand' | null) => {
     if (!session) return;
-    
+
     console.log('👆 Recording swipe:', { brandId, direction, userId, dbSessionId });
-    
+
     const swipeAction: SwipeAction = {
       sessionId: session.sessionId,
       brandId,
@@ -148,16 +150,19 @@ export const useGameSession = () => {
     };
 
     setSwipes(prev => [...prev, swipeAction]);
-    
+
+    // Bug #7 fix: item_type is the opposite of userType (brands swipe on buyers, buyers swipe on brands)
+    const itemType = userType === 'brand' ? 'buyer' : 'brand';
+
     // Save to database - IMPORTANT: Use dbSessionId (UUID) not session.sessionId (string)
     if (userId && dbSessionId) {
-      console.log('💾 Saving swipe to database:', { dbSessionId, userId, brandId, direction });
+      console.log('💾 Saving swipe to database:', { dbSessionId, userId, brandId, direction, itemType });
       await recordSwipeAction(
         dbSessionId, // Use database UUID, not frontend session string!
         userId,
         brandId,
         brandId, // Use brandId as name for now
-        'brand', // Type
+        itemType,
         direction,
         swipes.length + 1, // Position
         levels.length // Current level
@@ -182,13 +187,45 @@ export const useGameSession = () => {
     };
   }, [session, levels, swipes]);
 
+  const finishGame = useCallback(async (totalScore: number) => {
+    if (userId) {
+      console.log('🏁 Game finished — updating user stats (games_played +1) and leaderboard');
+
+      // Update leaderboard with final cumulative score
+      if (currentUser) {
+        const displayName = currentUser.username || `Player_${userId.slice(0, 8)}`;
+        console.log('🏆 Updating leaderboard with final score:', totalScore, 'for:', displayName);
+        await updateLeaderboardScore(userId, displayName, totalScore, dbSessionId || undefined).catch(err => {
+          console.error('Failed to update leaderboard at game end:', err);
+        });
+      }
+
+      // Update user stats (games_played +1, best_score, total_score)
+      await updateUserScores(userId, totalScore).catch(err => {
+        console.error('Failed to update user scores:', err);
+      });
+    }
+  }, [userId, currentUser, dbSessionId]);
+
+  const resetSession = useCallback(() => {
+    setLevels([]);
+    setSwipes([]);
+  }, []);
+
   const loadUserByEmail = useCallback(async (emailOrUsername: string): Promise<boolean> => {
     try {
       const user = await getUserByEmailOrUsername(emailOrUsername);
       if (user) {
         setUserId(user.id);
         setCurrentUser(user);
-        console.log('✅ User loaded:', user);
+
+        // Save to localStorage so getCurrentUser() works across components
+        setCurrentUserSession(
+          user.username || `Player_${user.id.slice(0, 8)}`,
+          user.email || undefined,
+        );
+
+        console.log('✅ User loaded and session saved:', user);
         return true;
       }
       return false;
@@ -232,6 +269,8 @@ export const useGameSession = () => {
     swipes,
     recordLevel,
     recordSwipe,
+    finishGame,
+    resetSession,
     setEmail,
     getAnalyticsData,
     exportToCSV,

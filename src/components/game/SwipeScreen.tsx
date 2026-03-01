@@ -54,10 +54,14 @@ export const SwipeScreen = () => {
   const items = gameState.userType === 'brand' ? BUYERS : FEATURED_BRANDS;
   const itemType = gameState.userType === 'brand' ? 'BUYERS' : 'BRANDS';
 
-  // Select items for this level
+  // Select items for this level — use modular wrapping so items never run out
   const levelItems = useMemo(() => {
-    const startIdx = ((gameState.currentLevel - 1) * 3) % items.length;
-    return items.slice(startIdx, startIdx + 3);
+    const result = [];
+    for (let i = 0; i < 3; i++) {
+      const idx = ((gameState.currentLevel - 1) * 3 + i) % items.length;
+      result.push(items[idx]);
+    }
+    return result;
   }, [gameState.currentLevel, items]);
 
   const currentBrand = levelItems[currentIndex];
@@ -79,6 +83,8 @@ export const SwipeScreen = () => {
   const handleSwipe = (direction: 'left' | 'right') => {
     if (!swipeStarted) return;
     if (!currentBrand) return;
+    // Bug #14 fix: Prevent double-fire during 300ms animation
+    if (swipeDirection !== null) return;
     
     // Play sound effect based on direction
     if (direction === 'right') {
@@ -240,7 +246,7 @@ export const SwipeScreen = () => {
           className="text-gray-300 text-xs sm:text-sm"
           style={{ fontFamily: 'var(--font-pixel)' }}
         >
-          Swipe right on {itemType.toLowerCase()} you're interesting in
+          Swipe right on {itemType.toLowerCase()} you're interested in
         </p>
         <div className="flex items-center justify-center gap-2 mt-2 sm:mt-3 md:mt-4">
           {levelItems.map((_, idx) => (
@@ -274,8 +280,10 @@ export const SwipeScreen = () => {
               exit={{ opacity: 0 }}
               transition={{ type: 'spring', stiffness: 260, damping: 20 }}
               drag={swipeStarted ? "x" : false}
-              dragConstraints={{ left: 0, right: 0 }}
+              dragSnapToOrigin
+              dragElastic={0.8}
               onDragEnd={handleDragEnd}
+              style={{ touchAction: 'none' }}
               className={`absolute w-full ${swipeStarted ? 'cursor-grab active:cursor-grabbing' : 'cursor-default'}`}
             >
               <div className="bg-gray-900 rounded-xl sm:rounded-2xl md:rounded-3xl overflow-hidden border-3 sm:border-4 border-white relative shadow-2xl">
