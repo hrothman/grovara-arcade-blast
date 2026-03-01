@@ -59,11 +59,10 @@ interface SlashPoint {
 
 // ── Level config ────────────────────────────────────────────────────────────
 
-// TESTING: durations set to 1s (originals: 20000, 30000, 30000)
 const LEVEL_CONFIG = {
-  1: { duration: 1000, throwRate: 1800, itemsMin: 1, itemsMax: 2, enemyChance: 0.40, gravity: 460, throwSpeedY: -700 },
-  2: { duration: 1000, throwRate: 1400, itemsMin: 2, itemsMax: 3, enemyChance: 0.45, gravity: 530, throwSpeedY: -780 },
-  3: { duration: 1000, throwRate: 1000, itemsMin: 2, itemsMax: 4, enemyChance: 0.50, gravity: 600, throwSpeedY: -860 },
+  1: { duration: 20000, throwRate: 1800, itemsMin: 1, itemsMax: 2, enemyChance: 0.40, gravity: 460, throwSpeedY: -700 },
+  2: { duration: 20000, throwRate: 1400, itemsMin: 2, itemsMax: 3, enemyChance: 0.45, gravity: 530, throwSpeedY: -780 },
+  3: { duration: 20000, throwRate: 1000, itemsMin: 2, itemsMax: 4, enemyChance: 0.50, gravity: 600, throwSpeedY: -860 },
 };
 
 const ULTRA_RARE_CHANCE = 0.12;

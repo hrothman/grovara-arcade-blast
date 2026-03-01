@@ -58,13 +58,24 @@ export const GameCompleteScreen = () => {
         gamesPlayed: entry.games_played || 0,
       }));
       const displayUsername = currentUser?.username || username;
-      const withPlayer = currentUser
-        ? mapped
-        : [
-            ...mapped,
-            { username: displayUsername, score: gameState.totalScore, gamesPlayed: 1 }
-          ];
-      setLeaderboard(withPlayer.sort((a, b) => b.score - a.score));
+      if (currentUser) {
+        // Registered user — ensure their entry reflects the best of DB score vs current game
+        const playerIdx = mapped.findIndex(e => e.username === displayUsername);
+        if (playerIdx >= 0) {
+          mapped[playerIdx].score = Math.max(mapped[playerIdx].score, gameState.totalScore);
+        } else {
+          // Player not in leaderboard yet — add them
+          mapped.push({ username: displayUsername, score: gameState.totalScore, gamesPlayed: 1 });
+        }
+        setLeaderboard(mapped.sort((a, b) => b.score - a.score));
+      } else {
+        // Anonymous — add local entry
+        const withPlayer = [
+          ...mapped,
+          { username: displayUsername, score: gameState.totalScore, gamesPlayed: 1 },
+        ];
+        setLeaderboard(withPlayer.sort((a, b) => b.score - a.score));
+      }
     };
     loadLeaderboard();
   }, [username, gameState.totalScore]);

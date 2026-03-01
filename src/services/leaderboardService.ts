@@ -299,8 +299,14 @@ export const updateLeaderboardScore = async (
         .maybeSingle();
 
       if (existingEntry) {
+        // Only update if new score is higher
+        if (cumulativeScore <= existingEntry.score) {
+          console.log('⏭️ Skipping leaderboard update — existing score', existingEntry.score, 'is >= new score', cumulativeScore);
+          return;
+        }
+
         // Try to update existing entry
-        console.log('📝 Trying to update existing leaderboard entry', existingEntry.id);
+        console.log('📝 Trying to update existing leaderboard entry', existingEntry.id, 'from', existingEntry.score, 'to', cumulativeScore);
         const { data: updated, error } = await supabase
           .from('leaderboard_entries')
           .update({
@@ -356,7 +362,12 @@ const updateLeaderboardScoreLocal = (
   const existingIndex = entries.findIndex(e => e.user_id === userId);
 
   if (existingIndex >= 0) {
-    // Update existing entry with new score, username, and session
+    // Only update if new score is higher
+    if (cumulativeScore <= entries[existingIndex].score) {
+      console.log('⏭️ Skipping localStorage update — existing score is >=', entries[existingIndex].score);
+      return;
+    }
+    // Update existing entry with new higher score, username, and session
     entries[existingIndex].username = username; // Update username in case user registered
     entries[existingIndex].score = cumulativeScore;
     entries[existingIndex].session_id = sessionId || entries[existingIndex].session_id;
