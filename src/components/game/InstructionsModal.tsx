@@ -1,5 +1,5 @@
 import { motion } from 'framer-motion';
-import { Play, Sword, ShieldCheck } from 'lucide-react';
+import { Play, ShieldCheck } from 'lucide-react';
 import {
   Dialog,
   DialogContent,
@@ -28,25 +28,22 @@ export const InstructionsModal = ({ isOpen, onStart }: InstructionsModalProps) =
           <div className="relative p-6">
             <DialogHeader className="space-y-3">
               <DialogTitle className="arcade-text text-2xl text-foreground neon-glow flex items-center gap-2 justify-center">
-                <Sword className="w-6 h-6 text-primary" />
                 How to Play
               </DialogTitle>
             </DialogHeader>
 
             <div className="mt-6 space-y-4">
-              {/* Instruction 1: Slash enemies */}
+              {/* Instruction 1: Slice the slimes */}
               <motion.div
                 initial={{ opacity: 0, x: -20 }}
                 animate={{ opacity: 1, x: 0 }}
                 transition={{ delay: 0.1 }}
-                className="flex items-start gap-3 bg-muted/30 rounded-lg p-4 border border-border/50"
+                className="flex items-center gap-3 bg-muted/30 rounded-lg p-4 border border-border/50"
               >
-                <div className="mt-0.5">
-                  <Sword className="w-5 h-5 text-red-400" />
-                </div>
+                <img src="/enemies/broker.png" alt="Broker Joker" className="w-10 h-10 object-contain flex-shrink-0" />
                 <div>
                   <p className="text-foreground">
-                    <span className="font-bold text-red-400">Slash</span> enemies (red glow) to eliminate them and score!
+                    <span className="font-bold text-red-400">Slice the slimes</span> — swipe the Broker Joker (red glow) to score!
                   </p>
                 </div>
               </motion.div>
