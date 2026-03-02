@@ -19,6 +19,11 @@ export class SoundManager {
   // HTML5 Audio for victory fanfare
   private victoryAudio: HTMLAudioElement | null = null;
 
+  // Web Audio API buffers — bypasses mobile HTMLAudioElement gesture restrictions
+  private ouchBuffer: AudioBuffer | null = null;
+  private victoryBuffer: AudioBuffer | null = null;
+  private audioBuffersLoading = false;
+
   constructor() {
     this.loadSettings();
   }
@@ -34,12 +39,69 @@ export class SoundManager {
       if (ctx && ctx.state === 'suspended') {
         ctx.resume().then(() => {
           this.audioUnlocked = true;
+          this.loadAudioBuffers();
         });
       } else {
         this.audioUnlocked = true;
+        this.loadAudioBuffers();
       }
     } catch (e) {
       console.warn('Failed to unlock audio context:', e);
+    }
+  }
+
+  /**
+   * Pre-fetch and decode audio files into AudioBuffers for Web Audio API playback.
+   * This bypasses mobile HTMLAudioElement restrictions since the AudioContext
+   * was already unlocked by a user gesture during gameplay.
+   */
+  private async loadAudioBuffers() {
+    if (this.audioBuffersLoading || (this.ouchBuffer && this.victoryBuffer)) return;
+    this.audioBuffersLoading = true;
+
+    const ctx = ZZFX.audioContext;
+    if (!ctx) return;
+
+    try {
+      const [ouchResp, victoryResp] = await Promise.all([
+        fetch('/sounds/ouch.wav'),
+        fetch('/sounds/victory-fanfare.mp3'),
+      ]);
+      const [ouchArr, victoryArr] = await Promise.all([
+        ouchResp.arrayBuffer(),
+        victoryResp.arrayBuffer(),
+      ]);
+      // decodeAudioData needs separate copies if called in parallel
+      this.ouchBuffer = await ctx.decodeAudioData(ouchArr);
+      this.victoryBuffer = await ctx.decodeAudioData(victoryArr);
+      console.log('[SoundManager] Audio buffers decoded for Web Audio API');
+    } catch (e) {
+      console.warn('[SoundManager] Failed to load audio buffers:', e);
+    }
+  }
+
+  /**
+   * Play an AudioBuffer through the Web Audio API.
+   * Returns true if played successfully, false if fallback is needed.
+   */
+  private playBuffer(buffer: AudioBuffer | null, volume: number, playbackRate = 1): boolean {
+    const ctx = ZZFX.audioContext;
+    if (!ctx || !buffer || ctx.state !== 'running') return false;
+
+    try {
+      const source = ctx.createBufferSource();
+      source.buffer = buffer;
+      source.playbackRate.value = playbackRate;
+
+      const gain = ctx.createGain();
+      gain.gain.value = Math.min(1, volume);
+
+      source.connect(gain);
+      gain.connect(ctx.destination);
+      source.start(0);
+      return true;
+    } catch {
+      return false;
     }
   }
 
@@ -84,6 +146,11 @@ export class SoundManager {
 
   private playOuchAudio() {
     if (this.sfxMuted) return;
+
+    // Try Web Audio API first (works on mobile without gesture)
+    if (this.playBuffer(this.ouchBuffer, this.sfxVolume, 1.6)) return;
+
+    // Fallback to HTMLAudioElement
     this.ensureOuchPool();
     const audio = this.ouchAudioPool[this.ouchPoolIndex % this.ouchAudioPool.length];
     this.ouchPoolIndex++;
@@ -95,6 +162,11 @@ export class SoundManager {
 
   private playVictoryFanfare() {
     if (this.sfxMuted) return;
+
+    // Try Web Audio API first (works on mobile without gesture)
+    if (this.playBuffer(this.victoryBuffer, Math.min(1, this.sfxVolume * 2.5), 0.85)) return;
+
+    // Fallback to HTMLAudioElement
     if (!this.victoryAudio) {
       this.victoryAudio = new Audio('/sounds/victory-fanfare.mp3');
       this.victoryAudio.preload = 'auto';
