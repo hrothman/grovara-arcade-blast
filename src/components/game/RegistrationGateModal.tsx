@@ -83,6 +83,14 @@ export const RegistrationGateModal = ({
       toast.error('Please enter your first name');
       return;
     }
+    if (!lastName.trim()) {
+      toast.error('Please enter your last name');
+      return;
+    }
+    if (!company.trim()) {
+      toast.error('Please enter your company name');
+      return;
+    }
 
     setIsSubmitting(true);
     try {
@@ -244,7 +252,7 @@ export const RegistrationGateModal = ({
                     >
                       <label className="text-sm font-medium text-foreground flex items-center gap-2 mb-2">
                         <User className="w-4 h-4 text-primary" />
-                        Last Name
+                        Last Name *
                       </label>
                       <Input
                         type="text"
@@ -265,7 +273,7 @@ export const RegistrationGateModal = ({
                     >
                       <label className="text-sm font-medium text-foreground flex items-center gap-2 mb-2">
                         <Building2 className="w-4 h-4 text-primary" />
-                        Company
+                        Company *
                       </label>
                       <Input
                         type="text"
