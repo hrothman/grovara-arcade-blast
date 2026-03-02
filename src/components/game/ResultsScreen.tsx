@@ -51,10 +51,10 @@ export const ResultsScreen = () => {
   const showSeparator = playerEntry !== null;
 
   const handleShare = () => {
-    const shareText = `I scored ${gameState.totalScore.toLocaleString()} points playing Grovara B2B Blaster at Expo West!`;
+    const shareText = `I scored ${gameState.totalScore.toLocaleString()} points playing Grovara B3B Blaster at Expo West!`;
     if (navigator.share) {
       navigator.share({
-        title: 'Grovara B2B Blaster',
+        title: 'Grovara B3B Blaster',
         text: shareText,
         url: window.location.origin,
       });
