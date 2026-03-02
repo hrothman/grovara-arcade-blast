@@ -120,13 +120,6 @@ export const ResultsScreen = () => {
               </span>
               <p className="text-muted-foreground text-[10px] mt-0.5">Levels</p>
             </div>
-            <div className="w-px h-8 bg-border" />
-            <div className="text-center">
-              <span className="arcade-text text-primary" style={{ fontSize: 'clamp(1rem, 4vw, 1.5rem)' }}>
-                {matchedBrands.length}
-              </span>
-              <p className="text-muted-foreground text-[10px] mt-0.5">Matches</p>
-            </div>
           </div>
 
           {/* Leaderboard — top 3 + player */}
