@@ -203,14 +203,12 @@ export const LeaderboardScreen = () => {
                   >
                     {entry.username}
                   </span>
-                  {entry.gamesPlayed > 0 && (
-                    <span
-                      className="text-gray-500 shrink-0"
-                      style={{ fontFamily: 'var(--font-pixel)', fontSize: 'clamp(0.45rem, 1.4vw, 0.7rem)' }}
-                    >
-                      {entry.gamesPlayed}x
-                    </span>
-                  )}
+                  <span
+                    className="text-gray-500 shrink-0"
+                    style={{ fontFamily: 'var(--font-pixel)', fontSize: 'clamp(0.45rem, 1.4vw, 0.7rem)' }}
+                  >
+                    {entry.gamesPlayed || 0} {entry.gamesPlayed === 1 ? 'Play' : 'Plays'}
+                  </span>
                   <span
                     className="text-yellow-500 shrink-0"
                     style={{ fontFamily: 'var(--font-pixel)', fontSize: 'clamp(0.55rem, 1.8vw, 0.875rem)' }}

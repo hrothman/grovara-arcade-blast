@@ -84,9 +84,9 @@ export const GameCompleteScreen = () => {
   const playerRankIdx = leaderboard.findIndex(entry => entry.username === displayUsername);
   const playerRank = playerRankIdx === -1 ? null : playerRankIdx + 1;
 
-  // Build compact display: top 3 + player (if not already in top 3)
-  const top3 = leaderboard.slice(0, 3);
-  const playerEntry = playerRankIdx > 2 ? leaderboard[playerRankIdx] : null;
+  // Build compact display: top 5 + player (if not already in top 5)
+  const top5 = leaderboard.slice(0, 5);
+  const playerEntry = playerRankIdx > 4 ? leaderboard[playerRankIdx] : null;
   const showSeparator = playerEntry !== null;
 
   return (
@@ -232,29 +232,27 @@ export const GameCompleteScreen = () => {
           </div>
 
           <div className="space-y-1">
-            {top3.map((entry, idx) => {
+            {top5.map((entry, idx) => {
               const isPlayer = entry.username === displayUsername;
               const rank = idx + 1;
+              const rankDisplay = rank <= 3 ? ['🥇', '🥈', '🥉'][rank - 1] : `${rank}`;
               return (
                 <div
                   key={entry.username}
-                  className={`flex items-center gap-2 px-2 py-1.5 rounded-lg text-xs ${
+                  className={`flex items-center gap-2 px-2 py-1 rounded-lg text-xs ${
                     isPlayer
                       ? 'bg-warning/20 border border-warning'
                       : 'bg-background/50'
                   }`}
                 >
                   <span className={`arcade-text text-[10px] w-5 text-center ${
-                    rank === 1 ? 'text-warning' : rank === 2 ? 'text-gray-400' : 'text-orange-400'
+                    rank === 1 ? 'text-warning' : rank === 2 ? 'text-gray-400' : rank === 3 ? 'text-orange-400' : 'text-muted-foreground'
                   }`}>
-                    {rank === 1 ? '🥇' : rank === 2 ? '🥈' : '🥉'}
+                    {rankDisplay}
                   </span>
                   <span className={`flex-1 font-medium truncate ${isPlayer ? 'text-warning' : 'text-foreground'}`}>
                     {isPlayer ? `${entry.username} (You)` : entry.username}
                   </span>
-                  {entry.gamesPlayed > 0 && (
-                    <span className="text-[9px] text-muted-foreground/70 tabular-nums">{entry.gamesPlayed}x</span>
-                  )}
                   <span className={`arcade-text text-[10px] ${isPlayer ? 'text-warning' : 'text-warning/70'}`}>
                     {entry.score.toLocaleString()}
                   </span>
@@ -265,16 +263,13 @@ export const GameCompleteScreen = () => {
             {showSeparator && playerEntry && (
               <>
                 <div className="text-center text-muted-foreground text-[10px] py-0.5">• • •</div>
-                <div className="flex items-center gap-2 px-2 py-1.5 rounded-lg text-xs bg-warning/20 border border-warning">
+                <div className="flex items-center gap-2 px-2 py-1 rounded-lg text-xs bg-warning/20 border border-warning">
                   <span className="arcade-text text-[10px] w-5 text-center text-muted-foreground">
                     {playerRank}
                   </span>
                   <span className="flex-1 font-medium truncate text-warning">
                     {playerEntry.username} (You)
                   </span>
-                  {playerEntry.gamesPlayed > 0 && (
-                    <span className="text-[9px] text-muted-foreground/70 tabular-nums">{playerEntry.gamesPlayed}x</span>
-                  )}
                   <span className="arcade-text text-[10px] text-warning">
                     {playerEntry.score.toLocaleString()}
                   </span>
