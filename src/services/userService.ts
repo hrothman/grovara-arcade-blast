@@ -102,6 +102,9 @@ const getOrCreateUserLocal = (deviceId: string): User => {
       device_id: deviceId,
       username: null,
       email: null,
+      first_name: null,
+      last_name: null,
+      company: null,
       user_type: null,
       is_anonymous: true,
       total_score: 0,
@@ -263,11 +266,14 @@ export const getUserByEmailOrUsername = async (emailOrUsername: string): Promise
  */
 export const registerUser = async (
   username: string,
-  email?: string
+  email?: string,
+  firstName?: string,
+  lastName?: string,
+  company?: string
 ): Promise<User | null> => {
   try {
     const deviceId = getDeviceId() || await generateDeviceId();
-    
+
     if (isSupabaseConfigured()) {
       // Check if username is available
       const { data: existingUsername } = await supabase
@@ -286,6 +292,9 @@ export const registerUser = async (
         .update({
           username,
           email: email || null,
+          first_name: firstName || null,
+          last_name: lastName || null,
+          company: company || null,
           is_anonymous: false,
           updated_at: new Date().toISOString(),
         } as UserUpdate)
@@ -305,6 +314,9 @@ export const registerUser = async (
           device_id: deviceId,
           username,
           email: email || null,
+          first_name: firstName || null,
+          last_name: lastName || null,
+          company: company || null,
           is_anonymous: false,
         } as UserInsert)
         .select()
@@ -316,7 +328,7 @@ export const registerUser = async (
       return inserted;
     } else {
       // Fallback to localStorage
-      return registerUserLocal(deviceId, username, email);
+      return registerUserLocal(deviceId, username, email, firstName, lastName, company);
     }
   } catch (error) {
     console.error('Error registering user:', error);
@@ -327,28 +339,31 @@ export const registerUser = async (
 /**
  * LocalStorage fallback for registration
  */
-const registerUserLocal = (deviceId: string, username: string, email?: string): User | null => {
+const registerUserLocal = (deviceId: string, username: string, email?: string, firstName?: string, lastName?: string, company?: string): User | null => {
   const usersJson = localStorage.getItem(USERS_STORAGE_KEY);
   if (!usersJson) return null;
-  
+
   const users: User[] = JSON.parse(usersJson);
-  
+
   // Check if username is taken
   if (users.some(u => u.username === username)) {
     throw new Error('Username already taken');
   }
-  
+
   const user = users.find(u => u.device_id === deviceId);
   if (!user) return null;
-  
+
   user.username = username;
   user.email = email || null;
+  user.first_name = firstName || null;
+  user.last_name = lastName || null;
+  user.company = company || null;
   user.is_anonymous = false;
   user.updated_at = new Date().toISOString();
-  
+
   localStorage.setItem(USERS_STORAGE_KEY, JSON.stringify(users));
   console.log('✅ User registered in localStorage');
-  
+
   return user;
 };
 

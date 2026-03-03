@@ -18,6 +18,9 @@ export interface Database {
           device_id: string
           username: string | null
           email: string | null
+          first_name: string | null
+          last_name: string | null
+          company: string | null
           user_type: 'buyer' | 'brand' | null
           is_anonymous: boolean
           total_score: number
@@ -32,6 +35,9 @@ export interface Database {
           device_id: string
           username?: string | null
           email?: string | null
+          first_name?: string | null
+          last_name?: string | null
+          company?: string | null
           user_type?: 'buyer' | 'brand' | null
           is_anonymous?: boolean
           total_score?: number
@@ -46,6 +52,9 @@ export interface Database {
           device_id?: string
           username?: string | null
           email?: string | null
+          first_name?: string | null
+          last_name?: string | null
+          company?: string | null
           user_type?: 'buyer' | 'brand' | null
           is_anonymous?: boolean
           total_score?: number

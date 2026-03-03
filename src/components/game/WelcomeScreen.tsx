@@ -90,7 +90,7 @@ export const WelcomeScreen = () => {
       const username = await generateUsername(firstName, lastName);
 
       // Register user in database
-      const registeredUser = await registerUser(username, email);
+      const registeredUser = await registerUser(username, email, firstName, lastName, company);
       if (!registeredUser) {
         throw new Error('Failed to register user');
       }
