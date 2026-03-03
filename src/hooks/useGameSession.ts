@@ -98,22 +98,19 @@ export const useGameSession = () => {
       const cumulativeScore = newLevels.reduce((sum, level) => sum + level.score, 0);
       console.log('📈 Cumulative score:', cumulativeScore);
       
-      // Update leaderboard for all users (both anonymous and registered)
-      if (userId && currentUser) {
-        // Generate display name for anonymous users or use real username
-        const displayName = currentUser.username || `Player_${userId.slice(0, 8)}`;
-        
-        console.log('🏆 Updating leaderboard with cumulative score for:', displayName);
+      // Only update leaderboard for registered users (with a real username)
+      if (userId && currentUser && currentUser.username) {
+        console.log('🏆 Updating leaderboard with cumulative score for:', currentUser.username);
         updateLeaderboardScore(
           userId,
-          displayName,
+          currentUser.username,
           cumulativeScore,
           dbSessionId || undefined
         ).catch(err => {
           console.error('Failed to update leaderboard:', err);
         });
       } else {
-        console.log('⚠️ Skipping leaderboard update - no user found');
+        console.log('⏭️ Skipping leaderboard update - user not registered yet');
       }
       
       return newLevels;
@@ -191,13 +188,14 @@ export const useGameSession = () => {
     if (userId) {
       console.log('🏁 Game finished — updating user stats (games_played +1) and leaderboard');
 
-      // Update leaderboard with final cumulative score
-      if (currentUser) {
-        const displayName = currentUser.username || `Player_${userId.slice(0, 8)}`;
-        console.log('🏆 Updating leaderboard with final score:', totalScore, 'for:', displayName);
-        await updateLeaderboardScore(userId, displayName, totalScore, dbSessionId || undefined).catch(err => {
+      // Only update leaderboard for registered users (with a real username)
+      if (currentUser && currentUser.username) {
+        console.log('🏆 Updating leaderboard with final score:', totalScore, 'for:', currentUser.username);
+        await updateLeaderboardScore(userId, currentUser.username, totalScore, dbSessionId || undefined).catch(err => {
           console.error('Failed to update leaderboard at game end:', err);
         });
+      } else {
+        console.log('⏭️ Skipping final leaderboard update - user not registered');
       }
 
       // Update user stats (games_played +1, best_score, total_score)
@@ -220,10 +218,12 @@ export const useGameSession = () => {
         setCurrentUser(user);
 
         // Save to localStorage so getCurrentUser() works across components
-        setCurrentUserSession(
-          user.username || `Player_${user.id.slice(0, 8)}`,
-          user.email || undefined,
-        );
+        if (user.username) {
+          setCurrentUserSession(
+            user.username,
+            user.email || undefined,
+          );
+        }
 
         console.log('✅ User loaded and session saved:', user);
         return true;
