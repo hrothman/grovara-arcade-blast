@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, useCallback, ReactNode } from 'react';
+import React, { createContext, useContext, useState, useCallback, useRef, useEffect, ReactNode } from 'react';
 import { GameState, LevelData, SwipeAction } from '@/types/game';
 import { useGameSession } from '@/hooks/useGameSession';
 import { Database } from '@/types/database';
@@ -55,7 +55,15 @@ export const GameProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     userType: null,
   });
 
+  const totalScoreRef = useRef(0);
+  const livesRef = useRef(INITIAL_LIVES);
+  const currentLevelRef = useRef(1);
+  useEffect(() => { totalScoreRef.current = gameState.totalScore; }, [gameState.totalScore]);
+
   const startGame = useCallback(() => {
+    livesRef.current = INITIAL_LIVES;
+    currentLevelRef.current = 1;
+    totalScoreRef.current = 0;
     setGameState(prev => ({
       ...prev,
       currentScreen: 'game',
@@ -76,42 +84,34 @@ export const GameProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   }, []);
 
   const loseLife = useCallback(() => {
-    setGameState(prev => {
-      const newLives = prev.lives - 1;
-      if (newLives <= 0) {
-        // Game over — update user stats (games_played +1)
-        finishGame(prev.totalScore);
-        return {
-          ...prev,
-          lives: 0,
-          currentScreen: 'gameOver',
-        };
-      }
-      return {
-        ...prev,
-        lives: newLives,
-      };
-    });
+    // Decrement ref immediately (not inside updater) to avoid React 18 batching issues
+    const newLives = livesRef.current - 1;
+    livesRef.current = newLives;
+
+    setGameState(prev => ({
+      ...prev,
+      lives: Math.max(0, newLives),
+      ...(newLives <= 0 ? { currentScreen: 'gameOver' as const } : {}),
+    }));
+
+    if (newLives <= 0) {
+      finishGame(totalScoreRef.current);
+    }
   }, [finishGame]);
 
   const completeLevel = useCallback((levelData: LevelData) => {
     recordLevel(levelData);
-    setGameState(prev => {
-      if (prev.currentLevel >= TOTAL_LEVELS) {
-        // Final level — go straight to victory screen
-        finishGame(prev.totalScore);
-        return {
-          ...prev,
-          levels: [...prev.levels, levelData],
-          currentScreen: 'gameComplete',
-        };
-      }
-      return {
-        ...prev,
-        levels: [...prev.levels, levelData],
-        currentScreen: 'levelComplete',
-      };
-    });
+    const isFinalLevel = currentLevelRef.current >= TOTAL_LEVELS;
+
+    setGameState(prev => ({
+      ...prev,
+      levels: [...prev.levels, levelData],
+      currentScreen: isFinalLevel ? 'gameComplete' as const : 'levelComplete' as const,
+    }));
+
+    if (isFinalLevel) {
+      finishGame(totalScoreRef.current);
+    }
   }, [recordLevel, finishGame]);
 
   const recordSwipe = useCallback((brandId: string, direction: 'left' | 'right') => {
@@ -129,21 +129,19 @@ export const GameProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   }, [session, sessionRecordSwipe, gameState.userType]);
 
   const nextLevel = useCallback(() => {
-    setGameState(prev => {
-      if (prev.currentLevel >= TOTAL_LEVELS) {
-        // All levels complete — update user stats (games_played +1)
-        finishGame(prev.totalScore);
-        return {
-          ...prev,
-          currentScreen: 'gameComplete',
-        };
-      }
-      return {
+    const isFinalLevel = currentLevelRef.current >= TOTAL_LEVELS;
+
+    if (isFinalLevel) {
+      setGameState(prev => ({ ...prev, currentScreen: 'gameComplete' as const }));
+      finishGame(totalScoreRef.current);
+    } else {
+      currentLevelRef.current += 1;
+      setGameState(prev => ({
         ...prev,
         currentLevel: prev.currentLevel + 1,
-        currentScreen: 'game',
-      };
-    });
+        currentScreen: 'game' as const,
+      }));
+    }
   }, [finishGame]);
 
   const goToSwipe = useCallback(() => {
@@ -192,6 +190,9 @@ export const GameProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   }, []);
 
   const resetGame = useCallback(() => {
+    livesRef.current = INITIAL_LIVES;
+    currentLevelRef.current = 1;
+    totalScoreRef.current = 0;
     resetSession(); // Clear accumulated levels/swipes in session hook
     setGameState({
       currentScreen: 'welcome',

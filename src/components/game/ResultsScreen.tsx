@@ -30,14 +30,22 @@ export const ResultsScreen = () => {
         score: entry.score,
         gamesPlayed: entry.games_played || 0,
       }));
-      const playerExists = mapped.some(entry => entry.username === displayUsername) || sessionUser;
-      const withPlayer = playerExists
-        ? mapped
-        : [
-            ...mapped,
-            { username: displayUsername, score: gameState.totalScore, gamesPlayed: 1 }
-          ];
-      setLeaderboard(withPlayer.sort((a, b) => b.score - a.score));
+      if (sessionUser) {
+        // Registered user — ensure their entry reflects the best of DB score vs current game
+        const playerIdx = mapped.findIndex(e => e.username === displayUsername);
+        if (playerIdx >= 0) {
+          mapped[playerIdx].score = Math.max(mapped[playerIdx].score, gameState.totalScore);
+        } else {
+          mapped.push({ username: displayUsername, score: gameState.totalScore, gamesPlayed: 1 });
+        }
+        setLeaderboard(mapped.sort((a, b) => b.score - a.score));
+      } else {
+        const withPlayer = [
+          ...mapped,
+          { username: displayUsername, score: gameState.totalScore, gamesPlayed: 1 }
+        ];
+        setLeaderboard(withPlayer.sort((a, b) => b.score - a.score));
+      }
     };
     loadLeaderboard();
   }, [displayUsername, gameState.totalScore]);
@@ -62,7 +70,7 @@ export const ResultsScreen = () => {
       navigator.clipboard.writeText(`${shareText} ${window.location.origin}`).then(() => {
         toast.success('Score copied to clipboard!');
       }).catch(() => {
-        toast.success('Score copied to clipboard!');
+        toast.error('Failed to copy to clipboard');
       });
     }
   };
