@@ -5,7 +5,7 @@ import { getLeaderboard } from '@/services/leaderboardService';
 import { useGame } from '@/context/GameContext';
 
 export const LeaderboardScreen = () => {
-  const { resetGame, startGame } = useGame();
+  const { resetGame } = useGame();
   const [leaderboard, setLeaderboard] = useState<Array<{ username: string; score: number; gamesPlayed: number }>>([]);
 
   useEffect(() => {
@@ -228,7 +228,7 @@ export const LeaderboardScreen = () => {
           transition={{ delay: 1.2 }}
           whileHover={{ scale: 1.05 }}
           whileTap={{ scale: 0.95 }}
-          onClick={startGame}
+          onClick={resetGame}
           className="shrink-0 mx-auto mt-3 sm:mt-4 lg:mt-5 px-6 sm:px-10 lg:px-14 py-2.5 sm:py-3 lg:py-4 font-bold text-white rounded-lg sm:rounded-xl"
           style={{
             fontFamily: 'var(--font-pixel)',
