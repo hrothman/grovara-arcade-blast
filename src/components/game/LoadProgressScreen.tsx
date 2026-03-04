@@ -113,20 +113,21 @@ export const LoadProgressScreen = () => {
         className="relative z-10 text-center max-w-md mx-auto w-full my-auto"
       >
         {/* Header */}
-        <div className="inline-flex items-center justify-center w-20 h-20 bg-primary/20 rounded-full neon-border mb-6">
-          <Download className="w-10 h-10 text-primary" />
+        <div className="inline-flex items-center justify-center w-14 h-14 bg-primary/20 rounded-full neon-border mb-4">
+          <Download className="w-7 h-7 text-primary" />
         </div>
-        
+
         <motion.h1
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.2 }}
-          className="arcade-text text-3xl font-bold text-foreground neon-glow mb-4"
+          className="arcade-text font-bold text-foreground neon-glow mb-2"
+          style={{ fontSize: 'clamp(1.1rem, 4.5vw, 1.75rem)' }}
         >
           CONTINUE PROGRESS
         </motion.h1>
 
-        <p className="text-muted-foreground mb-8">
+        <p className="text-muted-foreground text-sm mb-5">
           Enter your email to load your saved game
         </p>
 
@@ -135,14 +136,14 @@ export const LoadProgressScreen = () => {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.4 }}
-          className="bg-card/50 backdrop-blur-sm rounded-2xl p-6 mb-6 neon-border"
+          className="bg-card/50 backdrop-blur-sm rounded-xl p-4 mb-4 neon-border"
         >
-          <div className="flex items-center gap-2 mb-4 justify-center">
-            <Mail className="w-5 h-5 text-primary" />
-            <h2 className="font-semibold text-foreground">Your Email</h2>
+          <div className="flex items-center gap-2 mb-3 justify-center">
+            <Mail className="w-4 h-4 text-primary" />
+            <h2 className="font-semibold text-foreground text-sm">Your Email</h2>
           </div>
-          
-          <form onSubmit={handleLoadProgress} className="space-y-4">
+
+          <form onSubmit={handleLoadProgress} className="space-y-3">
             <Input
               type="email"
               placeholder="your@email.com"
@@ -154,7 +155,7 @@ export const LoadProgressScreen = () => {
             <button
               type="submit"
               disabled={isLoading}
-              className="btn-arcade w-full text-lg disabled:opacity-50"
+              className="btn-arcade w-full text-sm disabled:opacity-50"
             >
               {isLoading ? 'Loading...' : 'Load Progress'}
             </button>
@@ -177,10 +178,10 @@ export const LoadProgressScreen = () => {
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ delay: 0.6 }}
-          className="bg-card/30 rounded-xl p-4 mb-6 border border-primary/20"
+          className="bg-card/30 rounded-lg p-3 mb-4 border border-primary/20"
         >
-          <p className="text-sm text-muted-foreground">
-            💡 Your progress is saved automatically when you create an account or save your score
+          <p className="text-xs text-muted-foreground">
+            Your progress is saved automatically when you create an account or save your score
           </p>
         </motion.div>
 

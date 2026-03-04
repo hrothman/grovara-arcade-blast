@@ -170,7 +170,7 @@
   }
 
   .btn-arcade {
-    @apply arcade-text font-bold py-4 px-8 rounded-xl;
+    @apply arcade-text font-bold py-2.5 px-6 rounded-xl;
     background: linear-gradient(90deg, #1E093D 0%, #E24A7E 20%, #FF8600 40%, #D8D228 60%, #00B66F 80%, #00AB9E 100%);
     @apply text-white;
     @apply transition-all duration-200;

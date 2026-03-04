@@ -137,30 +137,30 @@ export const RegistrationGateModal = ({
         <div className="relative">
           <div className="absolute inset-0 gradient-radial-glow opacity-20 pointer-events-none" />
 
-          <div className="relative p-6">
+          <div className="relative p-4">
             {/* ======== MENU VIEW ======== */}
             {view === 'menu' && (
               <>
-                <DialogHeader className="space-y-3">
-                  <DialogTitle className="arcade-text text-2xl text-foreground neon-glow flex items-center gap-2">
-                    <LogIn className="w-6 h-6 text-primary" />
+                <DialogHeader className="space-y-1.5">
+                  <DialogTitle className="arcade-text text-base text-foreground neon-glow flex items-center gap-2">
+                    <LogIn className="w-4 h-4 text-primary" />
                     Register to Play
                   </DialogTitle>
-                  <DialogDescription className="text-muted-foreground text-sm">
+                  <DialogDescription className="text-muted-foreground text-xs">
                     Create an account or load your existing one to start
                     playing
                   </DialogDescription>
                 </DialogHeader>
 
-                <div className="mt-6 space-y-4">
+                <div className="mt-4 space-y-3">
                   <motion.button
                     initial={{ opacity: 0, y: 20 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ delay: 0.1 }}
                     onClick={() => setView('newPlayer')}
-                    className="btn-arcade w-full text-lg flex items-center justify-center gap-3"
+                    className="btn-arcade w-full text-sm flex items-center justify-center gap-2"
                   >
-                    <UserPlus className="w-5 h-5" />
+                    <UserPlus className="w-4 h-4" />
                     New Player
                   </motion.button>
 
@@ -169,9 +169,9 @@ export const RegistrationGateModal = ({
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ delay: 0.2 }}
                     onClick={() => setView('returningPlayer')}
-                    className="w-full bg-primary/20 hover:bg-primary/30 transition-colors rounded-xl py-3 flex items-center justify-center gap-2 text-foreground border border-primary/30"
+                    className="w-full bg-primary/20 hover:bg-primary/30 transition-colors rounded-lg py-2 flex items-center justify-center gap-2 text-sm text-foreground border border-primary/30"
                   >
-                    <LogIn className="w-5 h-5 text-primary" />
+                    <LogIn className="w-4 h-4 text-primary" />
                     Returning Player
                   </motion.button>
                 </div>
@@ -181,35 +181,31 @@ export const RegistrationGateModal = ({
             {/* ======== NEW PLAYER VIEW ======== */}
             {view === 'newPlayer' && (
               <>
-                <DialogHeader className="space-y-3">
-                  <DialogTitle className="arcade-text text-2xl text-foreground neon-glow">
+                <DialogHeader className="space-y-1">
+                  <DialogTitle className="arcade-text text-base text-foreground neon-glow">
                     New Player
                   </DialogTitle>
-                  <DialogDescription className="text-muted-foreground text-sm">
+                  <DialogDescription className="text-muted-foreground text-xs">
                     Fill in your details to start playing
                   </DialogDescription>
                 </DialogHeader>
 
-                <form onSubmit={handleNewPlayerSubmit} className="mt-6">
-                  <div className="space-y-4">
+                <form onSubmit={handleNewPlayerSubmit} className="mt-3">
+                  <div className="space-y-2.5">
                     <button
                       type="button"
                       onClick={handleBackToMenu}
-                      className="text-sm text-muted-foreground hover:text-foreground flex items-center gap-1 transition-colors"
+                      className="text-xs text-muted-foreground hover:text-foreground flex items-center gap-1 transition-colors"
                     >
-                      <ArrowLeft className="w-4 h-4" />
+                      <ArrowLeft className="w-3 h-3" />
                       Back
                     </button>
 
                     {/* Email */}
-                    <motion.div
-                      initial={{ opacity: 0, x: -20 }}
-                      animate={{ opacity: 1, x: 0 }}
-                      transition={{ delay: 0.1 }}
-                    >
-                      <label className="text-sm font-medium text-foreground flex items-center gap-2 mb-2">
-                        <Mail className="w-4 h-4 text-primary" />
-                        Email Address *
+                    <div>
+                      <label className="text-xs font-medium text-foreground flex items-center gap-1.5 mb-1">
+                        <Mail className="w-3 h-3 text-primary" />
+                        Email *
                       </label>
                       <Input
                         type="email"
@@ -221,58 +217,46 @@ export const RegistrationGateModal = ({
                         autoComplete="email"
                         autoFocus
                       />
-                    </motion.div>
+                    </div>
 
-                    {/* First Name */}
-                    <motion.div
-                      initial={{ opacity: 0, x: -20 }}
-                      animate={{ opacity: 1, x: 0 }}
-                      transition={{ delay: 0.15 }}
-                    >
-                      <label className="text-sm font-medium text-foreground flex items-center gap-2 mb-2">
-                        <User className="w-4 h-4 text-primary" />
-                        First Name *
-                      </label>
-                      <Input
-                        type="text"
-                        placeholder="John"
-                        value={firstName}
-                        onChange={(e) => setFirstName(e.target.value)}
-                        disabled={isSubmitting}
-                        className="bg-background/50 border-border focus:border-primary transition-colors"
-                        autoComplete="given-name"
-                      />
-                    </motion.div>
-
-                    {/* Last Name */}
-                    <motion.div
-                      initial={{ opacity: 0, x: -20 }}
-                      animate={{ opacity: 1, x: 0 }}
-                      transition={{ delay: 0.2 }}
-                    >
-                      <label className="text-sm font-medium text-foreground flex items-center gap-2 mb-2">
-                        <User className="w-4 h-4 text-primary" />
-                        Last Name *
-                      </label>
-                      <Input
-                        type="text"
-                        placeholder="Smith"
-                        value={lastName}
-                        onChange={(e) => setLastName(e.target.value)}
-                        disabled={isSubmitting}
-                        className="bg-background/50 border-border focus:border-primary transition-colors"
-                        autoComplete="family-name"
-                      />
-                    </motion.div>
+                    {/* First Name & Last Name — side by side */}
+                    <div className="grid grid-cols-2 gap-2">
+                      <div>
+                        <label className="text-xs font-medium text-foreground flex items-center gap-1.5 mb-1">
+                          <User className="w-3 h-3 text-primary" />
+                          First Name *
+                        </label>
+                        <Input
+                          type="text"
+                          placeholder="John"
+                          value={firstName}
+                          onChange={(e) => setFirstName(e.target.value)}
+                          disabled={isSubmitting}
+                          className="bg-background/50 border-border focus:border-primary transition-colors"
+                          autoComplete="given-name"
+                        />
+                      </div>
+                      <div>
+                        <label className="text-xs font-medium text-foreground flex items-center gap-1.5 mb-1">
+                          <User className="w-3 h-3 text-primary" />
+                          Last Name *
+                        </label>
+                        <Input
+                          type="text"
+                          placeholder="Smith"
+                          value={lastName}
+                          onChange={(e) => setLastName(e.target.value)}
+                          disabled={isSubmitting}
+                          className="bg-background/50 border-border focus:border-primary transition-colors"
+                          autoComplete="family-name"
+                        />
+                      </div>
+                    </div>
 
                     {/* Company */}
-                    <motion.div
-                      initial={{ opacity: 0, x: -20 }}
-                      animate={{ opacity: 1, x: 0 }}
-                      transition={{ delay: 0.25 }}
-                    >
-                      <label className="text-sm font-medium text-foreground flex items-center gap-2 mb-2">
-                        <Building2 className="w-4 h-4 text-primary" />
+                    <div>
+                      <label className="text-xs font-medium text-foreground flex items-center gap-1.5 mb-1">
+                        <Building2 className="w-3 h-3 text-primary" />
                         Company *
                       </label>
                       <Input
@@ -284,29 +268,24 @@ export const RegistrationGateModal = ({
                         className="bg-background/50 border-border focus:border-primary transition-colors"
                         autoComplete="organization"
                       />
-                    </motion.div>
+                    </div>
 
                     {/* Privacy note */}
-                    <motion.div
-                      initial={{ opacity: 0 }}
-                      animate={{ opacity: 1 }}
-                      transition={{ delay: 0.3 }}
-                      className="bg-muted/30 rounded-lg p-3 border border-border/50"
-                    >
-                      <p className="text-xs text-muted-foreground">
+                    <div className="bg-muted/30 rounded-md p-2 border border-border/50">
+                      <p className="text-[10px] text-muted-foreground leading-tight">
                         Your information is secure and will only be used to
                         save your game progress and connect you with brands.
                       </p>
-                    </motion.div>
+                    </div>
 
                     {/* Submit */}
                     <motion.button
-                      initial={{ opacity: 0, y: 20 }}
+                      initial={{ opacity: 0, y: 10 }}
                       animate={{ opacity: 1, y: 0 }}
-                      transition={{ delay: 0.35 }}
+                      transition={{ delay: 0.15 }}
                       type="submit"
                       disabled={isSubmitting}
-                      className="btn-arcade w-full text-lg disabled:opacity-50 disabled:cursor-not-allowed"
+                      className="btn-arcade w-full text-sm disabled:opacity-50 disabled:cursor-not-allowed"
                     >
                       {isSubmitting ? 'Registering...' : 'Register & Play'}
                     </motion.button>
@@ -318,34 +297,30 @@ export const RegistrationGateModal = ({
             {/* ======== RETURNING PLAYER VIEW ======== */}
             {view === 'returningPlayer' && (
               <>
-                <DialogHeader className="space-y-3">
-                  <DialogTitle className="arcade-text text-2xl text-foreground neon-glow flex items-center gap-2">
-                    <LogIn className="w-6 h-6 text-primary" />
+                <DialogHeader className="space-y-1.5">
+                  <DialogTitle className="arcade-text text-base text-foreground neon-glow flex items-center gap-2">
+                    <LogIn className="w-4 h-4 text-primary" />
                     Welcome Back!
                   </DialogTitle>
-                  <DialogDescription className="text-muted-foreground text-sm">
+                  <DialogDescription className="text-muted-foreground text-xs">
                     Enter your email to load your account
                   </DialogDescription>
                 </DialogHeader>
 
-                <form onSubmit={handleLoadSubmit} className="mt-6">
-                  <div className="space-y-4">
+                <form onSubmit={handleLoadSubmit} className="mt-4">
+                  <div className="space-y-3">
                     <button
                       type="button"
                       onClick={handleBackToMenu}
-                      className="text-sm text-muted-foreground hover:text-foreground flex items-center gap-1 transition-colors"
+                      className="text-xs text-muted-foreground hover:text-foreground flex items-center gap-1 transition-colors"
                     >
-                      <ArrowLeft className="w-4 h-4" />
+                      <ArrowLeft className="w-3 h-3" />
                       Back
                     </button>
 
-                    <motion.div
-                      initial={{ opacity: 0, x: -20 }}
-                      animate={{ opacity: 1, x: 0 }}
-                      transition={{ delay: 0.1 }}
-                    >
-                      <label className="text-sm font-medium text-foreground flex items-center gap-2 mb-2">
-                        <Mail className="w-4 h-4 text-primary" />
+                    <div>
+                      <label className="text-xs font-medium text-foreground flex items-center gap-1.5 mb-1">
+                        <Mail className="w-3 h-3 text-primary" />
                         Email Address
                       </label>
                       <Input
@@ -360,7 +335,7 @@ export const RegistrationGateModal = ({
                         className="bg-background/50 border-border focus:border-primary transition-colors"
                         autoFocus
                       />
-                    </motion.div>
+                    </div>
 
                     {errorMessage && (
                       <motion.div
@@ -372,8 +347,8 @@ export const RegistrationGateModal = ({
                           variant="destructive"
                           className="border-2 border-destructive/50"
                         >
-                          <AlertCircle className="h-5 w-5" />
-                          <AlertDescription className="ml-2 font-medium text-base">
+                          <AlertCircle className="h-4 w-4" />
+                          <AlertDescription className="ml-2 font-medium text-sm">
                             {errorMessage}
                           </AlertDescription>
                         </Alert>
@@ -383,9 +358,9 @@ export const RegistrationGateModal = ({
                             initial={{ opacity: 0, y: -10 }}
                             animate={{ opacity: 1, y: 0 }}
                             transition={{ delay: 0.1 }}
-                            className="mt-3 p-3 bg-muted/50 rounded-lg border border-border"
+                            className="mt-2 p-2 bg-muted/50 rounded-lg border border-border"
                           >
-                            <p className="text-sm text-muted-foreground mb-2">
+                            <p className="text-xs text-muted-foreground mb-1.5">
                               Don't have an account yet?
                             </p>
                             <button
@@ -394,9 +369,9 @@ export const RegistrationGateModal = ({
                                 resetForms();
                                 setView('newPlayer');
                               }}
-                              className="w-full bg-primary hover:bg-primary/90 transition-colors rounded-lg py-2 flex items-center justify-center gap-2 text-primary-foreground font-medium"
+                              className="w-full bg-primary hover:bg-primary/90 transition-colors rounded-lg py-1.5 flex items-center justify-center gap-2 text-sm text-primary-foreground font-medium"
                             >
-                              <UserPlus className="w-4 h-4" />
+                              <UserPlus className="w-3.5 h-3.5" />
                               Register as New Player
                             </button>
                           </motion.div>
@@ -405,12 +380,12 @@ export const RegistrationGateModal = ({
                     )}
 
                     <motion.button
-                      initial={{ opacity: 0, y: 20 }}
+                      initial={{ opacity: 0, y: 10 }}
                       animate={{ opacity: 1, y: 0 }}
-                      transition={{ delay: 0.2 }}
+                      transition={{ delay: 0.15 }}
                       type="submit"
                       disabled={isLoading}
-                      className="btn-arcade w-full text-lg disabled:opacity-50 disabled:cursor-not-allowed"
+                      className="btn-arcade w-full text-sm disabled:opacity-50 disabled:cursor-not-allowed"
                     >
                       {isLoading ? 'Loading...' : 'Load Account'}
                     </motion.button>

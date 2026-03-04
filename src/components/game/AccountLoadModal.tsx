@@ -75,30 +75,30 @@ export const AccountLoadModal = ({
           {/* Decorative gradient background */}
           <div className="absolute inset-0 gradient-radial-glow opacity-20 pointer-events-none" />
           
-          <div className="relative p-6">
-            <DialogHeader className="space-y-3">
-              <DialogTitle className="arcade-text text-2xl text-foreground neon-glow flex items-center gap-2">
-                <LogIn className="w-6 h-6 text-primary" />
+          <div className="relative p-4">
+            <DialogHeader className="space-y-1.5">
+              <DialogTitle className="arcade-text text-base text-foreground neon-glow flex items-center gap-2">
+                <LogIn className="w-4 h-4 text-primary" />
                 Welcome!
               </DialogTitle>
-              
-              <DialogDescription className="text-muted-foreground text-sm">
+
+              <DialogDescription className="text-muted-foreground text-xs">
                 {showLoadForm ? 'Enter your email or username to load your account' : 'Get started by loading your existing account or creating a new one'}
               </DialogDescription>
             </DialogHeader>
 
             {!showLoadForm ? (
               // Initial choice menu
-              <div className="mt-6 space-y-4">
+              <div className="mt-4 space-y-3">
                 {/* Load Account Button */}
                 <motion.button
                   initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: 0.1 }}
                   onClick={() => setShowLoadForm(true)}
-                  className="btn-arcade w-full text-lg flex items-center justify-center gap-3"
+                  className="btn-arcade w-full text-sm flex items-center justify-center gap-2"
                 >
-                  <LogIn className="w-5 h-5" />
+                  <LogIn className="w-4 h-4" />
                   Load My Account
                 </motion.button>
 
@@ -108,9 +108,9 @@ export const AccountLoadModal = ({
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: 0.2 }}
                   onClick={handleCreateAccount}
-                  className="w-full bg-primary/20 hover:bg-primary/30 transition-colors rounded-xl py-3 flex items-center justify-center gap-2 text-foreground border border-primary/30"
+                  className="w-full bg-primary/20 hover:bg-primary/30 transition-colors rounded-lg py-2 flex items-center justify-center gap-2 text-sm text-foreground border border-primary/30"
                 >
-                  <UserPlus className="w-5 h-5 text-primary" />
+                  <UserPlus className="w-4 h-4 text-primary" />
                   Create New Account
                 </motion.button>
 
@@ -120,45 +120,36 @@ export const AccountLoadModal = ({
                   animate={{ opacity: 1 }}
                   transition={{ delay: 0.3 }}
                   onClick={handleSkip}
-                  className="w-full text-sm text-muted-foreground hover:text-foreground transition-colors py-2"
+                  className="w-full text-xs text-muted-foreground hover:text-foreground transition-colors py-1.5"
                 >
                   Skip for now
                 </motion.button>
 
                 {/* Info Note */}
-                <motion.div
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
-                  transition={{ delay: 0.4 }}
-                  className="mt-4 bg-muted/30 rounded-lg p-3 border border-border/50"
-                >
-                  <p className="text-xs text-muted-foreground">
-                    💡 You can create an account later to save your progress and connect with matched brands.
+                <div className="bg-muted/30 rounded-md p-2 border border-border/50">
+                  <p className="text-[10px] text-muted-foreground leading-tight">
+                    You can create an account later to save your progress and connect with matched brands.
                   </p>
-                </motion.div>
+                </div>
               </div>
             ) : (
               // Load account form
-              <form onSubmit={handleLoadAccount} className="mt-6">
-                <div className="space-y-4">
+              <form onSubmit={handleLoadAccount} className="mt-4">
+                <div className="space-y-3">
                   {/* Back Button */}
                   <button
                     type="button"
                     onClick={handleBackToMenu}
-                    className="text-sm text-muted-foreground hover:text-foreground flex items-center gap-1 transition-colors"
+                    className="text-xs text-muted-foreground hover:text-foreground flex items-center gap-1 transition-colors"
                   >
-                    <ArrowLeft className="w-4 h-4" />
+                    <ArrowLeft className="w-3 h-3" />
                     Back
                   </button>
 
                   {/* Email or Username Input */}
-                  <motion.div
-                    initial={{ opacity: 0, x: -20 }}
-                    animate={{ opacity: 1, x: 0 }}
-                    transition={{ delay: 0.1 }}
-                  >
-                    <label className="text-sm font-medium text-foreground flex items-center gap-2 mb-2">
-                      <Mail className="w-4 h-4 text-primary" />
+                  <div>
+                    <label className="text-xs font-medium text-foreground flex items-center gap-1.5 mb-1">
+                      <Mail className="w-3 h-3 text-primary" />
                       Email or Username
                     </label>
                     <Input
@@ -167,13 +158,13 @@ export const AccountLoadModal = ({
                       value={emailOrUsername}
                       onChange={(e) => {
                         setEmailOrUsername(e.target.value);
-                        setErrorMessage(''); // Clear error on input change
+                        setErrorMessage('');
                       }}
                       disabled={isLoading}
                       className="bg-background/50 border-border focus:border-primary transition-colors"
                       autoFocus
                     />
-                  </motion.div>
+                  </div>
 
                   {/* Error Message */}
                   {errorMessage && (
@@ -183,28 +174,28 @@ export const AccountLoadModal = ({
                       transition={{ duration: 0.2 }}
                     >
                       <Alert variant="destructive" className="border-2 border-destructive/50">
-                        <AlertCircle className="h-5 w-5" />
-                        <AlertDescription className="ml-2 font-medium text-base">
+                        <AlertCircle className="h-4 w-4" />
+                        <AlertDescription className="ml-2 font-medium text-sm">
                           {errorMessage}
                         </AlertDescription>
                       </Alert>
-                      
+
                       {errorMessage === 'Account not found' && (
                         <motion.div
                           initial={{ opacity: 0, y: -10 }}
                           animate={{ opacity: 1, y: 0 }}
                           transition={{ delay: 0.1 }}
-                          className="mt-3 p-3 bg-muted/50 rounded-lg border border-border"
+                          className="mt-2 p-2 bg-muted/50 rounded-lg border border-border"
                         >
-                          <p className="text-sm text-muted-foreground mb-2">
+                          <p className="text-xs text-muted-foreground mb-1.5">
                             Don't have an account yet?
                           </p>
                           <button
                             type="button"
                             onClick={handleCreateAccount}
-                            className="w-full bg-primary hover:bg-primary/90 transition-colors rounded-lg py-2 flex items-center justify-center gap-2 text-primary-foreground font-medium"
+                            className="w-full bg-primary hover:bg-primary/90 transition-colors rounded-lg py-1.5 flex items-center justify-center gap-2 text-sm text-primary-foreground font-medium"
                           >
-                            <UserPlus className="w-4 h-4" />
+                            <UserPlus className="w-3.5 h-3.5" />
                             Create New Account
                           </button>
                         </motion.div>
@@ -214,12 +205,12 @@ export const AccountLoadModal = ({
 
                   {/* Load Account Button */}
                   <motion.button
-                    initial={{ opacity: 0, y: 20 }}
+                    initial={{ opacity: 0, y: 10 }}
                     animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: 0.2 }}
+                    transition={{ delay: 0.15 }}
                     type="submit"
                     disabled={isLoading}
-                    className="btn-arcade w-full text-lg disabled:opacity-50 disabled:cursor-not-allowed"
+                    className="btn-arcade w-full text-sm disabled:opacity-50 disabled:cursor-not-allowed"
                   >
                     {isLoading ? 'Loading...' : 'Load Account'}
                   </motion.button>
