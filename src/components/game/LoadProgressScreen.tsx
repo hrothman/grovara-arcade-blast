@@ -10,7 +10,7 @@ import { updateLeaderboardScore } from '@/services/leaderboardService';
 import { UserInfoModal } from './UserInfoModal';
 
 export const LoadProgressScreen = () => {
-  const { resetGame, startGame } = useGame();
+  const { resetGame, startGame, loadUserByEmail } = useGame();
   const [email, setEmail] = useState('');
   const [showModal, setShowModal] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
@@ -33,8 +33,8 @@ export const LoadProgressScreen = () => {
       
       if (savedProgress) {
         toast.success(`Welcome back! Progress loaded for ${email}`);
-        // TODO: Load the actual game state from savedProgress
-        // For now, just start the game
+        // Load the user into the hook so initSession knows who they are
+        await loadUserByEmail(email);
         startGame();
       } else {
         // No progress found - show modal to create account
@@ -88,7 +88,10 @@ export const LoadProgressScreen = () => {
 
       toast.success(`Account created! Welcome, ${username}!`);
       setShowModal(false);
-      
+
+      // Load the just-registered user into the hook so initSession knows who they are
+      await loadUserByEmail(submittedEmail);
+
       // Start the game
       setTimeout(() => {
         startGame();

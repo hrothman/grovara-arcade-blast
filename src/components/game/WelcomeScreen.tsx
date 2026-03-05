@@ -45,12 +45,17 @@ export const WelcomeScreen = () => {
     console.log('Session user:', user);
   }, []);
 
-  const handleStartGame = () => {
+  const handleStartGame = async () => {
     soundManager.unlockAudio();
     soundManager.playBackgroundMusic();
 
-    // If user already has a session, start immediately
+    // If user already has a session, load their DB profile first, then start
     if (sessionUser) {
+      // Populate useGameSession's userId/currentUser so leaderboard & swipes work
+      const identifier = sessionUser.email || sessionUser.username;
+      if (identifier) {
+        await loadUserByEmail(identifier);
+      }
       startGame();
       return;
     }

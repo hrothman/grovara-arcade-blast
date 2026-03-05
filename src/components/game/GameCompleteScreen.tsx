@@ -202,17 +202,6 @@ export const GameCompleteScreen = () => {
               </span>
               <p className="text-muted-foreground text-[10px] sm:text-xs mt-0.5">Levels</p>
             </div>
-            {gameState.levels.length > 0 && (
-              <>
-                <div className="w-px h-8 bg-border" />
-                <div className="text-center">
-                  <span className="arcade-text text-primary" style={{ fontSize: 'clamp(1rem, 4vw, 1.5rem)' }}>
-                    {Math.max(...gameState.levels.map(l => l.score || 0)).toLocaleString()}
-                  </span>
-                  <p className="text-muted-foreground text-[10px] sm:text-xs mt-0.5">Best</p>
-                </div>
-              </>
-            )}
           </div>
         </motion.div>
 

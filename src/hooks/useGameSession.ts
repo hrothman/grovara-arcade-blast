@@ -50,60 +50,67 @@ export const useGameSession = () => {
   useEffect(() => { dbSessionIdRef.current = dbSessionId; }, [dbSessionId]);
   useEffect(() => { sessionRef.current = session; }, [session]);
 
+  // Parse URL params on mount (lightweight — no DB calls)
   useEffect(() => {
-    // Initialize user and session
-    const initializeSession = async () => {
-      console.log('🎮 Initializing game session...');
-      
-      // Get or create anonymous user
-      const user = await getOrCreateUser();
-      if (user) {
-        setUserId(user.id);
-        setCurrentUser(user);
-        userIdRef.current = user.id;
-        currentUserRef.current = user;
-        console.log('👤 User ID:', user.id);
-        console.log('👤 User details:', user);
-      }
+    const params = new URLSearchParams(window.location.search);
+    const boothSource = params.get('booth') || 'expo-west-2024';
+    const campaign = params.get('utm_campaign') || 'grovara-expo';
+    const deviceType = getDeviceType();
 
-      // Parse URL params from QR code
-      const params = new URLSearchParams(window.location.search);
-      
-      const sessionId = params.get('sid') || generateSessionId();
-      const boothSource = params.get('booth') || 'expo-west-2024';
-      const campaign = params.get('utm_campaign') || 'grovara-expo';
-      const deviceType = getDeviceType();
-
-      const newSession: GameSession = {
-        sessionId,
-        boothSource,
-        campaign,
-        deviceType,
-        startTime: new Date(),
-      };
-
-      setSession(newSession);
-
-      // Create session in database
-      if (user) {
-        const dbSession = await createGameSession(
-          user.id,
-          sessionId,
-          boothSource,
-          campaign,
-          deviceType,
-          user.user_type || undefined
-        );
-        
-        if (dbSession) {
-          setDbSessionId(dbSession.id);
-          dbSessionIdRef.current = dbSession.id;
-          console.log('✅ Game session created in database:', dbSession.id);
-        }
-      }
+    const newSession: GameSession = {
+      sessionId: generateSessionId(),
+      boothSource,
+      campaign,
+      deviceType,
+      startTime: new Date(),
     };
 
-    initializeSession();
+    setSession(newSession);
+    sessionRef.current = newSession;
+  }, []);
+
+  // Create a DB game session — called only when the game actually starts
+  const initSession = useCallback(async () => {
+    // If a DB session already exists for this game, skip
+    if (dbSessionIdRef.current) return;
+
+    const uid = userIdRef.current;
+    const user = currentUserRef.current;
+    const currentSession = sessionRef.current;
+
+    if (!currentSession) return;
+
+    // Safety fallback: if no user was loaded via registration/login, create anonymous
+    if (!uid) {
+      console.log('⚠️ No user loaded — creating anonymous user as fallback');
+      const fallbackUser = await getOrCreateUser();
+      if (fallbackUser) {
+        setUserId(fallbackUser.id);
+        setCurrentUser(fallbackUser);
+        userIdRef.current = fallbackUser.id;
+        currentUserRef.current = fallbackUser;
+      }
+    }
+
+    const finalUid = userIdRef.current;
+    const finalUser = currentUserRef.current;
+
+    if (finalUid) {
+      const dbSession = await createGameSession(
+        finalUid,
+        currentSession.sessionId,
+        currentSession.boothSource || 'expo-west-2024',
+        currentSession.campaign || 'grovara-expo',
+        currentSession.deviceType || getDeviceType(),
+        finalUser?.user_type || undefined
+      );
+
+      if (dbSession) {
+        setDbSessionId(dbSession.id);
+        dbSessionIdRef.current = dbSession.id;
+        console.log('✅ Game session created in database:', dbSession.id);
+      }
+    }
   }, []);
 
   const recordLevel = useCallback(async (levelData: LevelData) => {
@@ -346,6 +353,7 @@ export const useGameSession = () => {
     dbSessionId,
     levels,
     swipes,
+    initSession,
     recordLevel,
     recordSwipe,
     finishGame,

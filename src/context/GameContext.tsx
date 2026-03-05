@@ -35,6 +35,7 @@ export const GameProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   const {
     session,
     currentUser,
+    initSession,
     recordLevel,
     recordSwipe: sessionRecordSwipe,
     finishGame,
@@ -64,6 +65,8 @@ export const GameProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     livesRef.current = INITIAL_LIVES;
     currentLevelRef.current = 1;
     totalScoreRef.current = 0;
+    // Create the DB game session now (deferred from mount to avoid null users)
+    initSession();
     setGameState(prev => ({
       ...prev,
       currentScreen: 'game',
@@ -74,7 +77,7 @@ export const GameProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       swipes: [],
       session,
     }));
-  }, [session]);
+  }, [session, initSession]);
 
   const addScore = useCallback((points: number) => {
     setGameState(prev => ({
