@@ -203,6 +203,9 @@ export class SoundManager {
     return this.bgAudio;
   }
 
+  // Watchdog interval to resume music if it unexpectedly pauses (mobile browser quirks)
+  private musicWatchdog: ReturnType<typeof setInterval> | null = null;
+
   /**
    * Start background music. Works from any screen — no Phaser scene required.
    * If the audio hasn't loaded yet, it will start automatically once ready.
@@ -215,7 +218,10 @@ export class SoundManager {
     audio.volume = this.musicVolume;
 
     // Already playing — nothing to do
-    if (!audio.paused) return;
+    if (!audio.paused) {
+      this.startMusicWatchdog();
+      return;
+    }
 
     // Try to play immediately (requires prior user interaction)
     const playPromise = audio.play();
@@ -225,10 +231,38 @@ export class SoundManager {
         console.warn('Audio autoplay blocked, will retry on interaction');
       });
     }
+
+    this.startMusicWatchdog();
+  }
+
+  /**
+   * Periodically check if music should be playing but isn't.
+   * Mobile browsers can silently pause audio (tab switch, Phaser destroy, etc.)
+   */
+  private startMusicWatchdog() {
+    if (this.musicWatchdog) return;
+    this.musicWatchdog = setInterval(() => {
+      if (!this.musicWanted || this.musicMuted) {
+        this.stopMusicWatchdog();
+        return;
+      }
+      if (this.bgAudio && this.bgAudio.paused && this.musicWanted && !this.musicMuted) {
+        console.warn('[SoundManager] Music unexpectedly paused — resuming');
+        this.bgAudio.play().catch(() => {});
+      }
+    }, 2000);
+  }
+
+  private stopMusicWatchdog() {
+    if (this.musicWatchdog) {
+      clearInterval(this.musicWatchdog);
+      this.musicWatchdog = null;
+    }
   }
 
   stopBackgroundMusic() {
     this.musicWanted = false;
+    this.stopMusicWatchdog();
     if (this.bgAudio) {
       this.bgAudio.pause();
       this.bgAudio.currentTime = 0;
@@ -236,6 +270,7 @@ export class SoundManager {
   }
 
   pauseBackgroundMusic() {
+    this.stopMusicWatchdog();
     if (this.bgAudio && !this.bgAudio.paused) {
       this.bgAudio.pause();
     }
