@@ -254,10 +254,7 @@ export const WelcomeScreen = () => {
           transition={{ delay: 0.5 }}
           className="mb-2 sm:mb-3 md:mb-4 px-4 sm:px-6 md:px-8"
         >
-          <div className="space-y-2 sm:space-y-3 text-center">
-            <p className="text-xs sm:text-sm md:text-base text-gray-300 font-light leading-relaxed" style={{ fontFamily: 'var(--font-pixel)', fontWeight: 300 }}>
-              Score high on the leaderboard to win exclusive prizes.
-            </p>
+          <div className="text-center">
             <p className="text-primary font-bold leading-snug" style={{ fontFamily: 'var(--font-pixel)', fontSize: 'clamp(0.7rem, 3.8vw, 1.125rem)' }}>
               Slash the Slimy Broker-Jokers.<br /><br />Save The Goods.
             </p>
