@@ -4,11 +4,17 @@ import { useGame } from '@/context/GameContext';
 import { Frown, RefreshCw, Medal } from 'lucide-react';
 import { getLeaderboard } from '@/services/leaderboardService';
 import { getCurrentUser } from '@/lib/leaderboardManager';
+import { soundManager } from '@/lib/soundManager';
 
 export const GameOverScreen = () => {
   const { gameState, resetGame, goToSwipe } = useGame();
   const [username] = useState(`user${Math.floor(Math.random() * 10000000)}`);
   const [leaderboard, setLeaderboard] = useState<Array<{ username: string; score: number; gamesPlayed: number }>>([]);
+
+  // Stop background music on game over
+  useEffect(() => {
+    soundManager.stopBackgroundMusic();
+  }, []);
 
   useEffect(() => {
     const loadLeaderboard = async () => {
