@@ -41,7 +41,6 @@ export const GameCompleteScreen = () => {
   const [leaderboard, setLeaderboard] = useState<Array<{ username: string; score: number; gamesPlayed: number }>>([]);
 
   const confettiPieces = useMemo(() => generateConfetti(30), []);
-
   // Stop background music and play victory fanfare on mount
   useEffect(() => {
     soundManager.stopBackgroundMusic();
@@ -198,7 +197,7 @@ export const GameCompleteScreen = () => {
             <div className="w-px h-8 bg-border" />
             <div className="text-center">
               <span className="arcade-text text-foreground" style={{ fontSize: 'clamp(1rem, 4vw, 1.5rem)' }}>
-                {gameState.levels.length} / 3
+                {gameState.levels.length} / 5
               </span>
               <p className="text-muted-foreground text-[10px] sm:text-xs mt-0.5">Levels</p>
             </div>
@@ -266,24 +265,6 @@ export const GameCompleteScreen = () => {
               </>
             )}
           </div>
-        </motion.div>
-
-        {/* Discount message */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.85 }}
-          className="w-full mb-3 sm:mb-4 rounded-xl p-3 sm:p-4 text-center border border-warning/50"
-          style={{
-            background: 'linear-gradient(135deg, rgba(255, 215, 0, 0.12) 0%, rgba(16, 185, 129, 0.12) 100%)',
-          }}
-        >
-          <p className="text-warning font-bold" style={{ fontSize: 'clamp(0.8rem, 3.5vw, 1.1rem)' }}>
-            You got 5% flat discount on Grovara's next order.
-          </p>
-          <p className="text-muted-foreground mt-1" style={{ fontSize: 'clamp(0.65rem, 2.5vw, 0.85rem)' }}>
-            We got your response and will follow up through email.
-          </p>
         </motion.div>
 
         {/* Action buttons */}

@@ -43,12 +43,15 @@ const buildItems = (items: any[]): SwipeItem[] => {
 const FEATURED_BRANDS = buildItems(featuredBrandsData);
 const BUYERS = buildItems(buyersData);
 
+// Persist across unmount/remount so instructions only show once per session
+let hasSwipedBefore = false;
+
 export const SwipeScreen = () => {
   const { gameState, recordSwipe, goToSwipeSummary } = useGame();
   const [currentIndex, setCurrentIndex] = useState(0);
   const [swipeDirection, setSwipeDirection] = useState<'left' | 'right' | null>(null);
-  const [showInstructions, setShowInstructions] = useState(true);
-  const [swipeStarted, setSwipeStarted] = useState(false);
+  const [showInstructions, setShowInstructions] = useState(!hasSwipedBefore);
+  const [swipeStarted, setSwipeStarted] = useState(hasSwipedBefore);
 
   // Select items based on user type
   const items = gameState.userType === 'brand' ? BUYERS : FEATURED_BRANDS;
@@ -69,13 +72,14 @@ export const SwipeScreen = () => {
 
   // Reset instructions when entering swipe screen
   useEffect(() => {
-    setShowInstructions(true);
-    setSwipeStarted(false);
+    setShowInstructions(!hasSwipedBefore);
+    setSwipeStarted(hasSwipedBefore);
     setCurrentIndex(0);
     setSwipeDirection(null);
   }, [gameState.currentLevel]);
 
   const handleStartSwipe = () => {
+    hasSwipedBefore = true;
     setShowInstructions(false);
     setSwipeStarted(true);
   };

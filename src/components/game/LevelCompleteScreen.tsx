@@ -8,7 +8,7 @@ import { getCurrentUser } from '@/lib/leaderboardManager';
 export const LevelCompleteScreen = () => {
   const { gameState, goToSwipe, nextLevel } = useGame();
   const currentLevelData = gameState.levels[gameState.levels.length - 1];
-  const isLastLevel = gameState.currentLevel >= 3;
+  const isLastLevel = gameState.currentLevel >= 5;
   const [username] = useState(`user${Math.floor(Math.random() * 10000000)}`);
   const [leaderboard, setLeaderboard] = useState<Array<{ username: string; score: number; gamesPlayed: number }>>([]);
 

@@ -6,6 +6,7 @@ import { getCurrentUser, setCurrentUser as setCurrentUserSession, UserSession } 
 import { RegistrationGateModal } from './RegistrationGateModal';
 import { SettingsModal } from './SettingsModal';
 import { ShareModal } from './ShareModal';
+import { FloatingProducts } from './FloatingProducts';
 import { registerUser, checkUsernameAvailable } from '@/services/userService';
 import { submitToLeadwise } from '@/services/leadwiseService';
 import { toast } from 'sonner';
@@ -140,20 +141,11 @@ export const WelcomeScreen = () => {
 
   return (
     <div className="h-screen max-h-screen relative flex flex-col overflow-hidden" style={{ maxHeight: '100dvh' }}>
-      {/* Top Bar: Expo West Logo (left) + Share with Friends (right) */}
+      {/* Top Bar: Share with Friends (right) */}
       <div
-        className="fixed left-0 right-0 z-50 flex items-center justify-between px-3 sm:px-4"
+        className="fixed left-0 right-0 z-50 flex items-center justify-end px-3 sm:px-4"
         style={{ top: 'max(0.5rem, env(safe-area-inset-top))' }}
       >
-        <motion.img
-          src="/who-are-you/ew26-45year-logo-rgb.webp"
-          alt="Natural Products Expo West"
-          initial={{ opacity: 0, x: -20 }}
-          animate={{ opacity: 1, x: 0 }}
-          transition={{ delay: 0.4, duration: 0.5 }}
-          className="w-24 sm:w-28 md:w-32 h-auto drop-shadow-lg"
-        />
-
         <motion.button
           initial={{ opacity: 0, x: 20 }}
           animate={{ opacity: 1, x: 0 }}
@@ -208,6 +200,9 @@ export const WelcomeScreen = () => {
           opacity: 0.8,
         }}
       />
+
+      {/* Floating Products Layer */}
+      <FloatingProducts />
 
       {/* TOP SECTION - Content */}
       <motion.div
@@ -264,9 +259,41 @@ export const WelcomeScreen = () => {
               Score high on the leaderboard to win exclusive prizes.
             </p>
             <p className="text-primary font-bold leading-snug" style={{ fontFamily: 'var(--font-pixel)', fontSize: 'clamp(0.7rem, 3.8vw, 1.125rem)' }}>
-              Slash the Slimy Broker-Jokers.<br />Save The Goods.
+              Slash the Slimy Broker-Jokers.<br /><br />Save The Goods.
             </p>
           </div>
+        </motion.div>
+
+        {/* Announcement Banner */}
+        <motion.div
+          initial={{ opacity: 0, scale: 0.9 }}
+          animate={{ opacity: 1, scale: 1 }}
+          transition={{ delay: 0.6, duration: 0.5 }}
+          className="mx-4 sm:mx-6 md:mx-8 mb-1"
+        >
+          <motion.div
+            className="px-4 sm:px-5 py-2 sm:py-2.5 rounded-xl border-2 border-warning/60 text-center"
+            style={{
+              background: 'linear-gradient(135deg, rgba(255, 215, 0, 0.15) 0%, rgba(236, 72, 153, 0.15) 100%)',
+              boxShadow: '0 0 20px rgba(255, 215, 0, 0.2)',
+            }}
+            animate={{
+              borderColor: ['rgba(255,215,0,0.6)', 'rgba(236,72,153,0.6)', 'rgba(255,215,0,0.6)'],
+              boxShadow: [
+                '0 0 20px rgba(255,215,0,0.2)',
+                '0 0 20px rgba(236,72,153,0.2)',
+                '0 0 20px rgba(255,215,0,0.2)',
+              ],
+            }}
+            transition={{ duration: 3, repeat: Infinity, ease: 'easeInOut' }}
+          >
+            <p
+              className="text-warning font-bold"
+              style={{ fontFamily: 'var(--font-pixel)', fontSize: 'clamp(0.65rem, 3vw, 0.9rem)' }}
+            >
+              NEW: 5 Hearts, 5 Levels — Go for the High Score!
+            </p>
+          </motion.div>
         </motion.div>
 
         {/* Buttons */}

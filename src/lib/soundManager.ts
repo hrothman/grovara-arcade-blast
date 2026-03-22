@@ -19,6 +19,9 @@ export class SoundManager {
   // HTML5 Audio for victory fanfare
   private victoryAudio: HTMLAudioElement | null = null;
 
+  // HTML5 Audio for peanut butter jelly time
+  private pbjAudio: HTMLAudioElement | null = null;
+
   // Web Audio API buffers — bypasses mobile HTMLAudioElement gesture restrictions
   private ouchBuffer: AudioBuffer | null = null;
   private victoryBuffer: AudioBuffer | null = null;
@@ -128,6 +131,7 @@ export class SoundManager {
     rareItem: () => zzfx(this.sfxVolume, 0, 1319, .03, .1, .3, 0, 2.5, 5, 0, 0, 0, 0, 0, 0, 0, 0, .6, .05), // Sparkle
     shelfComplete: () => zzfx(this.sfxVolume, 0, 659, .08, .15, .4, 0, 2.2, 0, 0, 0, 0, 0, 0, 0, .2, 0, .75, .08), // Triumphant
     gameComplete: () => this.playVictoryFanfare(), // 4-note ascending victory arpeggio
+    pbjTime: () => this.playPBJTime(), // Peanut Butter Jelly Time!!!
   };
 
   /**
@@ -175,6 +179,33 @@ export class SoundManager {
     this.victoryAudio.playbackRate = 0.85; // Slightly slower = longer & more epic
     this.victoryAudio.currentTime = 0;
     this.victoryAudio.play().catch(() => {});
+  }
+
+  private playPBJTime() {
+    if (this.sfxMuted) return;
+
+    if (!this.pbjAudio) {
+      this.pbjAudio = new Audio("/sounds/It's Peanut Butter Jelly Time!!!.mp3");
+      this.pbjAudio.preload = 'auto';
+    }
+    this.pbjAudio.volume = Math.min(1, this.sfxVolume * 2);
+    this.pbjAudio.currentTime = 0;
+    this.pbjAudio.play().catch(() => {});
+
+    // Stop after 5 seconds
+    setTimeout(() => {
+      if (this.pbjAudio && !this.pbjAudio.paused) {
+        this.pbjAudio.pause();
+        this.pbjAudio.currentTime = 0;
+      }
+    }, 5000);
+  }
+
+  stopPBJTime() {
+    if (this.pbjAudio && !this.pbjAudio.paused) {
+      this.pbjAudio.pause();
+      this.pbjAudio.currentTime = 0;
+    }
   }
 
   init(scene: Phaser.Scene) {

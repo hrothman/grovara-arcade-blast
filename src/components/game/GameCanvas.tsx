@@ -61,8 +61,10 @@ interface SlashPoint {
 
 const LEVEL_CONFIG = {
   1: { duration: 20000, throwRate: 1800, itemsMin: 1, itemsMax: 2, enemyChance: 0.40, gravity: 460, throwSpeedY: -700 },
-  2: { duration: 20000, throwRate: 1400, itemsMin: 2, itemsMax: 3, enemyChance: 0.45, gravity: 530, throwSpeedY: -780 },
-  3: { duration: 20000, throwRate: 1100, itemsMin: 2, itemsMax: 3, enemyChance: 0.45, gravity: 560, throwSpeedY: -820 },
+  2: { duration: 20000, throwRate: 1500, itemsMin: 1, itemsMax: 3, enemyChance: 0.42, gravity: 500, throwSpeedY: -750 },
+  3: { duration: 20000, throwRate: 1300, itemsMin: 2, itemsMax: 3, enemyChance: 0.45, gravity: 530, throwSpeedY: -780 },
+  4: { duration: 20000, throwRate: 1100, itemsMin: 2, itemsMax: 3, enemyChance: 0.45, gravity: 560, throwSpeedY: -820 },
+  5: { duration: 20000, throwRate: 900, itemsMin: 2, itemsMax: 4, enemyChance: 0.48, gravity: 580, throwSpeedY: -850 },
 };
 
 const ULTRA_RARE_CHANCE = 0.12;
@@ -84,6 +86,9 @@ const RARE_PRODUCT_ASSETS: Asset[] = getRareProductAssets();
 
 // ── Component ───────────────────────────────────────────────────────────────
 
+// Persist across unmount/remount so instructions only show once per session
+let hasPlayedGame = false;
+
 export const GameCanvas = () => {
   const gameContainerRef = useRef<HTMLDivElement>(null);
   const phaserGameRef = useRef<Phaser.Game | null>(null);
@@ -93,7 +98,7 @@ export const GameCanvas = () => {
 
   const [displayScore, setDisplayScore] = useState(0);
   const [timeLeft, setTimeLeft] = useState(30);
-  const [showInstructions, setShowInstructions] = useState(true);
+  const [showInstructions, setShowInstructions] = useState(!hasPlayedGame);
   const [gameStarted, setGameStarted] = useState(false);
   const [comboPopup, setComboPopup] = useState<{ active: boolean; count: number }>({ active: false, count: 0 });
   const [scorePopup, setScorePopup] = useState<{ active: boolean; value: number; x: number; y: number }>({
@@ -109,8 +114,8 @@ export const GameCanvas = () => {
   // ── Reset on screen/level change ────────────────────────────────────────
   useEffect(() => {
     if (gameState.currentScreen !== 'game') return;
-    setShowInstructions(true);
-    setGameStarted(false);
+    setShowInstructions(!hasPlayedGame);
+    setGameStarted(hasPlayedGame);
     setDisplayScore(0);
     setTimeLeft(levelConfig.duration / 1000);
     setComboPopup({ active: false, count: 0 });
@@ -155,6 +160,7 @@ export const GameCanvas = () => {
   const handleStartGame = useCallback(() => {
     // Unlock audio on user gesture (required for mobile browsers)
     soundManager.unlockAudio();
+    hasPlayedGame = true;
     setShowInstructions(false);
     setGameStarted(true);
   }, []);
@@ -258,8 +264,8 @@ export const GameCanvas = () => {
           soundManager.init(scene);
           soundManager.playBackgroundMusic();
 
-          // Set music speed based on level (Level 1 = chill, Level 3 = intense)
-          const musicSpeedByLevel: Record<number, number> = { 1: 0.88, 2: 1.0, 3: 1.15 };
+          // Set music speed based on level (Level 1 = chill, Level 5 = intense)
+          const musicSpeedByLevel: Record<number, number> = { 1: 0.88, 2: 0.95, 3: 1.0, 4: 1.1, 5: 1.2 };
           soundManager.setMusicSpeed(musicSpeedByLevel[gameState.currentLevel] || 1.0);
 
           slashGraphics = scene.add.graphics();
@@ -859,7 +865,7 @@ export const GameCanvas = () => {
             animate={lifeLostFlash ? { x: [0, -8, 8, -6, 6, -3, 3, 0], scale: [1, 1.15, 1, 1.1, 1] } : { x: 0, scale: 1 }}
             transition={{ duration: 0.5 }}
           >
-            {Array.from({ length: 3 }).map((_, i) => (
+            {Array.from({ length: 5 }).map((_, i) => (
               <motion.div
                 key={i}
                 animate={
@@ -872,7 +878,7 @@ export const GameCanvas = () => {
                 transition={{ duration: 0.5 }}
               >
                 <Heart
-                  className={`w-6 h-6 transition-all duration-200 ${
+                  className={`w-5 h-5 transition-all duration-200 ${
                     i < gameState.lives
                       ? 'text-red-500 fill-red-500 drop-shadow-[0_0_6px_rgba(239,68,68,0.6)]'
                       : 'text-gray-600/40'

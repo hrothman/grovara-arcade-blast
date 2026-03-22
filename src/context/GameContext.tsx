@@ -28,8 +28,8 @@ interface GameContextType {
 
 const GameContext = createContext<GameContextType | undefined>(undefined);
 
-const TOTAL_LEVELS = 3;
-const INITIAL_LIVES = 3;
+const TOTAL_LEVELS = 5;
+const INITIAL_LIVES = 5;
 
 export const GameProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
   const {

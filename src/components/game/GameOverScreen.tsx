@@ -90,7 +90,7 @@ export const GameOverScreen = () => {
             <div className="w-px h-8 bg-border" />
             <div className="text-center">
               <span className="arcade-text text-foreground" style={{ fontSize: 'clamp(1rem, 4vw, 1.5rem)' }}>
-                {gameState.levels.length} / 3
+                {gameState.levels.length} / 5
               </span>
               <p className="text-muted-foreground text-[10px] sm:text-xs mt-0.5">Levels</p>
             </div>
