@@ -59,7 +59,7 @@ export const ResultsScreen = () => {
   const showSeparator = playerEntry !== null;
 
   const handleShare = () => {
-    const shareText = `I scored ${gameState.totalScore.toLocaleString()} points playing Grovara B3B Blaster at Expo West!`;
+    const shareText = `I scored ${gameState.totalScore.toLocaleString()} points playing Grovara B3B Blaster!`;
     if (navigator.share) {
       navigator.share({
         title: 'Grovara B3B Blaster',
@@ -262,7 +262,7 @@ export const ResultsScreen = () => {
           transition={{ delay: 0.8 }}
           className="text-muted-foreground text-[10px]"
         >
-          Thank you for playing! • Expo West 2026
+          Thank you for playing!
         </motion.p>
       </motion.div>
     </div>

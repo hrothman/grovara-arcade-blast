@@ -144,7 +144,7 @@ export const UserTypeSelectionScreen = () => {
           className="text-gray-400 text-xs"
           style={{ fontFamily: 'var(--font-pixel)' }}
         >
-          Expo West 2026 • Powered by Grovara
+          Powered by Grovara
         </motion.p>
       </motion.div>
     </div>

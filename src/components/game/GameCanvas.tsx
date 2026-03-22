@@ -105,6 +105,10 @@ export const GameCanvas = () => {
     active: false, value: 0, x: 0, y: 0,
   });
   const [lifeLostFlash, setLifeLostFlash] = useState(false);
+  const [bananaHit, setBananaHit] = useState(false);
+  const bananaElRef = useRef<HTMLImageElement>(null);
+  const bananaScheduledRef = useRef(false);
+  const bananaPosRef = useRef<{ x: number; y: number; vx: number; vy: number; active: boolean } | null>(null);
 
   // Stats for level completion
   const statsRef = useRef({ productsSliced: 0, enemiesSliced: 0, totalProductsThrown: 0 });
@@ -119,12 +123,15 @@ export const GameCanvas = () => {
     setDisplayScore(0);
     setTimeLeft(levelConfig.duration / 1000);
     setComboPopup({ active: false, count: 0 });
+    bananaPosRef.current = null;
+    setBananaHit(false);
+    bananaScheduledRef.current = false;
+    if (bananaElRef.current) bananaElRef.current.style.display = 'none';
     levelScoreRef.current = 0;
     statsRef.current = { productsSliced: 0, enemiesSliced: 0, totalProductsThrown: 0 };
   }, [gameState.currentScreen, gameState.currentLevel, levelConfig.duration]);
 
-  // ── Helpers ─────────────────────────────────────────────────────────────
-
+  // ── Helpers (moved before banana effect) ────────────────────────────────
   const applyScoreChange = useCallback(
     (delta: number, x?: number, y?: number) => {
       addScore(delta);
@@ -140,6 +147,143 @@ export const GameCanvas = () => {
     },
     [addScore]
   );
+
+  // ── Dancing Banana Easter Egg ─────────────────────────────────────────
+  // Schedule banana, animate via DOM refs (not state), detect swipe hits
+  useEffect(() => {
+    if (!gameStarted || bananaScheduledRef.current) return;
+    bananaScheduledRef.current = true;
+
+    const BANANA_SIZE = 75;
+    const HIT_RADIUS = 55;
+    const delay = 3000 + Math.random() * 8000; // 3-11 seconds into the level
+
+    let animId: number;
+    let lastTime = 0;
+    let lastPointerX = 0;
+    let lastPointerY = 0;
+    let pointerDown = false;
+
+    const spawnBanana = () => {
+      if (!isMountedRef.current) return;
+
+      const w = window.innerWidth;
+      const h = window.innerHeight;
+      const edge = Math.floor(Math.random() * 4); // 0=left, 1=right, 2=top, 3=bottom
+      const speed = 450 + Math.random() * 200; // fast but hittable
+
+      let x: number, y: number, vx: number, vy: number;
+      if (edge === 0) { // from left
+        x = -70;
+        y = 120 + Math.random() * (h * 0.5);
+        vx = speed;
+        vy = (Math.random() - 0.5) * 200;
+      } else if (edge === 1) { // from right
+        x = w + 70;
+        y = 120 + Math.random() * (h * 0.5);
+        vx = -speed;
+        vy = (Math.random() - 0.5) * 200;
+      } else if (edge === 2) { // from top
+        x = 80 + Math.random() * (w - 160);
+        y = -70;
+        vx = (Math.random() - 0.5) * 300;
+        vy = speed;
+      } else { // from bottom
+        x = 80 + Math.random() * (w - 160);
+        y = h + 70;
+        vx = (Math.random() - 0.5) * 300;
+        vy = -speed;
+      }
+
+      bananaPosRef.current = { x, y, vx, vy, active: true };
+      if (bananaElRef.current) {
+        bananaElRef.current.style.display = 'block';
+        bananaElRef.current.style.transform = `translate(${x - BANANA_SIZE / 2}px, ${y - BANANA_SIZE / 2}px)`;
+      }
+      lastTime = performance.now();
+      animId = requestAnimationFrame(loop);
+    };
+
+    const loop = (now: number) => {
+      const pos = bananaPosRef.current;
+      if (!pos || !pos.active) return;
+
+      const dt = Math.min((now - lastTime) / 1000, 0.05);
+      lastTime = now;
+
+      pos.x += pos.vx * dt;
+      pos.y += pos.vy * dt;
+
+      const el = bananaElRef.current;
+      if (el) {
+        el.style.transform = `translate(${pos.x - BANANA_SIZE / 2}px, ${pos.y - BANANA_SIZE / 2}px)`;
+      }
+
+      // Remove if off screen
+      const w = window.innerWidth;
+      const h = window.innerHeight;
+      if (pos.x < -130 || pos.x > w + 130 || pos.y < -130 || pos.y > h + 130) {
+        pos.active = false;
+        bananaPosRef.current = null;
+        if (el) el.style.display = 'none';
+        return;
+      }
+
+      animId = requestAnimationFrame(loop);
+    };
+
+    // Detect swipe across banana
+    const onPointerDown = () => { pointerDown = true; };
+    const onPointerUp = () => { pointerDown = false; };
+    const onPointerMove = (e: PointerEvent) => {
+      if (!pointerDown) return;
+      const pos = bananaPosRef.current;
+      if (!pos || !pos.active) return;
+
+      const px = e.clientX;
+      const py = e.clientY;
+      const speed = Math.hypot(px - lastPointerX, py - lastPointerY);
+      lastPointerX = px;
+      lastPointerY = py;
+
+      if (speed < 3) return; // must be a swipe, not a still touch
+
+      // Check distance from pointer to banana center
+      const dist = Math.hypot(px - pos.x, py - pos.y);
+      if (dist < HIT_RADIUS) {
+        // HIT!
+        pos.active = false;
+        bananaPosRef.current = null;
+        if (bananaElRef.current) bananaElRef.current.style.display = 'none';
+        cancelAnimationFrame(animId);
+
+        soundManager.playSound('shelfComplete');
+        soundManager.playSound('enemyKill');
+        applyScoreChange(2000, pos.x, pos.y);
+        setBananaHit(true);
+        setTimeout(() => {
+          if (isMountedRef.current) setBananaHit(false);
+        }, 1500);
+      }
+    };
+
+    document.addEventListener('pointerdown', onPointerDown);
+    document.addEventListener('pointerup', onPointerUp);
+    document.addEventListener('pointermove', onPointerMove);
+
+    const timer = setTimeout(spawnBanana, delay);
+
+    return () => {
+      clearTimeout(timer);
+      cancelAnimationFrame(animId);
+      document.removeEventListener('pointerdown', onPointerDown);
+      document.removeEventListener('pointerup', onPointerUp);
+      document.removeEventListener('pointermove', onPointerMove);
+      bananaPosRef.current = null;
+    };
+  }, [gameStarted, applyScoreChange]);
+
+  // ── Helpers ─────────────────────────────────────────────────────────────
 
   const showCombo = useCallback((count: number) => {
     if (!isMountedRef.current) return;
@@ -961,6 +1105,65 @@ export const GameCanvas = () => {
             >
               COMBO x{comboPopup.count}!
             </span>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* Dancing Banana (always mounted, shown/hidden via ref) */}
+      <img
+        ref={bananaElRef}
+        src="/discovered/Peanut Butter Dancing GIF.gif"
+        alt=""
+        draggable={false}
+        className="absolute top-0 left-0 z-[60] pointer-events-none"
+        style={{
+          display: 'none',
+          width: 75,
+          height: 75,
+          objectFit: 'contain',
+          filter: 'drop-shadow(0 0 14px rgba(255, 215, 0, 0.9)) drop-shadow(0 0 30px rgba(255, 165, 0, 0.6))',
+          willChange: 'transform',
+        }}
+      />
+
+      {/* Banana hit bonus popup */}
+      <AnimatePresence>
+        {bananaHit && (
+          <motion.div
+            key="banana-bonus"
+            initial={{ opacity: 0, scale: 0.5 }}
+            animate={{ opacity: 1, scale: 1.2 }}
+            exit={{ opacity: 0, scale: 0.8, y: -40 }}
+            transition={{ duration: 0.4, ease: 'backOut' }}
+            className="absolute z-[70] pointer-events-none"
+            style={{
+              left: '50%',
+              top: '40%',
+              transform: 'translate(-50%, -50%)',
+            }}
+          >
+            <div className="text-center">
+              <motion.p
+                className="text-3xl sm:text-4xl font-black"
+                style={{
+                  fontFamily: 'var(--font-pixel)',
+                  background: 'linear-gradient(135deg, #ffd700, #ff6b00)',
+                  WebkitBackgroundClip: 'text',
+                  WebkitTextFillColor: 'transparent',
+                  filter: 'drop-shadow(0 2px 10px rgba(255, 215, 0, 0.6))',
+                }}
+                animate={{ scale: [1, 1.15, 1] }}
+                transition={{ duration: 0.5, repeat: 2 }}
+              >
+                +2000
+              </motion.p>
+              <motion.p
+                className="text-sm sm:text-base font-bold text-yellow-300 mt-1"
+                style={{ fontFamily: 'var(--font-pixel)', filter: 'drop-shadow(0 1px 4px rgba(0,0,0,0.6))' }}
+              >
+                BANANA BONUS!
+              </motion.p>
+            </div>
           </motion.div>
         )}
       </AnimatePresence>

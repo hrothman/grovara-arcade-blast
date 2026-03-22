@@ -225,7 +225,7 @@ export const SwipeSummaryScreen = () => {
           transition={{ delay: 0.8 }}
           className="text-center text-muted-foreground text-xs mt-6"
         >
-          Thank you for exploring! • Expo West 2026
+          Thank you for exploring!
         </motion.p>
       </motion.div>
     </div>

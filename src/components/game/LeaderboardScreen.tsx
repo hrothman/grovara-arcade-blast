@@ -98,7 +98,7 @@ export const LeaderboardScreen = () => {
               fontSize: 'clamp(0.5rem, 2vw, 0.875rem)',
             }}
           >
-            Top Scores from Expo West 2026
+            Top Scores
           </p>
         </motion.div>
 
@@ -256,7 +256,7 @@ export const LeaderboardScreen = () => {
               fontSize: 'clamp(0.45rem, 1.5vw, 0.75rem)',
             }}
           >
-            Expo West 2026 • Powered by Grovara
+            Powered by Grovara
           </p>
         </motion.div>
       </div>

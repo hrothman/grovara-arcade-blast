@@ -190,7 +190,7 @@ export const SwipeScreen = () => {
             className="text-gray-300 text-xs sm:text-sm"
             style={{ fontFamily: 'var(--font-pixel)', textShadow: '1px 1px 2px rgba(0,0,0,0.8)' }}
           >
-            Expo West 2026 • Powered by Grovara
+            Powered by Grovara
           </p>
         </motion.div>
       </div>
@@ -468,7 +468,7 @@ export const SwipeScreen = () => {
         className="relative z-30 mt-auto pb-2 sm:pb-3 flex-shrink-0"
       >
         <p className="text-gray-400 text-xs text-center" style={{ fontFamily: 'var(--font-pixel)' }}>
-          Expo West 2026 • Powered by Grovara
+          Powered by Grovara
         </p>
       </motion.div>
     </div>

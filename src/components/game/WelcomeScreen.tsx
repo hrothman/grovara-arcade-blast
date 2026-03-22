@@ -425,9 +425,7 @@ export const WelcomeScreen = () => {
             className="text-gray-300 text-[9px] xs:text-[10px] sm:text-xs md:text-sm px-2"
             style={{ fontFamily: 'var(--font-pixel)', textShadow: '1px 1px 2px rgba(0,0,0,0.8)' }}
           >
-            <span className="inline-block">Expo West 2026</span>
-            <span className="hidden xs:inline"> • </span>
-            <span className="block xs:inline">Powered by Grovara</span>
+            <span className="inline-block">Powered by Grovara</span>
           </p>
         </motion.div>
       </div>
