@@ -257,7 +257,7 @@ export const WelcomeScreen = () => {
               fontSize: 'clamp(1.5rem, 6.5vw, 3.5rem)',
             }}
           >
-            B3B BLASTER
+            EXPO HERO
           </h1>
         </motion.div>
 
