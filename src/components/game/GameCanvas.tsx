@@ -428,14 +428,22 @@ export const GameCanvas = () => {
             const srcW = (src as HTMLImageElement).naturalWidth || (src as HTMLCanvasElement).width;
             const srcH = (src as HTMLImageElement).naturalHeight || (src as HTMLCanvasElement).height;
             if (!srcW || !srcH) return;
+            // Cap the processed texture size. Products only render at ~180px,
+            // so a huge source (e.g. 2000x2000) would waste ~16MB of GPU memory
+            // each and crash mobile Safari (it reloads the tab under memory
+            // pressure). 600px keeps full visual quality at a fraction of the cost.
+            const MAX_TEX = 600;
+            const texScale = Math.min(1, MAX_TEX / Math.max(srcW, srcH));
+            const dstW = Math.max(1, Math.round(srcW * texScale));
+            const dstH = Math.max(1, Math.round(srcH * texScale));
             const c = document.createElement('canvas');
-            c.width = srcW;
-            c.height = srcH;
+            c.width = dstW;
+            c.height = dstH;
             const cx = c.getContext('2d');
             if (!cx) return;
             try {
-              cx.drawImage(src as CanvasImageSource, 0, 0);
-              const imgData = cx.getImageData(0, 0, srcW, srcH);
+              cx.drawImage(src as CanvasImageSource, 0, 0, dstW, dstH);
+              const imgData = cx.getImageData(0, 0, dstW, dstH);
               const d = imgData.data;
               for (let i = 0; i < d.length; i += 4) {
                 if (d[i] > 240 && d[i + 1] > 240 && d[i + 2] > 240) {
@@ -513,7 +521,14 @@ export const GameCanvas = () => {
 
               const sprite = scene.add.image(spawnX, spawnY, asset.id);
               const spriteSize = isEnemy ? ENEMY_SIZE : PRODUCT_SIZE;
-              sprite.setDisplaySize(spriteSize, spriteSize);
+              // Fit into a spriteSize box while preserving the image's real
+              // aspect ratio, so tall bags / wide packs aren't squished into a
+              // square and the product stays recognizable.
+              const texSrc = sprite.texture.getSourceImage() as { width: number; height: number };
+              const natW = texSrc?.width || spriteSize;
+              const natH = texSrc?.height || spriteSize;
+              const fitScale = spriteSize / Math.max(natW, natH);
+              sprite.setDisplaySize(natW * fitScale, natH * fitScale);
               sprite.setOrigin(0.5);
               sprite.setDepth(2);
               item.sprite = sprite;
