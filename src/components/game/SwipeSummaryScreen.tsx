@@ -131,11 +131,13 @@ export const SwipeSummaryScreen = () => {
                   className="bg-background/50 rounded-lg p-3 flex items-center gap-3 text-sm"
                 >
                   {item?.imageUrl ? (
-                    <img 
-                      src={item.imageUrl} 
-                      alt={item.name}
-                      className="w-10 h-10 rounded object-cover flex-shrink-0"
-                    />
+                    <div className="w-10 h-10 rounded bg-white flex-shrink-0 overflow-hidden flex items-center justify-center">
+                      <img
+                        src={item.imageUrl}
+                        alt={item.name}
+                        className="w-full h-full object-contain mix-blend-multiply"
+                      />
+                    </div>
                   ) : (
                     <div 
                       className="w-10 h-10 rounded flex items-center justify-center text-lg flex-shrink-0"

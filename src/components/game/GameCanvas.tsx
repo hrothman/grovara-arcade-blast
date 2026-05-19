@@ -366,27 +366,42 @@ export const GameCanvas = () => {
         preload: function (this: Phaser.Scene) {
           const scene = this;
 
-          // Loading progress bar
+          // Loading progress bar — created lazily. If the assets were already
+          // warmed into the browser cache from the welcome screen, the whole
+          // load finishes in a few ms and the bar is never shown at all.
           const barWidth = 300;
           const barHeight = 20;
-          const barX = (scene.scale.width - barWidth) / 2;
-          const barY = scene.scale.height / 2;
-          const progressBg = scene.add.rectangle(barX + barWidth / 2, barY, barWidth, barHeight, 0x222222);
-          const progressBar = scene.add.rectangle(barX, barY, 0, barHeight, 0x10b981).setOrigin(0, 0.5);
-          const progressText = scene.add.text(scene.scale.width / 2, barY + 30, 'Loading...', {
-            fontSize: '14px',
-            color: '#ffffff',
-          }).setOrigin(0.5);
+          const startedAt = performance.now();
+          const SHOW_AFTER_MS = 180;
+          let progressBg: Phaser.GameObjects.Rectangle | undefined;
+          let progressBar: Phaser.GameObjects.Rectangle | undefined;
+          let progressText: Phaser.GameObjects.Text | undefined;
+
+          const ensureUI = () => {
+            if (progressBg) return;
+            const barX = (scene.scale.width - barWidth) / 2;
+            const barY = scene.scale.height / 2;
+            progressBg = scene.add.rectangle(barX + barWidth / 2, barY, barWidth, barHeight, 0x222222);
+            progressBar = scene.add.rectangle(barX, barY, 0, barHeight, 0x10b981).setOrigin(0, 0.5);
+            progressText = scene.add.text(scene.scale.width / 2, barY + 30, 'Loading...', {
+              fontSize: '14px',
+              color: '#ffffff',
+            }).setOrigin(0.5);
+          };
 
           scene.load.on('progress', (value: number) => {
-            progressBar.width = barWidth * value;
-            progressText.setText(`Loading... ${Math.round(value * 100)}%`);
+            // Only reveal the bar if loading is actually taking time
+            // (cold/uncached load); cached loads finish before the threshold.
+            if (!progressBg && performance.now() - startedAt < SHOW_AFTER_MS) return;
+            ensureUI();
+            progressBar!.width = barWidth * value;
+            progressText!.setText(`Loading... ${Math.round(value * 100)}%`);
           });
 
           scene.load.on('complete', () => {
-            progressBg.destroy();
-            progressBar.destroy();
-            progressText.destroy();
+            progressBg?.destroy();
+            progressBar?.destroy();
+            progressText?.destroy();
           });
 
           ENEMY_ASSETS.forEach(asset => {
@@ -404,6 +419,36 @@ export const GameCanvas = () => {
           const scene = this;
           const w = scene.scale.width;
           const h = scene.scale.height;
+
+          // Strip near-white backgrounds from product textures
+          PRODUCT_ASSETS.forEach(asset => {
+            const tex = scene.textures.get(asset.id);
+            const src = tex?.getSourceImage() as HTMLImageElement | HTMLCanvasElement | undefined;
+            if (!src) return;
+            const srcW = (src as HTMLImageElement).naturalWidth || (src as HTMLCanvasElement).width;
+            const srcH = (src as HTMLImageElement).naturalHeight || (src as HTMLCanvasElement).height;
+            if (!srcW || !srcH) return;
+            const c = document.createElement('canvas');
+            c.width = srcW;
+            c.height = srcH;
+            const cx = c.getContext('2d');
+            if (!cx) return;
+            try {
+              cx.drawImage(src as CanvasImageSource, 0, 0);
+              const imgData = cx.getImageData(0, 0, srcW, srcH);
+              const d = imgData.data;
+              for (let i = 0; i < d.length; i += 4) {
+                if (d[i] > 240 && d[i + 1] > 240 && d[i + 2] > 240) {
+                  d[i + 3] = 0;
+                }
+              }
+              cx.putImageData(imgData, 0, 0);
+              scene.textures.remove(asset.id);
+              scene.textures.addCanvas(asset.id, c);
+            } catch {
+              // CORS-tainted or unsupported — leave original texture
+            }
+          });
 
           soundManager.init(scene);
           soundManager.playBackgroundMusic();

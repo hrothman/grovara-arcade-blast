@@ -340,14 +340,14 @@ export const SwipeScreen = () => {
                 </AnimatePresence>
 
                 {/* Brand/Buyer image */}
-                <div 
-                  className="h-48 sm:h-52 md:h-56 flex items-center justify-center bg-black/40 p-4 sm:p-6"
+                <div
+                  className="h-48 sm:h-52 md:h-56 flex items-center justify-center bg-white p-4 sm:p-6"
                 >
                   {currentBrand.imageUrl ? (
                     <img
                       src={currentBrand.imageUrl}
                       alt={currentBrand.name}
-                      className="max-h-full max-w-full object-contain drop-shadow-2xl"
+                      className="max-h-full max-w-full object-contain mix-blend-multiply"
                       loading="lazy"
                       onError={(e) => {
                         e.currentTarget.style.display = 'none';

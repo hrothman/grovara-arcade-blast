@@ -53,7 +53,7 @@ export const useGameSession = () => {
   // Parse URL params on mount (lightweight — no DB calls)
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
-    const boothSource = params.get('booth') || 'expo-west-2024';
+    const boothSource = params.get('booth') || 'sweets-and-snacks-2026';
     const campaign = params.get('utm_campaign') || 'grovara-expo';
     const deviceType = getDeviceType();
 
@@ -99,7 +99,7 @@ export const useGameSession = () => {
       const dbSession = await createGameSession(
         finalUid,
         currentSession.sessionId,
-        currentSession.boothSource || 'expo-west-2024',
+        currentSession.boothSource || 'sweets-and-snacks-2026',
         currentSession.campaign || 'grovara-expo',
         currentSession.deviceType || getDeviceType(),
         finalUser?.user_type || undefined
@@ -261,7 +261,7 @@ export const useGameSession = () => {
     const user = currentUserRef.current;
 
     const newSessionId = generateSessionId();
-    const boothSource = prevSession?.boothSource || 'expo-west-2024';
+    const boothSource = prevSession?.boothSource || 'sweets-and-snacks-2026';
     const campaign = prevSession?.campaign || 'grovara-expo';
     const deviceType = prevSession?.deviceType || getDeviceType();
 

@@ -11,6 +11,7 @@ import { registerUser, checkUsernameAvailable } from '@/services/userService';
 import { submitToLeadwise } from '@/services/leadwiseService';
 import { toast } from 'sonner';
 import { soundManager } from '@/lib/soundManager';
+import { preloadGameImages } from '@/lib/assetLoader';
 
 export const WelcomeScreen = () => {
   const { startGame, goToLeaderboard, loadUserByEmail } = useGame();
@@ -44,6 +45,13 @@ export const WelcomeScreen = () => {
     const user = getCurrentUser();
     setSessionUser(user);
     console.log('Session user:', user);
+  }, []);
+
+  // Warm the browser cache with all game art while the player is on the
+  // welcome screen, so hitting "Play" jumps straight into the game with
+  // no visible loading bar. Fire-and-forget — never blocks the UI.
+  useEffect(() => {
+    preloadGameImages();
   }, []);
 
   const handleStartGame = async () => {
@@ -141,11 +149,25 @@ export const WelcomeScreen = () => {
 
   return (
     <div className="h-screen max-h-screen relative flex flex-col overflow-hidden" style={{ maxHeight: '100dvh' }}>
-      {/* Top Bar: Share with Friends (right) */}
+      {/* Top Bar: Sweets & Snacks Expo branding (left) + Share with Friends (right) */}
       <div
-        className="fixed left-0 right-0 z-50 flex items-center justify-end px-3 sm:px-4"
+        className="fixed left-0 right-0 z-50 flex items-center justify-between px-3 sm:px-4"
         style={{ top: 'max(0.5rem, env(safe-area-inset-top))' }}
       >
+        {/* Sweets & Snacks Expo Logo - Top Left */}
+        <motion.div
+          initial={{ opacity: 0, x: -20 }}
+          animate={{ opacity: 1, x: 0 }}
+          transition={{ delay: 0.5, duration: 0.5 }}
+          className="rounded-full bg-white/90 backdrop-blur-sm border-2 border-primary/40 p-1 sm:p-1.5"
+        >
+          <img
+            src="/home/sse-logo-header-final-1-215x221-1.png"
+            alt="Sweets & Snacks Expo"
+            className="w-10 h-10 sm:w-12 sm:h-12 object-contain"
+          />
+        </motion.div>
+
         <motion.button
           initial={{ opacity: 0, x: 20 }}
           animate={{ opacity: 1, x: 0 }}
@@ -285,10 +307,16 @@ export const WelcomeScreen = () => {
             transition={{ duration: 3, repeat: Infinity, ease: 'easeInOut' }}
           >
             <p
-              className="text-warning font-bold"
-              style={{ fontFamily: 'var(--font-pixel)', fontSize: 'clamp(0.65rem, 3vw, 0.9rem)' }}
+              className="text-warning font-bold leading-tight"
+              style={{ fontFamily: 'var(--font-pixel)', fontSize: 'clamp(0.8rem, 4vw, 1.15rem)' }}
             >
-              NEW: 5 Hearts, 5 Levels — Go for the High Score!
+              Sweets &amp; Snacks Expo
+            </p>
+            <p
+              className="text-white/90 font-bold mt-1 leading-tight"
+              style={{ fontFamily: 'var(--font-pixel)', fontSize: 'clamp(0.6rem, 2.8vw, 0.8rem)' }}
+            >
+              Las Vegas, Nevada
             </p>
           </motion.div>
         </motion.div>
@@ -318,74 +346,176 @@ export const WelcomeScreen = () => {
 
       {/* BOTTOM SECTION - Characters & Footer */}
       <div className="relative z-20 flex-shrink-0" style={{ height: 'clamp(200px, 40vh, 400px)', minHeight: '200px' }}>
-        {/* Villain Character - Left */}
+        {/* Villain Character - Left (recoils, irritated, when the bird goads him) */}
         <motion.div
           className="absolute bottom-0 left-0 z-20 pointer-events-none"
           style={{ height: '100%', width: '60%' }}
           initial={{ x: -100, opacity: 0 }}
-          animate={{
-            x: 0,
-            opacity: 1,
-            y: [0, -8, 0],
-            rotate: [0, -2, 0, 2, 0],
-          }}
-          transition={{
-            x: { duration: 0.8, delay: 0.2 },
-            opacity: { duration: 0.8, delay: 0.2 },
-            y: { duration: 2.5, repeat: Infinity, ease: 'easeInOut', delay: 1 },
-            rotate: { duration: 3, repeat: Infinity, ease: 'easeInOut', delay: 1 },
-          }}
+          animate={{ x: 0, opacity: 1 }}
+          transition={{ x: { duration: 0.8, delay: 0.2 }, opacity: { duration: 0.8, delay: 0.2 } }}
         >
-          <motion.img
-            src="/home/villain.png"
-            alt="Villain"
-            className="w-full h-full object-contain object-bottom"
-            style={{ objectPosition: 'bottom left' }}
+          {/* Irritation symbols above the hat — pop on each jab beat */}
+          <motion.div
+            aria-hidden
+            className="absolute"
+            style={{ left: '32%', top: '4%', fontSize: 'clamp(1.1rem, 5vw, 2rem)', filter: 'drop-shadow(0 2px 3px rgba(0,0,0,0.5))' }}
             animate={{
-              filter: [
-                'drop-shadow(0 0 8px rgba(236,72,153,0.6)) hue-rotate(0deg)',
-                'drop-shadow(0 0 18px rgba(139,92,246,0.7)) hue-rotate(20deg)',
-                'drop-shadow(0 0 12px rgba(236,72,153,0.5)) hue-rotate(-10deg)',
-                'drop-shadow(0 0 8px rgba(236,72,153,0.6)) hue-rotate(0deg)',
-              ],
+              opacity: [0, 0, 0, 1, 0.35, 1, 0, 0],
+              scale: [0.4, 0.4, 0.5, 1.2, 0.85, 1.25, 0.5, 0.4],
+              rotate: [0, 0, 0, -10, 4, -12, 0, 0],
             }}
-            transition={{ duration: 4, repeat: Infinity, ease: 'easeInOut' }}
-          />
+            transition={{ duration: 5, repeat: Infinity, ease: 'easeInOut', delay: 1.2, times: [0, 0.42, 0.5, 0.56, 0.62, 0.68, 0.76, 1] }}
+          >
+            💢
+          </motion.div>
+          <motion.div
+            aria-hidden
+            className="absolute"
+            style={{ left: '46%', top: '10%', fontSize: 'clamp(0.8rem, 3.6vw, 1.4rem)', filter: 'drop-shadow(0 2px 3px rgba(0,0,0,0.5))' }}
+            animate={{
+              opacity: [0, 0, 0, 0.9, 0.2, 0.95, 0, 0],
+              scale: [0.3, 0.3, 0.4, 1, 0.7, 1.05, 0.4, 0.3],
+              y: [0, 0, 0, -4, 2, -6, 0, 0],
+            }}
+            transition={{ duration: 5, repeat: Infinity, ease: 'easeInOut', delay: 1.2, times: [0, 0.42, 0.5, 0.56, 0.62, 0.68, 0.76, 1] }}
+          >
+            💦
+          </motion.div>
+
+          {/* Cowering / recoil choreography — synced to the bird's jabs */}
+          <motion.div
+            className="w-full h-full"
+            style={{ transformOrigin: 'bottom center' }}
+            animate={{
+              x: [0, 0, 0, '-7%', '-2%', '-9%', 0, 0],
+              y: [0, -6, 0, 7, 3, 8, 0, 0],
+              rotate: [0, -2, 0, -9, -4, -11, 0, 0],
+              scale: [1, 1, 1, 0.95, 0.98, 0.93, 1, 1],
+            }}
+            transition={{ duration: 5, repeat: Infinity, ease: 'easeInOut', delay: 1.2, times: [0, 0.42, 0.5, 0.56, 0.62, 0.68, 0.76, 1] }}
+          >
+            <motion.img
+              src="/home/villain.png"
+              alt="Villain"
+              className="w-full h-full object-contain object-bottom"
+              style={{ objectPosition: 'bottom left' }}
+              animate={{
+                filter: [
+                  'drop-shadow(0 0 8px rgba(236,72,153,0.6)) hue-rotate(0deg) brightness(1)',
+                  'drop-shadow(0 0 14px rgba(139,92,246,0.6)) hue-rotate(15deg) brightness(1)',
+                  'drop-shadow(0 0 10px rgba(236,72,153,0.5)) hue-rotate(0deg) brightness(1)',
+                  'drop-shadow(0 0 22px rgba(239,68,68,0.85)) hue-rotate(-25deg) brightness(1.12)',
+                  'drop-shadow(0 0 12px rgba(236,72,153,0.5)) hue-rotate(0deg) brightness(1)',
+                  'drop-shadow(0 0 22px rgba(239,68,68,0.85)) hue-rotate(-25deg) brightness(1.12)',
+                  'drop-shadow(0 0 8px rgba(236,72,153,0.6)) hue-rotate(0deg) brightness(1)',
+                  'drop-shadow(0 0 8px rgba(236,72,153,0.6)) hue-rotate(0deg) brightness(1)',
+                ],
+              }}
+              transition={{ duration: 5, repeat: Infinity, ease: 'easeInOut', delay: 1.2, times: [0, 0.42, 0.5, 0.56, 0.62, 0.68, 0.76, 1] }}
+            />
+          </motion.div>
         </motion.div>
 
-        {/* Bird Character - Right */}
+        {/* Bird Character - Right (a serene deity that goads the broker) */}
         <motion.div
           className="absolute bottom-0 right-0 z-20 pointer-events-none"
           style={{ height: '100%', width: '60%' }}
           initial={{ x: 100, opacity: 0 }}
-          animate={{
-            x: 0,
-            opacity: 1,
-            y: [0, -10, 0],
-            rotate: [0, 3, 0, -3, 0],
-          }}
-          transition={{
-            x: { duration: 0.8, delay: 0.2 },
-            opacity: { duration: 0.8, delay: 0.2 },
-            y: { duration: 2, repeat: Infinity, ease: 'easeInOut', delay: 1.3 },
-            rotate: { duration: 2.8, repeat: Infinity, ease: 'easeInOut', delay: 1.3 },
-          }}
+          animate={{ x: 0, opacity: 1 }}
+          transition={{ x: { duration: 0.8, delay: 0.2 }, opacity: { duration: 0.8, delay: 0.2 } }}
         >
-          <motion.img
-            src="/home/bird.png"
-            alt="Bird"
-            className="w-full h-full object-contain object-bottom"
-            style={{ objectPosition: 'bottom right' }}
-            animate={{
-              filter: [
-                'drop-shadow(0 0 8px rgba(16,185,129,0.6)) hue-rotate(0deg)',
-                'drop-shadow(0 0 18px rgba(59,130,246,0.7)) hue-rotate(-20deg)',
-                'drop-shadow(0 0 12px rgba(6,182,212,0.5)) hue-rotate(15deg)',
-                'drop-shadow(0 0 8px rgba(16,185,129,0.6)) hue-rotate(0deg)',
-              ],
+          {/* Divine aura / halo behind the bird */}
+          <motion.div
+            aria-hidden
+            className="absolute rounded-full"
+            style={{
+              right: '4%',
+              bottom: '6%',
+              width: '78%',
+              height: '78%',
+              background:
+                'radial-gradient(circle, rgba(255,236,170,0.6) 0%, rgba(255,205,90,0.3) 38%, rgba(255,205,90,0) 70%)',
+              filter: 'blur(8px)',
             }}
-            transition={{ duration: 3.5, repeat: Infinity, ease: 'easeInOut' }}
+            animate={{
+              opacity: [0.32, 0.4, 0.5, 0.9, 0.55, 0.95, 0.4, 0.32],
+              scale: [1, 1.05, 1.08, 1.28, 1.12, 1.3, 1.05, 1],
+            }}
+            transition={{ duration: 5, repeat: Infinity, ease: 'easeInOut', delay: 1.2, times: [0, 0.42, 0.5, 0.56, 0.62, 0.68, 0.76, 1] }}
           />
+
+          {/* Angry red aura — erupts on each jab at the broker */}
+          <motion.div
+            aria-hidden
+            className="absolute rounded-full"
+            style={{
+              right: '2%',
+              bottom: '4%',
+              width: '86%',
+              height: '86%',
+              background:
+                'radial-gradient(circle, rgba(255,70,45,0.7) 0%, rgba(225,30,30,0.4) 40%, rgba(225,30,30,0) 72%)',
+              filter: 'blur(10px)',
+              mixBlendMode: 'screen',
+            }}
+            animate={{
+              opacity: [0, 0.04, 0.12, 0.9, 0.32, 0.95, 0.1, 0],
+              scale: [0.9, 0.95, 1.02, 1.34, 1.12, 1.36, 1.0, 0.9],
+            }}
+            transition={{ duration: 5, repeat: Infinity, ease: 'easeInOut', delay: 1.2, times: [0, 0.42, 0.5, 0.56, 0.62, 0.68, 0.76, 1] }}
+          />
+
+          {/* Twinkling sparkles */}
+          {[
+            { left: '24%', top: '20%', size: '1.4rem', delay: 0 },
+            { left: '60%', top: '10%', size: '1rem', delay: 0.8 },
+            { left: '44%', top: '32%', size: '1.2rem', delay: 1.6 },
+            { left: '14%', top: '40%', size: '0.9rem', delay: 2.4 },
+          ].map((s, i) => (
+            <motion.span
+              key={i}
+              aria-hidden
+              className="absolute"
+              style={{ left: s.left, top: s.top, fontSize: s.size, filter: 'drop-shadow(0 0 4px rgba(255,220,120,0.8))' }}
+              animate={{ opacity: [0, 1, 0], scale: [0.4, 1, 0.4], y: [0, -8, 0] }}
+              transition={{ duration: 2.4, repeat: Infinity, ease: 'easeInOut', delay: s.delay }}
+            >
+              ✨
+            </motion.span>
+          ))}
+
+          {/* Goad choreography — winds up, then double beak-jab toward the broker */}
+          <motion.div
+            className="w-full h-full"
+            style={{ transformOrigin: 'bottom center' }}
+            animate={{
+              x: [0, 0, '2%', '-15%', '-4%', '-17%', 0, 0],
+              y: [0, -10, -6, 12, 5, 13, 0, 0],
+              rotate: [0, 3, 7, -13, -5, -15, 0, 0],
+              scale: [1, 1.01, 1.04, 1.15, 1.06, 1.17, 1, 1],
+            }}
+            transition={{ duration: 5, repeat: Infinity, ease: 'easeInOut', delay: 1.2, times: [0, 0.42, 0.5, 0.56, 0.62, 0.68, 0.76, 1] }}
+          >
+            <motion.img
+              src="/home/bird.png"
+              alt="Bird"
+              className="w-full h-full object-contain object-bottom"
+              style={{ objectPosition: 'bottom right' }}
+              animate={{
+                filter: [
+                  'drop-shadow(0 0 10px rgba(255,215,120,0.7)) brightness(1)',
+                  'drop-shadow(0 0 16px rgba(255,235,170,0.8)) brightness(1.05)',
+                  'drop-shadow(0 0 20px rgba(255,225,140,0.85)) brightness(1.08)',
+                  'drop-shadow(0 0 34px rgba(255,55,40,1)) brightness(1.16) saturate(1.3)',
+                  'drop-shadow(0 0 18px rgba(255,150,90,0.85)) brightness(1.06) saturate(1.1)',
+                  'drop-shadow(0 0 36px rgba(255,45,35,1)) brightness(1.2) saturate(1.35)',
+                  'drop-shadow(0 0 12px rgba(255,215,120,0.7)) brightness(1)',
+                  'drop-shadow(0 0 10px rgba(255,215,120,0.7)) brightness(1)',
+                ],
+              }}
+              transition={{ duration: 5, repeat: Infinity, ease: 'easeInOut', delay: 1.2, times: [0, 0.42, 0.5, 0.56, 0.62, 0.68, 0.76, 1] }}
+            />
+          </motion.div>
         </motion.div>
 
         {/* Bottom Gradient Overlay - MUST be on top of characters */}
