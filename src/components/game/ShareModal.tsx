@@ -14,8 +14,8 @@ export const ShareModal = ({ open, onOpenChange }: ShareModalProps) => {
   const [activeTab, setActiveTab] = useState<'link' | 'qr'>('link');
 
   const shareUrl = window.location.origin;
-  const shareTitle = 'B3B Arcade - Grovara';
-  const shareText = 'Play B3B Arcade and discover amazing brands on Grovara!';
+  const shareTitle = 'Grovara Expo Hero';
+  const shareText = 'Play Grovara Expo Hero and discover amazing brands!';
 
   const handleNativeShare = async () => {
     if (navigator.share) {
