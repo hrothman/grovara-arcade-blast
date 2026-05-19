@@ -366,42 +366,27 @@ export const GameCanvas = () => {
         preload: function (this: Phaser.Scene) {
           const scene = this;
 
-          // Loading progress bar — created lazily. If the assets were already
-          // warmed into the browser cache from the welcome screen, the whole
-          // load finishes in a few ms and the bar is never shown at all.
+          // Loading progress bar
           const barWidth = 300;
           const barHeight = 20;
-          const startedAt = performance.now();
-          const SHOW_AFTER_MS = 180;
-          let progressBg: Phaser.GameObjects.Rectangle | undefined;
-          let progressBar: Phaser.GameObjects.Rectangle | undefined;
-          let progressText: Phaser.GameObjects.Text | undefined;
-
-          const ensureUI = () => {
-            if (progressBg) return;
-            const barX = (scene.scale.width - barWidth) / 2;
-            const barY = scene.scale.height / 2;
-            progressBg = scene.add.rectangle(barX + barWidth / 2, barY, barWidth, barHeight, 0x222222);
-            progressBar = scene.add.rectangle(barX, barY, 0, barHeight, 0x10b981).setOrigin(0, 0.5);
-            progressText = scene.add.text(scene.scale.width / 2, barY + 30, 'Loading...', {
-              fontSize: '14px',
-              color: '#ffffff',
-            }).setOrigin(0.5);
-          };
+          const barX = (scene.scale.width - barWidth) / 2;
+          const barY = scene.scale.height / 2;
+          const progressBg = scene.add.rectangle(barX + barWidth / 2, barY, barWidth, barHeight, 0x222222);
+          const progressBar = scene.add.rectangle(barX, barY, 0, barHeight, 0x10b981).setOrigin(0, 0.5);
+          const progressText = scene.add.text(scene.scale.width / 2, barY + 30, 'Loading...', {
+            fontSize: '14px',
+            color: '#ffffff',
+          }).setOrigin(0.5);
 
           scene.load.on('progress', (value: number) => {
-            // Only reveal the bar if loading is actually taking time
-            // (cold/uncached load); cached loads finish before the threshold.
-            if (!progressBg && performance.now() - startedAt < SHOW_AFTER_MS) return;
-            ensureUI();
-            progressBar!.width = barWidth * value;
-            progressText!.setText(`Loading... ${Math.round(value * 100)}%`);
+            progressBar.width = barWidth * value;
+            progressText.setText(`Loading... ${Math.round(value * 100)}%`);
           });
 
           scene.load.on('complete', () => {
-            progressBg?.destroy();
-            progressBar?.destroy();
-            progressText?.destroy();
+            progressBg.destroy();
+            progressBar.destroy();
+            progressText.destroy();
           });
 
           ENEMY_ASSETS.forEach(asset => {
