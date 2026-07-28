@@ -24,8 +24,9 @@ export const PuppyMascot = () => {
     <motion.div
       className="fixed z-40 flex items-center gap-1.5 sm:gap-2 pointer-events-none"
       style={{
+        // Align the mascot's top with the "Share with Friends" button row
         left: 'max(0.6rem, env(safe-area-inset-left))',
-        top: 'max(3.5rem, calc(env(safe-area-inset-top) + 3rem))',
+        top: 'max(0.5rem, env(safe-area-inset-top))',
       }}
       initial={{ opacity: 0, x: -40 }}
       animate={{ opacity: 1, x: 0 }}
