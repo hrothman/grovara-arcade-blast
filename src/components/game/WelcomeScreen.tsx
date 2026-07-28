@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
-import { motion } from 'framer-motion';
+import { motion, useReducedMotion } from 'framer-motion';
 import { useGame } from '@/context/GameContext';
 import { Medal, Settings, Share2 } from 'lucide-react';
 import { getCurrentUser, setCurrentUser as setCurrentUserSession, UserSession } from '@/lib/leaderboardManager';
@@ -7,6 +7,8 @@ import { RegistrationGateModal } from './RegistrationGateModal';
 import { SettingsModal } from './SettingsModal';
 import { ShareModal } from './ShareModal';
 import { FloatingProducts } from './FloatingProducts';
+import { PuppyMascot } from './PuppyMascot';
+import { ArcadeFloor } from './ArcadeFloor';
 import { registerUser, checkUsernameAvailable } from '@/services/userService';
 import { submitToLeadwise } from '@/services/leadwiseService';
 import { toast } from 'sonner';
@@ -14,6 +16,7 @@ import { soundManager } from '@/lib/soundManager';
 
 export const WelcomeScreen = () => {
   const { startGame, goToLeaderboard, loadUserByEmail } = useGame();
+  const reduceMotion = useReducedMotion();
   const [sessionUser, setSessionUser] = useState<UserSession | null>(null);
   const [showRegistration, setShowRegistration] = useState(false);
   const [showSettings, setShowSettings] = useState(false);
@@ -141,6 +144,26 @@ export const WelcomeScreen = () => {
 
   return (
     <div className="h-screen max-h-screen relative flex flex-col overflow-hidden" style={{ maxHeight: '100dvh' }}>
+      {/* Arcade cabinet neon frame (decorative, non-blocking) */}
+      <div
+        className="fixed inset-0 z-[45] pointer-events-none"
+        style={{
+          boxShadow:
+            'inset 0 0 0 2px rgba(255,61,240,0.55), inset 0 0 24px 3px rgba(255,61,240,0.3), inset 0 0 0 5px rgba(124,247,255,0.16), inset 0 0 60px 8px rgba(139,92,246,0.18)',
+        }}
+      />
+
+      {/* CRT scanlines (static = essentially free) */}
+      <div
+        className="fixed inset-0 z-[44] pointer-events-none"
+        style={{
+          backgroundImage:
+            'repeating-linear-gradient(0deg, rgba(0,0,0,0.16) 0px, rgba(0,0,0,0.16) 1px, transparent 1px, transparent 3px)',
+          mixBlendMode: 'multiply',
+          opacity: 0.5,
+        }}
+      />
+
       {/* Top Bar: Share with Friends (right) */}
       <div
         className="fixed left-0 right-0 z-50 flex items-center justify-end px-3 sm:px-4"
@@ -201,8 +224,51 @@ export const WelcomeScreen = () => {
         }}
       />
 
+      {/* Synthwave grid-floor horizon */}
+      <ArcadeFloor />
+
       {/* Floating Products Layer */}
       <FloatingProducts />
+
+      {/* Gamified glow orbs — blurred, slow pulse (transform/opacity only = GPU cheap) */}
+      <div className="absolute inset-0 z-[12] pointer-events-none overflow-hidden" style={{ mixBlendMode: 'screen' }}>
+        <motion.div
+          className="absolute rounded-full"
+          style={{
+            width: '55vw', height: '55vw', maxWidth: 420, maxHeight: 420,
+            top: '8%', left: '-10%',
+            background: 'radial-gradient(circle, rgba(236,72,153,0.55) 0%, rgba(236,72,153,0) 70%)',
+            willChange: 'transform, opacity',
+          }}
+          animate={reduceMotion ? {} : { scale: [1, 1.25, 1], opacity: [0.5, 0.8, 0.5] }}
+          transition={{ duration: 6, repeat: Infinity, ease: 'easeInOut' }}
+        />
+        <motion.div
+          className="absolute rounded-full"
+          style={{
+            width: '55vw', height: '55vw', maxWidth: 420, maxHeight: 420,
+            top: '18%', right: '-12%',
+            background: 'radial-gradient(circle, rgba(139,92,246,0.5) 0%, rgba(139,92,246,0) 70%)',
+            willChange: 'transform, opacity',
+          }}
+          animate={reduceMotion ? {} : { scale: [1.2, 1, 1.2], opacity: [0.45, 0.75, 0.45] }}
+          transition={{ duration: 7, repeat: Infinity, ease: 'easeInOut', delay: 0.8 }}
+        />
+        <motion.div
+          className="absolute rounded-full"
+          style={{
+            width: '45vw', height: '45vw', maxWidth: 340, maxHeight: 340,
+            top: '2%', left: '30%',
+            background: 'radial-gradient(circle, rgba(251,191,36,0.4) 0%, rgba(251,191,36,0) 70%)',
+            willChange: 'transform, opacity',
+          }}
+          animate={reduceMotion ? {} : { scale: [1, 1.15, 1], opacity: [0.35, 0.6, 0.35] }}
+          transition={{ duration: 5, repeat: Infinity, ease: 'easeInOut', delay: 1.5 }}
+        />
+      </div>
+
+      {/* Golden-retriever mascot greeter */}
+      <PuppyMascot />
 
       {/* TOP SECTION - Content */}
       <motion.div
@@ -234,17 +300,62 @@ export const WelcomeScreen = () => {
             </h2>
           </div>
 
-          {/* Main Title */}
-          <h1
-            className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold text-white mb-0.5 sm:mb-1 tracking-wider leading-tight px-2"
+          {/* Main Title — neon arcade marquee emblem */}
+          <motion.div
+            className="relative inline-block px-5 py-2 sm:px-7 sm:py-3"
+            animate={reduceMotion ? {} : { scale: [1, 1.035, 1] }}
+            transition={{ duration: 3, repeat: Infinity, ease: 'easeInOut' }}
             style={{
-              fontFamily: 'var(--font-pixel)',
-              textShadow: '3px 3px 0px rgba(0,0,0,0.8), 0 0 15px rgba(255,255,255,0.4)',
-              fontSize: 'clamp(1.5rem, 6.5vw, 3.5rem)',
+              borderRadius: 14,
+              background:
+                'linear-gradient(180deg, rgba(20,10,40,0.55) 0%, rgba(40,15,60,0.35) 100%)',
+              boxShadow:
+                '0 0 0 2px rgba(255,61,240,0.6), 0 0 22px 2px rgba(255,61,240,0.35), inset 0 0 18px rgba(124,247,255,0.15)',
             }}
           >
-            EXPO HERO
-          </h1>
+            {/* Corner brackets */}
+            {[
+              'top-[-3px] left-[-3px] border-t-2 border-l-2 rounded-tl-md',
+              'top-[-3px] right-[-3px] border-t-2 border-r-2 rounded-tr-md',
+              'bottom-[-3px] left-[-3px] border-b-2 border-l-2 rounded-bl-md',
+              'bottom-[-3px] right-[-3px] border-b-2 border-r-2 rounded-br-md',
+            ].map((pos, i) => (
+              <span
+                key={i}
+                aria-hidden
+                className={`absolute w-3.5 h-3.5 sm:w-4 sm:h-4 ${pos}`}
+                style={{ borderColor: '#7cf7ff', boxShadow: '0 0 8px rgba(124,247,255,0.7)' }}
+              />
+            ))}
+
+            <h1
+              className="relative text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold text-white tracking-wider leading-tight overflow-hidden"
+              style={{
+                fontFamily: 'var(--font-pixel)',
+                textShadow:
+                  '3px 3px 0px rgba(0,0,0,0.85), 0 0 18px rgba(236,72,153,0.7), 0 0 34px rgba(124,247,255,0.4)',
+                fontSize: 'clamp(1.5rem, 6.5vw, 3.5rem)',
+              }}
+            >
+              EXPO HERO
+              {/* Shine sweep */}
+              {!reduceMotion && (
+                <motion.span
+                  aria-hidden
+                  className="absolute inset-0 pointer-events-none"
+                  style={{
+                    background:
+                      'linear-gradient(105deg, transparent 30%, rgba(255,255,255,0.75) 48%, transparent 62%)',
+                    mixBlendMode: 'screen',
+                    willChange: 'transform',
+                  }}
+                  initial={{ x: '-120%' }}
+                  animate={{ x: '120%' }}
+                  transition={{ duration: 1.6, repeat: Infinity, repeatDelay: 2.6, ease: 'easeInOut' }}
+                />
+              )}
+            </h1>
+          </motion.div>
         </motion.div>
 
         {/* Tagline Section */}
@@ -262,25 +373,70 @@ export const WelcomeScreen = () => {
         </motion.div>
 
         {/* Buttons */}
-        <div className="flex flex-row items-center justify-center gap-2 sm:gap-3 md:gap-4 w-full max-w-3xl mx-auto px-4 sm:px-6 md:px-8">
+        <div className="flex flex-col items-center justify-center w-full max-w-3xl mx-auto px-4 sm:px-6 md:px-8">
           {/* Start Mission Button */}
-          <motion.button
+          <motion.div
+            className="relative mt-3 sm:mt-4 md:mt-5"
             initial={{ opacity: 0, scale: 0.9 }}
             animate={{ opacity: 1, scale: 1 }}
             transition={{ delay: 0.7, type: 'spring' }}
-            whileHover={{ scale: 1.05 }}
-            whileTap={{ scale: 0.95 }}
-            onClick={handleStartGame}
-            className="px-12 sm:px-16 md:px-20 py-3 sm:py-3.5 md:py-4 text-sm sm:text-base md:text-lg font-bold text-white rounded-lg sm:rounded-xl relative overflow-hidden mt-3 sm:mt-4 md:mt-5"
-            style={{
-              fontFamily: 'var(--font-pixel)',
-              background: 'linear-gradient(135deg, #EC4899 0%, #8B5CF6 100%)',
-              boxShadow: '0 0 30px rgba(236, 72, 153, 0.6), 0 8px 16px rgba(0,0,0,0.4)',
-              border: '3px solid rgba(255,255,255,0.3)',
-            }}
           >
-            PLAY
-          </motion.button>
+            {/* Pulsing glow ring behind the button */}
+            {!reduceMotion && (
+              <motion.div
+                aria-hidden
+                className="absolute -inset-1 rounded-xl sm:rounded-2xl pointer-events-none"
+                style={{
+                  background: 'linear-gradient(135deg, #EC4899 0%, #8B5CF6 100%)',
+                  filter: 'blur(14px)',
+                  willChange: 'transform, opacity',
+                }}
+                animate={{ opacity: [0.5, 0.9, 0.5], scale: [0.98, 1.04, 0.98] }}
+                transition={{ duration: 1.8, repeat: Infinity, ease: 'easeInOut' }}
+              />
+            )}
+            <motion.button
+              whileHover={{ scale: 1.06 }}
+              whileTap={{ scale: 0.94 }}
+              animate={reduceMotion ? {} : { y: [0, -3, 0] }}
+              transition={{ duration: 1.6, repeat: Infinity, ease: 'easeInOut' }}
+              onClick={handleStartGame}
+              className="relative px-14 sm:px-20 md:px-24 py-3.5 sm:py-4 md:py-5 text-base sm:text-lg md:text-xl font-bold text-white rounded-lg sm:rounded-xl overflow-hidden flex items-center gap-2"
+              style={{
+                fontFamily: 'var(--font-pixel)',
+                background: 'linear-gradient(135deg, #EC4899 0%, #8B5CF6 100%)',
+                boxShadow: '0 0 30px rgba(236, 72, 153, 0.6), 0 8px 16px rgba(0,0,0,0.4)',
+                border: '3px solid rgba(255,255,255,0.35)',
+              }}
+            >
+              <span className="relative z-10">▶ PLAY</span>
+              {/* Diagonal shine sweep across the button */}
+              {!reduceMotion && (
+                <motion.span
+                  aria-hidden
+                  className="absolute inset-0 pointer-events-none"
+                  style={{
+                    background:
+                      'linear-gradient(105deg, transparent 35%, rgba(255,255,255,0.55) 50%, transparent 65%)',
+                    willChange: 'transform',
+                  }}
+                  initial={{ x: '-130%' }}
+                  animate={{ x: '130%' }}
+                  transition={{ duration: 1.4, repeat: Infinity, repeatDelay: 2, ease: 'easeInOut' }}
+                />
+              )}
+            </motion.button>
+          </motion.div>
+
+          {/* Tap-to-play hint */}
+          <motion.p
+            className="mt-2 sm:mt-3 text-white/70 text-[8px] sm:text-[10px] tracking-widest"
+            style={{ fontFamily: 'var(--font-pixel)' }}
+            animate={reduceMotion ? {} : { opacity: [0.4, 1, 0.4] }}
+            transition={{ duration: 1.8, repeat: Infinity, ease: 'easeInOut' }}
+          >
+            TAP TO START
+          </motion.p>
         </div>
       </motion.div>
 
