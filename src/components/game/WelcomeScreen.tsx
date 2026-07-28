@@ -141,25 +141,11 @@ export const WelcomeScreen = () => {
 
   return (
     <div className="h-screen max-h-screen relative flex flex-col overflow-hidden" style={{ maxHeight: '100dvh' }}>
-      {/* Top Bar: Sweets & Snacks Expo branding (left) + Share with Friends (right) */}
+      {/* Top Bar: Share with Friends (right) */}
       <div
-        className="fixed left-0 right-0 z-50 flex items-center justify-between px-3 sm:px-4"
+        className="fixed left-0 right-0 z-50 flex items-center justify-end px-3 sm:px-4"
         style={{ top: 'max(0.5rem, env(safe-area-inset-top))' }}
       >
-        {/* Sweets & Snacks Expo Logo - Top Left */}
-        <motion.div
-          initial={{ opacity: 0, x: -20 }}
-          animate={{ opacity: 1, x: 0 }}
-          transition={{ delay: 0.5, duration: 0.5 }}
-          className="rounded-full bg-white/90 backdrop-blur-sm border-2 border-primary/40 p-1 sm:p-1.5"
-        >
-          <img
-            src="/home/sse-logo-header-final-1-215x221-1.png"
-            alt="Sweets & Snacks Expo"
-            className="w-10 h-10 sm:w-12 sm:h-12 object-contain"
-          />
-        </motion.div>
-
         <motion.button
           initial={{ opacity: 0, x: 20 }}
           animate={{ opacity: 1, x: 0 }}
@@ -273,44 +259,6 @@ export const WelcomeScreen = () => {
               Slash the Slimy Broker-Jokers.<br /><br />Save The Goods.
             </p>
           </div>
-        </motion.div>
-
-        {/* Announcement Banner */}
-        <motion.div
-          initial={{ opacity: 0, scale: 0.9 }}
-          animate={{ opacity: 1, scale: 1 }}
-          transition={{ delay: 0.6, duration: 0.5 }}
-          className="mx-4 sm:mx-6 md:mx-8 mb-1"
-        >
-          <motion.div
-            className="px-4 sm:px-5 py-2 sm:py-2.5 rounded-xl border-2 border-warning/60 text-center"
-            style={{
-              background: 'linear-gradient(135deg, rgba(255, 215, 0, 0.15) 0%, rgba(236, 72, 153, 0.15) 100%)',
-              boxShadow: '0 0 20px rgba(255, 215, 0, 0.2)',
-            }}
-            animate={{
-              borderColor: ['rgba(255,215,0,0.6)', 'rgba(236,72,153,0.6)', 'rgba(255,215,0,0.6)'],
-              boxShadow: [
-                '0 0 20px rgba(255,215,0,0.2)',
-                '0 0 20px rgba(236,72,153,0.2)',
-                '0 0 20px rgba(255,215,0,0.2)',
-              ],
-            }}
-            transition={{ duration: 3, repeat: Infinity, ease: 'easeInOut' }}
-          >
-            <p
-              className="text-warning font-bold leading-tight"
-              style={{ fontFamily: 'var(--font-pixel)', fontSize: 'clamp(0.8rem, 4vw, 1.15rem)' }}
-            >
-              Sweets &amp; Snacks Expo
-            </p>
-            <p
-              className="text-white/90 font-bold mt-1 leading-tight"
-              style={{ fontFamily: 'var(--font-pixel)', fontSize: 'clamp(0.6rem, 2.8vw, 0.8rem)' }}
-            >
-              Las Vegas, Nevada
-            </p>
-          </motion.div>
         </motion.div>
 
         {/* Buttons */}

@@ -50,7 +50,6 @@ const PRODUCT_ASSETS: Asset[] = NEW_BRAND_FILES.map((filename, i) => ({
 }));
 
 const RARE_PRODUCT_ASSETS: Asset[] = [
-  { id: 'rare_product_0', filename: 'B3B chain.png', path: '/rare_products/B3B%20chain.png' },
   { id: 'rare_product_1', filename: 'Pokemon.png', path: '/rare_products/Pokemon.png' },
   { id: 'rare_product_2', filename: 'Scout 2.png', path: '/rare_products/Scout%202.png' },
 ];

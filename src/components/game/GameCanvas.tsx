@@ -682,7 +682,7 @@ export const GameCanvas = () => {
             } else {
               // Product sliced — lose a life! (these are Grovara's goods!)
               soundManager.playSound('enemyHit');
-              soundManager.playSound('ouch');
+              soundManager.playSound('toasty');
               if (gameActive) loseLife();
               flashLifeLost();
               currentCombo = 0;
@@ -887,7 +887,7 @@ export const GameCanvas = () => {
                 item.missed = true;
                 // Lose a life if an enemy escapes unsliced (bonus items don't penalize)
                 if (item.type === 'enemy') {
-                  soundManager.playSound('ouch');
+                  soundManager.playSound('toasty');
                   if (gameActive) loseLife();
                   flashLifeLost();
                   currentCombo = 0;

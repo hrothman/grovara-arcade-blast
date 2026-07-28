@@ -19,9 +19,14 @@ export class SoundManager {
   // HTML5 Audio for victory fanfare
   private victoryAudio: HTMLAudioElement | null = null;
 
+  // HTML5 Audio pool for "Toasty!" sound (allows overlapping plays on rapid misses)
+  private toastyAudioPool: HTMLAudioElement[] = [];
+  private toastyPoolIndex = 0;
+
   // Web Audio API buffers — bypasses mobile HTMLAudioElement gesture restrictions
   private ouchBuffer: AudioBuffer | null = null;
   private victoryBuffer: AudioBuffer | null = null;
+  private toastyBuffer: AudioBuffer | null = null;
   private audioBuffersLoading = false;
 
   constructor() {
@@ -56,24 +61,27 @@ export class SoundManager {
    * was already unlocked by a user gesture during gameplay.
    */
   private async loadAudioBuffers() {
-    if (this.audioBuffersLoading || (this.ouchBuffer && this.victoryBuffer)) return;
+    if (this.audioBuffersLoading || (this.ouchBuffer && this.victoryBuffer && this.toastyBuffer)) return;
     this.audioBuffersLoading = true;
 
     const ctx = ZZFX.audioContext;
     if (!ctx) return;
 
     try {
-      const [ouchResp, victoryResp] = await Promise.all([
+      const [ouchResp, victoryResp, toastyResp] = await Promise.all([
         fetch('/sounds/ouch.wav'),
         fetch('/sounds/victory-fanfare.mp3'),
+        fetch('/sounds/toasty.mp3'),
       ]);
-      const [ouchArr, victoryArr] = await Promise.all([
+      const [ouchArr, victoryArr, toastyArr] = await Promise.all([
         ouchResp.arrayBuffer(),
         victoryResp.arrayBuffer(),
+        toastyResp.arrayBuffer(),
       ]);
       // decodeAudioData needs separate copies if called in parallel
       this.ouchBuffer = await ctx.decodeAudioData(ouchArr);
       this.victoryBuffer = await ctx.decodeAudioData(victoryArr);
+      this.toastyBuffer = await ctx.decodeAudioData(toastyArr);
       console.log('[SoundManager] Audio buffers decoded for Web Audio API');
     } catch (e) {
       console.warn('[SoundManager] Failed to load audio buffers:', e);
@@ -123,6 +131,7 @@ export class SoundManager {
     enemyHit: () => zzfx(this.sfxVolume * 2, 0, 180, .02, .1, .15, 3, 1.5, -5, 0, 0, 0, 0, .3, 0, 0, 0, .6, .02), // Warning buzzer (product sliced — loud!)
     enemyKill: () => zzfx(this.sfxVolume * 2, 0, 400, .04, .15, .25, 1, 1.8, 0, 8, -200, .08, .15, 0, 0, 0, 0, .7, .05), // Satisfying explosion (enemy sliced — loud!)
     ouch: () => this.playOuchAudio(), // Real voice "Ouch!" sound
+    toasty: () => this.playToastyAudio(), // "Toasty!" sound on a miss
     itemStolen: () => zzfx(this.sfxVolume, 0, 440, .02, .08, .2, 3, 1.4, -1, 0, 0, 0, 0, .5, 0, 0, 0, .5, .02), // Negative
     levelComplete: () => zzfx(this.sfxVolume, 0, 830, .04, .12, .3, 0, 2, 0, 0, 0, 0, 0, 0, 0, .1, 0, .7, .04), // Victory
     rareItem: () => zzfx(this.sfxVolume, 0, 1319, .03, .1, .3, 0, 2.5, 5, 0, 0, 0, 0, 0, 0, 0, 0, .6, .05), // Sparkle
@@ -156,6 +165,31 @@ export class SoundManager {
     this.ouchPoolIndex++;
     audio.volume = this.sfxVolume;
     audio.playbackRate = 1.6; // Fast "ouch!"
+    audio.currentTime = 0;
+    audio.play().catch(() => {});
+  }
+
+  private ensureToastyPool() {
+    if (this.toastyAudioPool.length > 0) return;
+    for (let i = 0; i < 3; i++) {
+      const audio = new Audio('/sounds/toasty.mp3');
+      audio.preload = 'auto';
+      audio.volume = this.sfxVolume;
+      this.toastyAudioPool.push(audio);
+    }
+  }
+
+  private playToastyAudio() {
+    if (this.sfxMuted) return;
+
+    // Try Web Audio API first (works on mobile without gesture)
+    if (this.playBuffer(this.toastyBuffer, Math.min(1, this.sfxVolume * 1.5))) return;
+
+    // Fallback to HTMLAudioElement
+    this.ensureToastyPool();
+    const audio = this.toastyAudioPool[this.toastyPoolIndex % this.toastyAudioPool.length];
+    this.toastyPoolIndex++;
+    audio.volume = Math.min(1, this.sfxVolume * 1.5);
     audio.currentTime = 0;
     audio.play().catch(() => {});
   }
