@@ -387,18 +387,23 @@ export const HealerDog = ({
             initial={{ opacity: 0, y: 8, scale: 0.85 }}
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, scale: 0.85 }}
-            className="absolute z-[66] pointer-events-none"
+            // Full-width row rather than a point anchored on the dog's centre:
+            // on a phone a bubble centred over a corner-sitting dog runs off
+            // the screen edge. It hugs whichever side he came in from instead.
+            className="absolute z-[66] pointer-events-none flex px-3"
             style={{
-              left: spotX + DOG_WIDTH / 2,
+              left: 0,
+              right: 0,
               bottom: `calc(8% + ${DOG_HEIGHT + 18}px)`,
-              transform: 'translateX(-50%)',
+              justifyContent: side === 'left' ? 'flex-start' : 'flex-end',
             }}
           >
             <motion.div
               animate={{ y: [0, -5, 0] }}
               transition={{ duration: 1.4, repeat: Infinity }}
-              className="px-3 py-1.5 rounded-xl text-center whitespace-nowrap"
+              className="px-3 py-1.5 rounded-xl text-center"
               style={{
+                maxWidth: 'min(78vw, 260px)',
                 background: 'rgba(6, 30, 22, 0.88)',
                 border: '1px solid rgba(16,185,129,0.7)',
                 boxShadow: '0 0 18px rgba(16,185,129,0.35)',
