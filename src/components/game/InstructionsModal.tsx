@@ -1,5 +1,6 @@
 import { motion } from 'framer-motion';
-import { Play, ShieldCheck, Banana } from 'lucide-react';
+import { Play, ShieldCheck, Banana, Flame } from 'lucide-react';
+import { DOG_IMAGE } from './HealerDog';
 import {
   Dialog,
   DialogContent,
@@ -16,7 +17,7 @@ export const InstructionsModal = ({ isOpen, onStart }: InstructionsModalProps) =
   return (
     <Dialog open={isOpen} onOpenChange={() => {}}>
       <DialogContent
-        className="w-[92vw] max-w-sm sm:max-w-md bg-card/95 backdrop-blur-md neon-border p-0 overflow-hidden rounded-xl"
+        className="w-[92vw] max-w-sm sm:max-w-md max-h-[88vh] bg-card/95 backdrop-blur-md neon-border p-0 overflow-y-auto rounded-xl"
         onPointerDownOutside={(e) => e.preventDefault()}
         onEscapeKeyDown={(e) => e.preventDefault()}
         hideClose
@@ -69,6 +70,44 @@ export const InstructionsModal = ({ isOpen, onStart }: InstructionsModalProps) =
                 <Banana className="w-7 h-7 sm:w-9 sm:h-9 text-yellow-400 flex-shrink-0" />
                 <p className="text-foreground text-xs sm:text-sm leading-snug">
                   <span className="font-bold text-yellow-400">Catch the Banana!</span> — a dancing banana flies by randomly. Slash it for <span className="font-bold text-yellow-300">+2000 pts!</span>
+                </p>
+              </motion.div>
+
+              {/* Instruction 4: Hot streak = extra time */}
+              <motion.div
+                initial={{ opacity: 0, x: -20 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ delay: 0.35 }}
+                className="flex items-center gap-2.5 sm:gap-3 bg-muted/30 rounded-lg p-2.5 sm:p-3 border border-orange-500/30"
+                style={{ background: 'rgba(255, 140, 0, 0.08)' }}
+              >
+                <Flame className="w-7 h-7 sm:w-9 sm:h-9 text-orange-400 fill-orange-400/40 flex-shrink-0" />
+                <p className="text-foreground text-xs sm:text-sm leading-snug">
+                  <span className="font-bold text-orange-400">Stay hot!</span> — slash 5 jokers in a row
+                  without losing a heart to earn{' '}
+                  <span className="font-bold text-emerald-300">+5 seconds</span> (once per level). Lose a
+                  heart and the streak resets.
+                </p>
+              </motion.div>
+
+              {/* Instruction 5: The healer dog */}
+              <motion.div
+                initial={{ opacity: 0, x: -20 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ delay: 0.4 }}
+                className="flex items-center gap-2.5 sm:gap-3 rounded-lg p-2.5 sm:p-3 border border-emerald-500/40"
+                style={{ background: 'rgba(16, 185, 129, 0.1)' }}
+              >
+                <img
+                  src={DOG_IMAGE}
+                  alt="Healer dog"
+                  className="w-9 h-9 sm:w-11 sm:h-11 object-contain flex-shrink-0"
+                />
+                <p className="text-foreground text-xs sm:text-sm leading-snug">
+                  <span className="font-bold text-emerald-400">Never slash the dog!</span> — when you&apos;re
+                  hurt he comes to help and the game pauses. Just{' '}
+                  <span className="font-bold text-emerald-300">hold your finger on him</span> to get a heart
+                  back. Swipe him fast and he runs off.
                 </p>
               </motion.div>
 

@@ -137,6 +137,10 @@ export class SoundManager {
     rareItem: () => zzfx(this.sfxVolume, 0, 1319, .03, .1, .3, 0, 2.5, 5, 0, 0, 0, 0, 0, 0, 0, 0, .6, .05), // Sparkle
     shelfComplete: () => zzfx(this.sfxVolume, 0, 659, .08, .15, .4, 0, 2.2, 0, 0, 0, 0, 0, 0, 0, .2, 0, .75, .08), // Triumphant
     gameComplete: () => this.playVictoryFanfare(), // 4-note ascending victory arpeggio
+    timeBonus: () => zzfx(this.sfxVolume, 0, 987, .02, .18, .28, 0, 1.6, 0, 12, 320, .06, .06, 0, 0, 0, 0, .8, .03), // Rising chime (+seconds)
+    heal: () => zzfx(this.sfxVolume, 0, 587, .05, .25, .4, 0, 1.9, 0, 6, 260, .1, .1, 0, 0, .1, 0, .8, .06), // Warm restorative chime
+    dogHappy: () => zzfx(this.sfxVolume, 0, 740, .03, .16, .22, 0, 2.4, 8, 0, 180, .05, 0, 0, 0, 0, 0, .7, .04), // Playful yip
+    dogYelp: () => zzfx(this.sfxVolume * 1.4, 0, 620, .01, .09, .16, 1, 2.6, -14, 0, -300, .04, 0, 0, 0, 0, 0, .6, .01), // Sad descending whine
   };
 
   /**

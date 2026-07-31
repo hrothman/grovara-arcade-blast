@@ -20,6 +20,8 @@ interface GameContextType {
   resetGame: () => void;
   addScore: (points: number) => void;
   loseLife: () => void;
+  healLife: () => boolean;
+  maxLives: number;
   setEmail: (email: string) => void;
   getAnalytics: () => any;
   setUserType: (type: 'buyer' | 'brand') => void;
@@ -59,9 +61,24 @@ export const GameProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   const totalScoreRef = useRef(0);
   const livesRef = useRef(INITIAL_LIVES);
   const currentLevelRef = useRef(1);
+
+  // Which screen a navigation action is allowed to fire from. Updated
+  // *synchronously* by those actions, so a repeat tap is rejected even though
+  // React hasn't re-rendered yet.
+  //
+  // This is what stops the level-skip bug: the level-complete screen stays
+  // mounted and clickable through its 300ms exit animation, so tapping
+  // "NEXT LEVEL" twice used to advance twice (level 1 → level 3). Both taps
+  // now have to come from the levelComplete screen, and the first one moves us
+  // off it immediately.
+  const activeScreenRef = useRef<GameState['currentScreen']>('welcome');
   useEffect(() => { totalScoreRef.current = gameState.totalScore; }, [gameState.totalScore]);
+  useEffect(() => { activeScreenRef.current = gameState.currentScreen; }, [gameState.currentScreen]);
 
   const startGame = useCallback(() => {
+    // Already playing — a duplicate tap must not restart the run.
+    if (activeScreenRef.current === 'game') return;
+    activeScreenRef.current = 'game';
     livesRef.current = INITIAL_LIVES;
     currentLevelRef.current = 1;
     totalScoreRef.current = 0;
@@ -102,9 +119,22 @@ export const GameProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     }
   }, [finishGame]);
 
+  /**
+   * Restore one heart (healer dog reward). Returns false when there was
+   * nothing to heal — full health, or the run is already over.
+   */
+  const healLife = useCallback(() => {
+    if (livesRef.current <= 0 || livesRef.current >= INITIAL_LIVES) return false;
+    const newLives = livesRef.current + 1;
+    livesRef.current = newLives;
+    setGameState(prev => ({ ...prev, lives: newLives }));
+    return true;
+  }, []);
+
   const completeLevel = useCallback((levelData: LevelData) => {
     recordLevel(levelData);
     const isFinalLevel = currentLevelRef.current >= TOTAL_LEVELS;
+    activeScreenRef.current = isFinalLevel ? 'gameComplete' : 'levelComplete';
 
     setGameState(prev => ({
       ...prev,
@@ -132,16 +162,24 @@ export const GameProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   }, [session, sessionRecordSwipe, gameState.userType]);
 
   const nextLevel = useCallback(() => {
+    // Only the level-complete screen may advance a level. The first tap moves
+    // us off it right here, so any follow-up tap — same tick or landing during
+    // the exit animation — is a no-op.
+    if (activeScreenRef.current !== 'levelComplete') return;
+
     const isFinalLevel = currentLevelRef.current >= TOTAL_LEVELS;
+    activeScreenRef.current = isFinalLevel ? 'gameComplete' : 'game';
 
     if (isFinalLevel) {
       setGameState(prev => ({ ...prev, currentScreen: 'gameComplete' as const }));
       finishGame(totalScoreRef.current);
     } else {
       currentLevelRef.current += 1;
+      const nextLevelNumber = currentLevelRef.current;
       setGameState(prev => ({
         ...prev,
-        currentLevel: prev.currentLevel + 1,
+        // Read from the ref rather than prev so the two can never diverge.
+        currentLevel: nextLevelNumber,
         currentScreen: 'game' as const,
       }));
     }
@@ -193,6 +231,7 @@ export const GameProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   }, []);
 
   const resetGame = useCallback(() => {
+    activeScreenRef.current = 'welcome';
     livesRef.current = INITIAL_LIVES;
     currentLevelRef.current = 1;
     totalScoreRef.current = 0;
@@ -246,6 +285,8 @@ export const GameProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         resetGame,
         addScore,
         loseLife,
+        healLife,
+        maxLives: INITIAL_LIVES,
         setEmail,
         getAnalytics,
         setUserType,

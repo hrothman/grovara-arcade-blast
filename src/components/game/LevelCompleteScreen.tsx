@@ -9,6 +9,16 @@ export const LevelCompleteScreen = () => {
   const { gameState, goToSwipe, nextLevel } = useGame();
   const currentLevelData = gameState.levels[gameState.levels.length - 1];
   const isLastLevel = gameState.currentLevel >= 5;
+  // This screen stays mounted (and clickable) through its exit animation, so
+  // the button locks itself the moment it is used. The context guards the
+  // transition too — this is just the visible half of the fix.
+  const [advancing, setAdvancing] = useState(false);
+
+  const handleNextLevel = () => {
+    if (advancing) return;
+    setAdvancing(true);
+    nextLevel();
+  };
   const [username] = useState(`user${Math.floor(Math.random() * 10000000)}`);
   const [leaderboard, setLeaderboard] = useState<Array<{ username: string; score: number; gamesPlayed: number }>>([]);
 
@@ -200,10 +210,13 @@ export const LevelCompleteScreen = () => {
             initial={{ opacity: 0, scale: 0.9 }}
             animate={{ opacity: 1, scale: 1 }}
             transition={{ delay: 1.0, type: 'spring' }}
-            whileHover={{ scale: 1.05 }}
-            whileTap={{ scale: 0.95 }}
-            onClick={nextLevel}
-            className="btn-arcade text-sm sm:text-base px-6 py-2.5 flex items-center justify-center gap-2 w-full"
+            whileHover={advancing ? undefined : { scale: 1.05 }}
+            whileTap={advancing ? undefined : { scale: 0.95 }}
+            onClick={handleNextLevel}
+            disabled={advancing}
+            className={`btn-arcade text-sm sm:text-base px-6 py-2.5 flex items-center justify-center gap-2 w-full ${
+              advancing ? 'opacity-60 pointer-events-none' : ''
+            }`}
           >
             {isLastLevel ? (
               <>

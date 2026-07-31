@@ -2,8 +2,9 @@ import { useEffect, useRef, useState, useCallback } from 'react';
 import Phaser from 'phaser';
 import { useGame } from '@/context/GameContext';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Heart, Zap } from 'lucide-react';
+import { Heart, Zap, Flame } from 'lucide-react';
 import { InstructionsModal } from './InstructionsModal';
+import { HealerDog } from './HealerDog';
 import { getEnemyAssets, getProductAssets, getRareProductAssets, getRandomAsset, Asset } from '@/lib/assetLoader';
 import { soundManager } from '@/lib/soundManager';
 
@@ -67,6 +68,15 @@ const LEVEL_CONFIG = {
   5: { duration: 20000, throwRate: 900, itemsMin: 2, itemsMax: 4, enemyChance: 0.48, gravity: 580, throwSpeedY: -850 },
 };
 
+// ── Hot streak → extra time ─────────────────────────────────────────────────
+// Slash this many Broker Jokers in a row without losing a heart and the level
+// clock gets +5s — once per level. The streak survives across separate swipes
+// (unlike the combo counter, which resets on every new touch) and only breaks
+// when a heart is lost.
+const STREAK_FOR_TIME_BONUS = 5;
+const TIME_BONUS_SECONDS = 5;
+const MAX_TIME_BONUSES_PER_LEVEL = 1;
+
 const ULTRA_RARE_CHANCE = 0.12;
 const MIN_SWIPE_SPEED = 0.5; // px/ms
 const SLASH_TRAIL_LIFETIME = 150; // ms
@@ -94,10 +104,21 @@ export const GameCanvas = () => {
   const phaserGameRef = useRef<Phaser.Game | null>(null);
   const isMountedRef = useRef(true);
   const levelScoreRef = useRef(0);
-  const { gameState, addScore, loseLife, completeLevel } = useGame();
+  const { gameState, addScore, loseLife, healLife, maxLives, completeLevel } = useGame();
 
   const [displayScore, setDisplayScore] = useState(0);
   const [timeLeft, setTimeLeft] = useState(30);
+  const [hotStreak, setHotStreak] = useState(0);
+  const [timeBonusesUsed, setTimeBonusesUsed] = useState(0);
+  const [timeBonusFlash, setTimeBonusFlash] = useState(false);
+  // Milliseconds left in the level — read by the healer dog to decide whether
+  // there is still time for a visit.
+  const remainingMsRef = useRef(0);
+  // True while the healer dog is on screen. The level holds still for him:
+  // no clock, no new throws, no penalty for jokers that fall through — so
+  // stopping to pet him never costs the player anything.
+  const dogVisitRef = useRef(false);
+  const [dogVisit, setDogVisit] = useState(false);
   const [showInstructions, setShowInstructions] = useState(!hasPlayedGame);
   const [gameStarted, setGameStarted] = useState(false);
   const [comboPopup, setComboPopup] = useState<{ active: boolean; count: number }>({ active: false, count: 0 });
@@ -122,6 +143,10 @@ export const GameCanvas = () => {
     setGameStarted(hasPlayedGame);
     setDisplayScore(0);
     setTimeLeft(levelConfig.duration / 1000);
+    remainingMsRef.current = levelConfig.duration;
+    setHotStreak(0);
+    setTimeBonusesUsed(0);
+    setTimeBonusFlash(false);
     setComboPopup({ active: false, count: 0 });
     bananaPosRef.current = null;
     setBananaHit(false);
@@ -301,6 +326,24 @@ export const GameCanvas = () => {
     }, 400);
   }, []);
 
+  const getRemainingMs = useCallback(() => remainingMsRef.current, []);
+
+  const handleDogVisitChange = useCallback((visiting: boolean) => {
+    dogVisitRef.current = visiting;
+    setDogVisit(visiting);
+  }, []);
+
+  /** Slashing the healer dog costs points (never a life — it just runs off). */
+  const handleDogScorePenalty = useCallback(
+    (points: number) => {
+      // Clamp so a penalty can't drag the run's score below zero.
+      const applied = Math.max(points, -levelScoreRef.current);
+      if (applied === 0) return;
+      applyScoreChange(applied);
+    },
+    [applyScoreChange]
+  );
+
   const handleStartGame = useCallback(() => {
     // Unlock audio on user gesture (required for mobile browsers)
     soundManager.unlockAudio();
@@ -349,6 +392,10 @@ export const GameCanvas = () => {
     let timerEvent: Phaser.Time.TimerEvent | null = null;
     let remainingTime = levelConfig.duration / 1000;
     let elapsedTime = 0;
+    // Consecutive jokers slashed without losing a heart, and how many +5s
+    // rewards this level has already handed out.
+    let hotStreak = 0;
+    let timeBonusesGiven = 0;
 
     const config: Phaser.Types.Core.GameConfig = {
       type: Phaser.AUTO,
@@ -452,6 +499,40 @@ export const GameCanvas = () => {
 
           slashGraphics = scene.add.graphics();
           slashGraphics.setDepth(10);
+
+          // ── Hot streak → +5s on the clock ─────────────────────────
+
+          const grantTimeBonus = () => {
+            timeBonusesGiven++;
+            remainingTime += TIME_BONUS_SECONDS;
+            remainingMsRef.current = remainingTime * 1000;
+            soundManager.playSound('timeBonus');
+            if (!isMountedRef.current) return;
+            setTimeLeft(remainingTime);
+            setTimeBonusesUsed(timeBonusesGiven);
+            setTimeBonusFlash(true);
+            setTimeout(() => {
+              if (isMountedRef.current) setTimeBonusFlash(false);
+            }, 1600);
+          };
+
+          /** A joker went down cleanly — extend the streak, reward every Nth. */
+          const registerCleanHit = () => {
+            hotStreak++;
+            if (isMountedRef.current) setHotStreak(hotStreak);
+            if (
+              hotStreak % STREAK_FOR_TIME_BONUS === 0 &&
+              timeBonusesGiven < MAX_TIME_BONUSES_PER_LEVEL
+            ) {
+              grantTimeBonus();
+            }
+          };
+
+          /** A heart was lost — the streak is over. */
+          const breakStreak = () => {
+            hotStreak = 0;
+            if (isMountedRef.current) setHotStreak(0);
+          };
 
           // ── Throw items ───────────────────────────────────────────
 
@@ -653,6 +734,7 @@ export const GameCanvas = () => {
 
               applyScoreChange(bonusScore, item.x, item.y + HUD_HEIGHT);
               statsRef.current.enemiesSliced++;
+              registerCleanHit();
 
               // Extra flashy gold/cyan particle burst for bonus
               spawnParticles(scene, item.x, item.y, 0xffd700, 14);
@@ -675,6 +757,7 @@ export const GameCanvas = () => {
 
               applyScoreChange(totalScore, item.x, item.y + HUD_HEIGHT);
               statsRef.current.enemiesSliced++;
+              registerCleanHit();
 
               // Green/gold particle burst for satisfying enemy kill
               spawnParticles(scene, item.x, item.y, 0x10b981, 10);
@@ -686,6 +769,7 @@ export const GameCanvas = () => {
               if (gameActive) loseLife();
               flashLifeLost();
               currentCombo = 0;
+              breakStreak();
 
               // Red particle burst (warning — you hit a product!)
               spawnParticles(scene, item.x, item.y, 0xff3333, 8);
@@ -791,17 +875,23 @@ export const GameCanvas = () => {
 
           // ── Timer ─────────────────────────────────────────────────
 
+          // Looping (not `repeat`-bounded) so the hot-streak bonus can push
+          // seconds back onto the clock mid-level.
           timerEvent = scene.time.addEvent({
             delay: 1000,
-            repeat: remainingTime - 1,
+            loop: true,
             callback: () => {
+              // The clock stops while the healer dog is here.
+              if (dogVisitRef.current) return;
               remainingTime--;
+              remainingMsRef.current = remainingTime * 1000;
               if (isMountedRef.current) {
                 setTimeLeft(remainingTime);
               }
 
               if (remainingTime <= 0 && gameActive) {
                 gameActive = false;
+                timerEvent?.remove();
                 // Level complete
                 soundManager.playSound('levelComplete');
                 const stats = statsRef.current;
@@ -826,17 +916,27 @@ export const GameCanvas = () => {
             const dt = deltaMs / 1000;
             const now = Date.now();
 
-            // Track elapsed time for bonus spawning
-            elapsedTime += deltaMs;
+            // While the healer dog is on screen the level holds still: nothing
+            // new is thrown, so petting him is never a race against the game.
+            // Items already in the air keep flying.
+            const dogVisiting = dogVisitRef.current;
 
-            // Spawn bonus item once per level at the designated time
-            if (!bonusSpawned && elapsedTime >= bonusSpawnTime) {
-              throwBonusItem();
-            }
+            if (!dogVisiting) {
+              // Track elapsed time for bonus spawning
+              elapsedTime += deltaMs;
 
-            // Throw items on schedule
-            if (now - lastThrowTime > levelConfig.throwRate) {
-              throwItems();
+              // Spawn bonus item once per level at the designated time
+              if (!bonusSpawned && elapsedTime >= bonusSpawnTime) {
+                throwBonusItem();
+              }
+
+              // Throw items on schedule
+              if (now - lastThrowTime > levelConfig.throwRate) {
+                throwItems();
+                lastThrowTime = now;
+              }
+            } else {
+              // Keep the throw schedule from bursting the moment he leaves.
               lastThrowTime = now;
             }
 
@@ -885,12 +985,15 @@ export const GameCanvas = () => {
               // Check if item fell off screen
               if (item.y > h + 60 && !item.missed) {
                 item.missed = true;
-                // Lose a life if an enemy escapes unsliced (bonus items don't penalize)
-                if (item.type === 'enemy') {
+                // Lose a life if an enemy escapes unsliced (bonus items don't
+                // penalize, and neither does anything that falls through while
+                // the player's attention is on the healer dog)
+                if (item.type === 'enemy' && !dogVisiting) {
                   soundManager.playSound('toasty');
                   if (gameActive) loseLife();
                   flashLifeLost();
                   currentCombo = 0;
+                  breakStreak();
                 }
                 if (item.sprite) { item.sprite.destroy(); item.sprite = undefined; }
                 if (item.glowOuter) { item.glowOuter.destroy(); item.glowOuter = undefined; }
@@ -1078,21 +1181,124 @@ export const GameCanvas = () => {
           </motion.div>
 
           {/* Timer */}
-          <div className="bg-black/40 backdrop-blur-sm rounded-lg px-3 py-1.5">
-            <span className={`text-lg font-bold tabular-nums ${timeLeft <= 10 ? 'text-red-400' : 'text-white'}`}>
-              {timeLeft}s
-            </span>
+          <div className="relative">
+            <motion.div
+              className={`bg-black/40 backdrop-blur-sm rounded-lg px-3 py-1.5 ${
+                dogVisit ? 'ring-1 ring-emerald-400/60' : ''
+              }`}
+              animate={
+                timeBonusFlash
+                  ? {
+                      scale: [1, 1.25, 1],
+                      boxShadow: [
+                        '0 0 0px rgba(16,185,129,0)',
+                        '0 0 22px rgba(16,185,129,0.9)',
+                        '0 0 0px rgba(16,185,129,0)',
+                      ],
+                    }
+                  : {}
+              }
+              transition={{ duration: 0.8 }}
+            >
+              <motion.span
+                className={`text-lg font-bold tabular-nums ${
+                  timeBonusFlash || dogVisit
+                    ? 'text-emerald-300'
+                    : timeLeft <= 10
+                    ? 'text-red-400'
+                    : 'text-white'
+                }`}
+                // Blink while the clock is held for the dog.
+                animate={dogVisit ? { opacity: [1, 0.35, 1] } : { opacity: 1 }}
+                transition={dogVisit ? { duration: 1.1, repeat: Infinity } : { duration: 0.2 }}
+              >
+                {timeLeft}s
+              </motion.span>
+            </motion.div>
+
+            {/* +5s reward flying off the clock */}
+            <AnimatePresence>
+              {timeBonusFlash && (
+                <motion.div
+                  key="time-bonus"
+                  initial={{ opacity: 0, y: 0, scale: 0.7 }}
+                  animate={{ opacity: 1, y: 34, scale: 1 }}
+                  exit={{ opacity: 0, y: 52 }}
+                  transition={{ duration: 0.45, ease: 'backOut' }}
+                  className="absolute right-0 top-full mt-1 whitespace-nowrap"
+                >
+                  <span
+                    className="text-emerald-300 font-black text-base"
+                    style={{
+                      fontFamily: 'var(--font-pixel)',
+                      filter: 'drop-shadow(0 0 10px rgba(16,185,129,0.8))',
+                    }}
+                  >
+                    +{TIME_BONUS_SECONDS}s
+                  </span>
+                </motion.div>
+              )}
+            </AnimatePresence>
           </div>
         </div>
 
-        {/* Score */}
-        <div className="flex items-center justify-center px-4 py-1">
+        {/* Score + hot streak */}
+        <div className="flex items-center justify-center gap-3 px-4 py-1">
           <div className="flex items-center gap-1.5">
             <Zap className="w-4 h-4 text-yellow-400 fill-yellow-400" />
             <span className="text-white text-lg font-bold tabular-nums">
               {displayScore.toLocaleString()}
             </span>
           </div>
+
+          {/* Hot streak meter — fills up to the next +5s */}
+          <AnimatePresence>
+            {hotStreak > 0 && (
+              <motion.div
+                key="streak"
+                initial={{ opacity: 0, scale: 0.7 }}
+                animate={{ opacity: 1, scale: 1 }}
+                exit={{ opacity: 0, scale: 0.7 }}
+                className="flex items-center gap-1.5 bg-black/40 backdrop-blur-sm rounded-full pl-1.5 pr-2 py-0.5"
+              >
+                <motion.div
+                  animate={{ scale: [1, 1.2, 1] }}
+                  transition={{ duration: 0.9, repeat: Infinity }}
+                >
+                  <Flame className="w-3.5 h-3.5 text-orange-400 fill-orange-400/60" />
+                </motion.div>
+                {timeBonusesUsed >= MAX_TIME_BONUSES_PER_LEVEL ? (
+                  /* Bonus already claimed for this level — just show the streak */
+                  <span className="text-orange-300 text-[10px] font-bold tracking-wider">
+                    x{hotStreak}
+                    <span className="text-emerald-400/80 ml-1">+{TIME_BONUS_SECONDS}s ✓</span>
+                  </span>
+                ) : (
+                  <div className="flex items-center gap-[3px]">
+                    {Array.from({ length: STREAK_FOR_TIME_BONUS }).map((_, i) => (
+                      <span
+                        key={i}
+                        className="rounded-full"
+                        style={{
+                          width: 5,
+                          height: 5,
+                          background:
+                            i < hotStreak % STREAK_FOR_TIME_BONUS ||
+                            (hotStreak > 0 && hotStreak % STREAK_FOR_TIME_BONUS === 0)
+                              ? '#34d399'
+                              : 'rgba(255,255,255,0.22)',
+                          boxShadow:
+                            i < hotStreak % STREAK_FOR_TIME_BONUS
+                              ? '0 0 6px rgba(16,185,129,0.8)'
+                              : 'none',
+                        }}
+                      />
+                    ))}
+                  </div>
+                )}
+              </motion.div>
+            )}
+          </AnimatePresence>
         </div>
       </div>
 
@@ -1212,6 +1418,36 @@ export const GameCanvas = () => {
           </motion.div>
         )}
       </AnimatePresence>
+
+      {/* Calm-down scrim: the level is on hold while the dog is here */}
+      <AnimatePresence>
+        {dogVisit && (
+          <motion.div
+            key="dog-scrim"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.4 }}
+            className="absolute inset-0 z-[55] pointer-events-none"
+            style={{
+              background:
+                'radial-gradient(circle at 50% 70%, rgba(6,30,22,0.15) 0%, rgba(3,10,20,0.55) 100%)',
+            }}
+          />
+        )}
+      </AnimatePresence>
+
+      {/* Healer dog — hold to pet and win a heart back (never slash him) */}
+      <HealerDog
+        key={`dog-${gameState.currentLevel}`}
+        active={gameStarted}
+        lives={gameState.lives}
+        maxLives={maxLives}
+        getTimeLeftMs={getRemainingMs}
+        onHeal={healLife}
+        onScorePenalty={handleDogScorePenalty}
+        onVisitChange={handleDogVisitChange}
+      />
 
       {/* Instructions modal */}
       <InstructionsModal isOpen={showInstructions} onStart={handleStartGame} />
